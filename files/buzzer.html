@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -22,54 +22,54 @@
     body.flash-active { background-color: #ffeaa7 !important; }
     .container {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       background: #ffffff;
       padding: 35px 25px;
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
-    h2 { margin-top: 0; font-size: 24px; color: #d63031; }
+    h2 { margin-top: 0; font-size: 26px; color: #d63031; }
     input[type="text"] {
       width: 90%;
       padding: 14px;
       font-size: 16px;
       border: 2px solid #dfe6e9;
       border-radius: 12px;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       text-align: center;
       background-color: #f8f9fa;
       outline: none;
     }
     input[type="text"]:focus { border-color: #d63031; background-color: #fff; }
-    .buzzer-wrapper { position: relative; display: inline-block; margin: 10px 0 20px; }
     
-    /* 부저 버튼 애니메이션 및 크기 */
+    /* 부저 크기를 260px로 확대 */
+    .buzzer-wrapper { position: relative; display: inline-block; margin: 10px 0 15px; }
     .buzzer-btn-img {
-      width: 200px;
-      height: 200px;
+      width: 260px;
+      height: 260px;
       border: none;
       background: transparent;
       cursor: pointer;
       outline: none;
       padding: 0;
     }
-    .buzzer-img {
+    .buzzer-svg {
       width: 100%;
       height: 100%;
-      object-fit: contain;
       transition: transform 0.1s ease;
-      user-select: none;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25));
     }
-    .buzzer-btn-img:active .buzzer-img, .buzzer-img.pressed {
-      transform: translateY(8px) scale(0.95);
+    .buzzer-btn-img:active .buzzer-svg, .buzzer-svg.pressed {
+      transform: translateY(10px) scale(0.95);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
     }
     .buzzer-wrapper.glow::after {
       content: '';
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 220px;
-      height: 220px;
+      width: 280px;
+      height: 280px;
       transform: translate(-50%, -50%);
       background: radial-gradient(circle, rgba(255,234,167,0.9) 0%, rgba(214,48,49,0) 70%);
       border-radius: 50%;
@@ -88,18 +88,27 @@
 
 <div class="container">
   <h2>🚨 선착순 정답 부저</h2>
-  <input type="text" id="studentInfo" placeholder="학번과 이름을 입력하세요">
+  <input type="text" id="studentInfo" placeholder="학번을 입력하세요 (예: 10305)">
   
   <div class="buzzer-wrapper" id="buzzerWrapper">
     <button class="buzzer-btn-img" onclick="pressBuzzer()">
-      <img src="https://api.iconify.design/emojione-v1:red-button.svg" 
-           alt="부저 버튼" 
-           class="buzzer-img" 
-           id="buzzerImg">
+      <!-- 내장형 SVG 그래픽 (엑박 현상 완전 방지) -->
+      <svg class="buzzer-svg" id="buzzerSvg" viewBox="0 0 200 200">
+        <!-- 번개 효과 배경 -->
+        <path d="M 30,70 L 15,95 L 45,95 L 25,125 L 60,90 L 38,90 Z" fill="#f1c40f" />
+        <path d="M 170,70 L 185,95 L 155,95 L 175,125 L 140,90 L 162,90 Z" fill="#f1c40f" />
+        <!-- 부저 받침대 -->
+        <ellipse cx="100" cy="140" rx="75" ry="30" fill="#2c3e50" />
+        <rect x="25" y="125" width="150" height="15" fill="#34495e" rx="5" />
+        <!-- 빨간색 부저 버튼 -->
+        <ellipse cx="100" cy="115" rx="65" ry="25" fill="#c0392b" />
+        <ellipse cx="100" cy="110" rx="65" ry="25" fill="#e74c3c" />
+        <ellipse cx="100" cy="106" rx="50" ry="18" fill="#ff7675" />
+      </svg>
     </button>
   </div>
 
-  <div id="status">이름을 입력하고 부저를 누르세요!</div>
+  <div id="status">학번을 입력하고 부저를 누르세요!</div>
 </div>
 
 <script type="module">
@@ -133,9 +142,9 @@
 
     document.body.classList.add('flash-active');
     const wrapper = document.getElementById('buzzerWrapper');
-    const img = document.getElementById('buzzerImg');
+    const svg = document.getElementById('buzzerSvg');
     
-    img.classList.add('pressed');
+    svg.classList.add('pressed');
     wrapper.classList.add('glow');
 
     setTimeout(() => { document.body.classList.remove('flash-active'); }, 200);
@@ -150,7 +159,7 @@
     }).catch((err) => {
       alert("전송 중 오류 발생: " + err.message);
       isSubmitting = false;
-      img.classList.remove('pressed');
+      svg.classList.remove('pressed');
     });
   };
 </script>
