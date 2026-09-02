@@ -1,32 +1,467 @@
-// 특정 학생 학번(studentNum) 데이터만 삭제하는 함수
-window.deleteStudentData = function(studentNum) {
-    if (!confirm(`${studentNum} 학생의 제출 기록을 삭제하시겠습니까?`)) return;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선생님용 실시간 제출 현황판</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; background: #f8fafc; color: #1e293b; margin: 0; }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        h1 { font-size: 1.5rem; margin: 0; color: #0f172a; }
+        
+        .btn-group { display: flex; gap: 8px; }
+        .btn { padding: 10px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
+        .btn-excel { background: #16a34a; color: white; }
+        .btn-excel:hover { background: #15803d; }
+        .btn-clear { background: #ef4444; color: white; }
+        .btn-clear:hover { background: #dc2626; }
+        .btn-present { background: #8b5cf6; color: white; }
+        .btn-present:hover { background: #7c3aed; }
 
-    const selectedUnit = document.getElementById('unitSelect').value;
+        /* 삭제 전용 소형 버튼 */
+        .btn-delete-sm { background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .btn-delete-sm:hover { background: #ef4444; color: white; }
 
-    if (selectedUnit === '2단원') {
-        // Firebase에서 해당 학번을 가진 데이터의 Key를 찾아 삭제
-        const dbRef = ref(db, 'yeep_activity_submissions');
-        onValue(dbRef, (snapshot) => {
-            const val = snapshot.val();
-            if (val) {
-                Object.keys(val).forEach(key => {
-                    const item = val[key];
-                    const rawNum = item.studentInfo || item.num || item.studentNum || '';
-                    if (String(rawNum) === String(studentNum)) {
-                        remove(ref(db, `yeep_activity_submissions/${key}`))
-                            .then(() => alert(`${studentNum} 학생 데이터가 삭제되었습니다.`))
-                            .catch((err) => alert("삭제 실패: " + err.message));
-                    }
+        /* 단원 선택 및 학급 선택 바 */
+        .control-bar { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .unit-selector, .class-selector { display: flex; align-items: center; gap: 10px; }
+        .control-bar label { font-weight: bold; color: #334155; font-size: 0.95rem; }
+        .control-bar select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.95rem; font-weight: bold; }
+
+        /* 40명 학생 그리드 현황판 */
+        .grid-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; color: #1e293b; display: flex; justify-content: space-between; align-items: center; }
+        .student-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; margin-bottom: 30px; }
+        
+        .student-card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 5px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s; position: relative; min-height: 70px; display: flex; flex-direction: column; justify-content: center; }
+        .student-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .student-card.submitted { background: #dcfce7; border-color: #22c55e; }
+        .student-card .num { font-weight: bold; font-size: 0.9rem; color: #334155; }
+        .student-card .status { font-size: 0.75rem; margin-top: 4px; font-weight: bold; }
+        .student-card.submitted .status { color: #15803d; }
+        .student-card.unsubmitted .status { color: #94a3b8; }
+        .student-card .type-badge { font-size: 0.7rem; background: #16a34a; color: white; border-radius: 4px; padding: 2px 4px; margin-top: 3px; display: inline-block; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+
+        /* 주관식 답변 목록 / 발표용 카드 */
+        .table-section-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; color: #1e293b; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px 12px; text-align: left; font-size: 0.92rem; }
+        th { background: #f1f5f9; color: #334155; font-weight: bold; }
+
+        /* 발표 모드 모달 (Modal) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 16px; max-width: 750px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; cursor: pointer; color: #64748b; }
+        .present-card { background: #f8fafc; border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+        .present-header { font-weight: bold; font-size: 1.1rem; color: #1d4ed8; margin-bottom: 10px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; display: flex; justify-content: space-between; }
+        .present-body { font-size: 1.15rem; line-height: 1.6; color: #0f172a; white-space: pre-wrap; word-break: break-all; }
+
+        @media (max-width: 768px) {
+            .student-grid { grid-template-columns: repeat(5, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>📊 실시간 제출 현황판</h1>
+        <div class="btn-group">
+            <button class="btn btn-present" onclick="openPresentModal('all')">🎤 전체 발표 모드</button>
+            <button class="btn btn-excel" onclick="downloadCSV()">📥 Excel(CSV) 다운로드</button>
+            <button class="btn btn-clear" onclick="clearData()">🗑️ 데이터 전체 삭제</button>
+        </div>
+    </div>
+
+    <!-- 단원 선택 및 학급 선택 바 -->
+    <div class="control-bar">
+        <div class="unit-selector">
+            <label for="unitSelect">📘 활동지 선택:</label>
+            <select id="unitSelect" onchange="renderDashboard()">
+                <option value="1단원">1단원 (진로 특성에 맞는 직업 찾기)</option>
+                <option value="2단원" selected>2단원 (창업가 정신의 핵심 역량 찾기)</option>
+                <option value="3단원">3단원 (나의 학습 성격 유형 알아보기)</option>
+            </select>
+        </div>
+        <div class="class-selector">
+            <label for="classSelect">🏫 학급 선택:</label>
+            <select id="classSelect" onchange="renderDashboard()">
+                <option value="1">1반</option>
+                <option value="2">2반</option>
+                <option value="3">3반</option>
+                <option value="4">4반</option>
+                <option value="5">5반</option>
+                <option value="6">6반</option>
+                <option value="7">7반</option>
+                <option value="8">8반</option>
+                <option value="9">9반</option>
+                <option value="10">10반</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 1번~40번 그리드 현황판 -->
+    <div class="grid-title">
+        <span>📌 학급 제출 현황 (1번 ~ 40번 클릭 시 개별 발표)</span>
+        <span id="submitCount" style="font-size: 0.95rem; color: #2563eb;">제출 인원: 0명 / 40명</span>
+    </div>
+    <div class="student-grid" id="studentGrid"></div>
+
+    <!-- 주관식 제출 내역 테이블 -->
+    <div class="table-section-title" id="tableTitle">📝 상세 제출 및 주관식 답변 내역</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">학번</th>
+                <th style="width: 22%;" id="thResult">결과 / 성격 유형</th>
+                <th style="width: 45%;" id="thAnswer">주관식 작성 내용</th>
+                <th style="width: 13%;">제출 시간</th>
+                <th style="width: 10%; text-align: center;">관리</th>
+            </tr>
+        </thead>
+        <tbody id="dataList"></tbody>
+    </table>
+</div>
+
+<!-- 발표 모드 모달 창 -->
+<div class="modal" id="presentModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closePresentModal()">&times;</span>
+        <h2 style="margin-top:0; color:#1d4ed8;" id="modalTitle">🎤 발표 화면</h2>
+        <div id="presentList"></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+      authDomain: "activity3-bcbca.firebaseapp.com",
+      databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+      projectId: "activity3-bcbca",
+      storageBucket: "activity3-bcbca.firebasestorage.app",
+      messagingSenderId: "698284558768",
+      appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.yeepSubmissions = [];
+
+    onValue(ref(db, 'yeep_activity_submissions'), (snapshot) => {
+        const val = snapshot.val();
+        window.yeepSubmissions = [];
+        if (val) {
+            Object.keys(val).forEach(key => {
+                const item = val[key];
+                const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-';
+                
+                const rawNum = item.studentInfo || item.num || item.studentNum || '';
+
+                let abilitiesList = [];
+                if (Array.isArray(item.topAbilities) && item.topAbilities.length > 0) {
+                    abilitiesList = item.topAbilities.map(a => typeof a === 'object' ? a.name || a.title : a);
+                }
+                const topAbilitiesStr = abilitiesList.length > 0 ? abilitiesList.join(', ') : '-';
+
+                let answerText = `[핵심 역량 3가지] ${topAbilitiesStr}\n\n`;
+                answerText += `[꿈과 노력] ${item.futurePlan || item.answer || '-'}`;
+
+                window.yeepSubmissions.push({
+                    key: key, // 데이터베이스 삭제용 키
+                    unit: '2단원',
+                    num: rawNum,
+                    result: item.topGroup || item.result || '창업가 정신',
+                    topAbilities: abilitiesList,
+                    futurePlan: item.futurePlan || '',
+                    answer: answerText,
+                    time: timeStr
+                });
+            });
+        }
+        if (typeof window.renderDashboard === 'function') {
+            window.renderDashboard();
+        }
+    });
+
+    // 특정 학생 개별 삭제 함수
+    window.deleteStudentData = function(studentNum, dbKey) {
+        if (!confirm(`${studentNum}번 학생의 제출 기록을 삭제하시겠습니까?\n삭제 후 해당 학생은 다시 제출할 수 있습니다.`)) return;
+
+        const selectedUnit = document.getElementById('unitSelect').value;
+
+        if (selectedUnit === '2단원') {
+            if (dbKey) {
+                remove(ref(db, `yeep_activity_submissions/${dbKey}`))
+                    .then(() => alert(`${studentNum}번 학생 데이터가 삭제되었습니다.`))
+                    .catch((err) => alert("삭제 실패: " + err.message));
+            }
+        } else {
+            let localData = JSON.parse(localStorage.getItem('career_submissions') || '[]');
+            localData = localData.filter(item => String(item.num) !== String(studentNum));
+            localStorage.setItem('career_submissions', JSON.stringify(localData));
+            alert(`${studentNum}번 학생 데이터가 삭제되었습니다.`);
+            window.renderDashboard();
+        }
+    };
+
+    window.clearYeepData = function() {
+        if (confirm("정말로 2단원의 모든 제출 데이터를 삭제하시겠습니까?")) {
+            remove(ref(db, 'yeep_activity_submissions'))
+                .then(() => alert("2단원 데이터가 성공적으로 삭제되었습니다."))
+                .catch((err) => alert("삭제 실패: " + err.message));
+        }
+    };
+</script>
+
+<script>
+    function parseStudentInfo(numStr) {
+        const cleanStr = String(numStr || '').replace(/[^0-9]/g, '').trim();
+        let studentClass = 0;
+        let studentNo = 0;
+
+        if (cleanStr.length === 5) {
+            studentClass = parseInt(cleanStr.substring(1, 3));
+            studentNo = parseInt(cleanStr.substring(3));
+        } else if (cleanStr.length === 4) {
+            studentClass = parseInt(cleanStr.substring(1, 2));
+            studentNo = parseInt(cleanStr.substring(2));
+        } else if (cleanStr.length === 3) {
+            studentClass = parseInt(cleanStr.substring(0, 1));
+            studentNo = parseInt(cleanStr.substring(1));
+        } else {
+            studentNo = parseInt(cleanStr);
+        }
+
+        return { studentClass, studentNo };
+    }
+
+    function getLocalSubmissions() {
+        return JSON.parse(localStorage.getItem('career_submissions') || '[]');
+    }
+
+    function renderDashboard() {
+        const selectedUnit = document.getElementById('unitSelect').value;
+        const selectedClass = parseInt(document.getElementById('classSelect').value);
+        
+        let allData = [];
+        if (selectedUnit === '2단원') {
+            allData = window.yeepSubmissions || [];
+        } else {
+            allData = getLocalSubmissions();
+        }
+
+        const thResult = document.getElementById('thResult');
+        const thAnswer = document.getElementById('thAnswer');
+        const tableTitle = document.getElementById('tableTitle');
+
+        if (selectedUnit === '1단원') {
+            thResult.innerText = '흥미 유형 / 적성';
+            thAnswer.innerText = '어울리는 직업 탐색 및 작성 이유';
+            tableTitle.innerText = '📝 [1단원] 흥미 유형별 직업 탐색 답변 내역';
+        } else if (selectedUnit === '2단원') {
+            thResult.innerText = '최고 역량군';
+            thAnswer.innerText = '핵심 역량 3가지 및 꿈과 노력 작성 내용';
+            tableTitle.innerText = '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역';
+        } else {
+            thResult.innerText = '학습 성격 유형';
+            thAnswer.innerText = '나의 성격 유형 분석 및 실천 다짐';
+            tableTitle.innerText = '📝 [3단원] 학습 성격 유형 및 실천 다짐 답변 내역';
+        }
+
+        const filteredData = allData.filter(item => {
+            const unitName = item.unit || '1단원';
+            let isMatchUnit = false;
+            if (selectedUnit === '1단원') isMatchUnit = unitName.includes('1단원');
+            else if (selectedUnit === '2단원') isMatchUnit = unitName.includes('2단원');
+            else isMatchUnit = unitName.includes('3단원') || unitName.includes('성격');
+
+            const { studentClass } = parseStudentInfo(item.num);
+            return isMatchUnit && studentClass === selectedClass;
+        });
+
+        const studentMap = {};
+        filteredData.forEach(item => {
+            const { studentNo } = parseStudentInfo(item.num);
+            if (studentNo >= 1 && studentNo <= 40) {
+                studentMap[studentNo] = item;
+            }
+        });
+
+        const gridContainer = document.getElementById('studentGrid');
+        gridContainer.innerHTML = '';
+        let submittedCount = 0;
+
+        for (let i = 1; i <= 40; i++) {
+            const card = document.createElement('div');
+            const data = studentMap[i];
+
+            if (data) {
+                submittedCount++;
+                card.className = 'student-card submitted';
+                const mainResult = (data.result || '').split(' ')[0] || '완료';
+                card.innerHTML = `
+                    <div class="num">${i}번</div>
+                    <div class="status">제출완료</div>
+                    <div class="type-badge" title="${data.result}">${mainResult}</div>
+                `;
+                card.onclick = () => openPresentModal(data);
+            } else {
+                card.className = 'student-card unsubmitted';
+                card.innerHTML = `
+                    <div class="num">${i}번</div>
+                    <div class="status">미제출</div>
+                `;
+                card.onclick = () => alert(`${i}번 학생은 아직 제출하지 않았습니다.`);
+            }
+            gridContainer.appendChild(card);
+        }
+
+        document.getElementById('submitCount').innerText = `제출 인원: ${submittedCount}명 / 40명`;
+
+        const tbody = document.getElementById('dataList');
+        tbody.innerHTML = '';
+
+        if (filteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 25px; color:#94a3b8;">선택하신 학급/단원의 제출 내역이 없습니다.</td></tr>';
+            return;
+        }
+
+        [...filteredData].reverse().forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${item.num}</strong></td>
+                <td>${item.result || '-'}</td>
+                <td style="white-space: pre-wrap;">${item.answer || '-'}</td>
+                <td style="font-size: 0.82rem; color: #64748b;">${item.time || '-'}</td>
+                <td style="text-align: center;">
+                    <button class="btn-delete-sm" onclick="window.deleteStudentData('${item.num}', '${item.key || ''}')">🗑️ 삭제</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openPresentModal(target) {
+        const selectedUnit = document.getElementById('unitSelect').value;
+        const selectedClass = parseInt(document.getElementById('classSelect').value);
+        const modalTitle = document.getElementById('modalTitle');
+        const presentList = document.getElementById('presentList');
+        presentList.innerHTML = '';
+
+        if (target === 'all') {
+            modalTitle.innerText = `🎤 ${selectedClass}반 [${selectedUnit}] 전체 학생 발표 보기`;
+            
+            let allData = [];
+            if (selectedUnit === '2단원') {
+                allData = window.yeepSubmissions || [];
+            } else {
+                allData = getLocalSubmissions();
+            }
+
+            const filteredData = allData.filter(item => {
+                const unitName = item.unit || '1단원';
+                let isMatchUnit = false;
+                if (selectedUnit === '1단원') isMatchUnit = unitName.includes('1단원');
+                else if (selectedUnit === '2단원') isMatchUnit = unitName.includes('2단원');
+                else isMatchUnit = unitName.includes('3단원') || unitName.includes('성격');
+
+                const { studentClass } = parseStudentInfo(item.num);
+                return isMatchUnit && studentClass === selectedClass;
+            });
+
+            if (filteredData.length === 0) {
+                presentList.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:30px;">제출한 학생이 없습니다.</p>';
+            } else {
+                filteredData.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'present-card';
+                    card.innerHTML = `
+                        <div class="present-header">
+                            <span>🎓 학번: ${item.num}</span>
+                            <span>[${item.result || ''}]</span>
+                        </div>
+                        <div class="present-body">💬 ${item.answer || '작성 내용 없음'}</div>
+                    `;
+                    presentList.appendChild(card);
                 });
             }
-        }, { onlyOnce: true });
-    } else {
-        // 1, 3단원 (로컬스토리지) 개별 삭제
-        let localData = getLocalSubmissions();
-        localData = localData.filter(item => String(item.num) !== String(studentNum));
-        localStorage.setItem('career_submissions', JSON.stringify(localData));
-        alert(`${studentNum} 학생 데이터가 삭제되었습니다.`);
-        renderDashboard();
+        } else {
+            modalTitle.innerText = `🎓 ${target.num}번 학생 발표 내용`;
+            const card = document.createElement('div');
+            card.className = 'present-card';
+            card.style.borderWidth = '3px';
+            card.style.borderColor = '#16a34a';
+            card.innerHTML = `
+                <div class="present-header" style="color:#15803d; font-size:1.2rem;">
+                    <span>학번: ${target.num}</span>
+                    <span>최고 역량: ${target.result || '-'}</span>
+                </div>
+                <div class="present-body" style="font-size:1.25rem; padding-top:10px;">
+                    📌 제출 내용:<br><br>${target.answer || '작성 내용이 없습니다.'}
+                </div>
+            `;
+            presentList.appendChild(card);
+        }
+
+        document.getElementById('presentModal').style.display = 'flex';
     }
-};
+
+    function closePresentModal() {
+        document.getElementById('presentModal').style.display = 'none';
+    }
+
+    function downloadCSV() {
+        const selectedUnit = document.getElementById('unitSelect').value;
+        let data = [];
+        if (selectedUnit === '2단원') {
+            data = window.yeepSubmissions || [];
+        } else {
+            data = getLocalSubmissions();
+        }
+
+        if (data.length === 0) return alert("다운로드할 데이터가 없습니다.");
+
+        let csv = "\uFEFF제출단원,학번,결과/유형,주관식답변,제출시간\n";
+        data.forEach(item => {
+            const unitName = item.unit || '1단원';
+            const cleanAnswer = `"${(item.answer || '').replace(/"/g, '""')}"`;
+            const cleanResult = `"${(item.result || '').replace(/"/g, '""')}"`;
+            csv += `"${unitName}","${item.num || ''}",${cleanResult},${cleanAnswer},"${item.time || ''}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `진로활동_통합제출현황_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+    }
+
+    function clearData() {
+        const selectedUnit = document.getElementById('unitSelect').value;
+        if (selectedUnit === '2단원') {
+            if (window.clearYeepData) window.clearYeepData();
+        } else {
+            if (confirm("정말로 학생들의 모든 제출 데이터를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
+                localStorage.removeItem('career_submissions');
+                renderDashboard();
+            }
+        }
+    }
+
+    window.renderDashboard = renderDashboard;
+    window.openPresentModal = openPresentModal;
+    window.closePresentModal = closePresentModal;
+    window.downloadCSV = downloadCSV;
+    window.clearData = clearData;
+
+    renderDashboard();
+</script>
+
+</body>
+</html>
