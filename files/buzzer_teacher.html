@@ -3,56 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>부저 실시간 순위 화면</title>
+  <title>선착순 정답 부저</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: '맑은 고딕', sans-serif;
+      font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
       text-align: center;
-      background-color: #1e272e;
-      color: white;
-      padding: 30px 20px;
+      background-color: #f0f3f8;
+      color: #333;
       margin: 0;
-    }
-    h1 { font-size: 32px; color: #eccc68; margin-bottom: 20px; }
-    .rank-list { max-width: 500px; margin: 20px auto; text-align: left; }
-    .rank-item {
-      background: #485460;
-      padding: 15px 20px;
-      margin-bottom: 12px;
-      border-radius: 12px;
-      font-size: 22px;
+      padding: 20px;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.2s ease;
     }
-    .rank-1 { background: #ff4757; font-weight: bold; font-size: 26px; border: 2px solid #ff6b81; }
-    .reset-btn {
-      padding: 15px 30px;
-      font-size: 18px;
-      font-weight: bold;
-      background-color: #2ed573;
-      color: white;
+    
+    /* 0.8초 동안 2번 강하게 깜빡이는 화면 플래시 효과 */
+    body.flash-active {
+      animation: strongFlash 0.8s ease-in-out;
+    }
+    @keyframes strongFlash {
+      0% { background-color: #f0f3f8; }
+      25% { background-color: #f1c40f; }
+      50% { background-color: #ffffff; }
+      75% { background-color: #f1c40f; }
+      100% { background-color: #f0f3f8; }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      padding: 35px 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+    h2 { margin-top: 0; font-size: 26px; color: #d63031; }
+    input[type="text"] {
+      width: 90%;
+      padding: 14px;
+      font-size: 16px;
+      border: 2px solid #dfe6e9;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+      background-color: #f8f9fa;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: #d63031; background-color: #fff; }
+    
+    .buzzer-wrapper { position: relative; display: inline-block; margin: 10px 0 15px; }
+    .buzzer-btn-img {
+      width: 260px;
+      height: 260px;
       border: none;
-      border-radius: 10px;
+      background: transparent;
       cursor: pointer;
-      margin-top: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      outline: none;
+      padding: 0;
     }
-    .reset-btn:active { transform: scale(0.98); }
+    
+    /* 눌렀을 때 비활성화 스타일 */
+    .buzzer-btn-img:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      filter: grayscale(40%);
+    }
+
+    .buzzer-svg {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.1s ease;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25));
+    }
+    .buzzer-btn-img:active:not(:disabled) .buzzer-svg, .buzzer-svg.pressed {
+      transform: translateY(12px) scale(0.93);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .buzzer-wrapper.glow::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 290px;
+      height: 290px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(241,196,15,0.9) 0%, rgba(214,48,49,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: pulseGlow 0.8s ease-out forwards;
+    }
+    @keyframes pulseGlow {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.8); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+    }
+
+    #status { margin-top: 15px; font-size: 18px; font-weight: bold; min-height: 28px; color: #636e72; }
+    .success-msg { color: #00b894 !important; }
   </style>
 </head>
 <body>
 
-<h1>🚨 선착순 부저 실시간 순위</h1>
-<button class="reset-btn" onclick="resetBuzzer()">🔄 부저 리셋 (다음 문제)</button>
+<div class="container">
+  <h2>🚨 선착순 정답 부저</h2>
+  <input type="text" id="studentInfo" placeholder="학번을 입력하세요 (예: 10305)">
+  
+  <div class="buzzer-wrapper" id="buzzerWrapper">
+    <button class="buzzer-btn-img" id="buzzerBtn" onclick="pressBuzzer()">
+      <svg class="buzzer-svg" id="buzzerSvg" viewBox="0 0 200 200">
+        <path d="M 30,70 L 15,95 L 45,95 L 25,125 L 60,90 L 38,90 Z" fill="#f1c40f" />
+        <path d="M 170,70 L 185,95 L 155,95 L 175,125 L 140,90 L 162,90 Z" fill="#f1c40f" />
+        <ellipse cx="100" cy="140" rx="75" ry="30" fill="#2c3e50" />
+        <rect x="25" y="125" width="150" height="15" fill="#34495e" rx="5" />
+        <ellipse cx="100" cy="115" rx="65" ry="25" fill="#c0392b" />
+        <ellipse cx="100" cy="110" rx="65" ry="25" fill="#e74c3c" />
+        <ellipse cx="100" cy="106" rx="50" ry="18" fill="#ff7675" />
+      </svg>
+    </button>
+  </div>
 
-<div class="rank-list" id="rankList">
-  <p style="text-align:center; font-size:18px; color:#a4b0be;">부저 대기 중...</p>
+  <div id="status">학번을 입력하고 부저를 누르세요!</div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -66,36 +144,53 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
-  const buzzerRef = ref(db, 'buzzer_submissions');
+  let isSubmitting = false;
 
-  onValue(buzzerRef, (snapshot) => {
-    const list = document.getElementById('rankList');
-    list.innerHTML = '';
-    
-    if (!snapshot.exists()) {
-      list.innerHTML = '<p style="text-align:center; font-size:18px; color:#a4b0be;">부저 대기 중...</p>';
+  window.pressBuzzer = function() {
+    if (isSubmitting) return;
+
+    const inputEl = document.getElementById('studentInfo');
+    const btnEl = document.getElementById('buzzerBtn');
+    const info = inputEl.value.trim();
+
+    if (!info) {
+      alert("학번을 먼저 입력해주세요!");
       return;
     }
 
-    const data = [];
-    snapshot.forEach((child) => {
-      data.push(child.val());
+    // 눌림 처리 (중복 클릭 즉시 방지)
+    isSubmitting = true;
+    btnEl.disabled = true;
+    inputEl.disabled = true;
+
+    // 강한 번쩍임 및 빛 애니메이션
+    document.body.classList.add('flash-active');
+    const wrapper = document.getElementById('buzzerWrapper');
+    const svg = document.getElementById('buzzerSvg');
+    
+    svg.classList.add('pressed');
+    wrapper.classList.add('glow');
+
+    // 0.8초 후 깜빡임 애니메이션 클래스 제거
+    setTimeout(() => { 
+      document.body.classList.remove('flash-active'); 
+    }, 800);
+
+    push(ref(db, 'buzzer_submissions'), {
+      name: info,
+      timestamp: serverTimestamp()
+    }).then(() => {
+      const statusEl = document.getElementById('status');
+      statusEl.innerText = "🔔 성공적으로 제출되었습니다! (이미 눌렀음)";
+      statusEl.className = "success-msg";
+    }).catch((err) => {
+      alert("전송 중 오류 발생: " + err.message);
+      // 실패 시 다시 누를 수 있도록 복구
+      isSubmitting = false;
+      btnEl.disabled = false;
+      inputEl.disabled = false;
+      svg.classList.remove('pressed');
     });
-
-    data.sort((a, b) => a.timestamp - b.timestamp);
-
-    data.forEach((item, index) => {
-      const div = document.createElement('div');
-      div.className = `rank-item ${index === 0 ? 'rank-1' : ''}`;
-      div.innerHTML = `<span>🥇 ${index + 1}등: ${item.name}</span>`;
-      list.appendChild(div);
-    });
-  });
-
-  window.resetBuzzer = function() {
-    if (confirm("부저 기록을 초기화하시겠습니까?")) {
-      remove(buzzerRef);
-    }
   };
 </script>
 
