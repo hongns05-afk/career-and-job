@@ -77,7 +77,8 @@
             <label for="unitSelect">📘 활동지 선택:</label>
             <select id="unitSelect" onchange="renderDashboard()">
                 <option value="1단원">1단원 (진로 특성에 맞는 직업 찾기)</option>
-                <option value="3단원" selected>3단원 (나의 학습 성격 유형 알아보기)</option>
+                <option value="2단원" selected>2단원 (창업가 정신의 핵심 역량 찾기)</option>
+                <option value="3단원">3단원 (나의 학습 성격 유형 알아보기)</option>
             </select>
         </div>
         <div class="class-selector">
@@ -128,17 +129,81 @@
     </div>
 </div>
 
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+      authDomain: "activity3-bcbca.firebaseapp.com",
+      databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+      projectId: "activity3-bcbca",
+      storageBucket: "activity3-bcbca.firebasestorage.app",
+      messagingSenderId: "698284558768",
+      appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let yeepSubmissions = [];
+
+    // Firebase 2단원 실시간 수신
+    onValue(ref(db, 'yeep_activity_submissions'), (snapshot) => {
+        const val = snapshot.val();
+        yeepSubmissions = [];
+        if (val) {
+            Object.keys(val).forEach(key => {
+                const item = val[key];
+                const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-';
+                
+                let answerText = '';
+                if (item.entrepreneur) {
+                    answerText += `[추천 창업가] ${item.entrepreneur.name || '-'} (${item.entrepreneur.company || '-'})\n`;
+                    answerText += `명언: "${item.entrepreneur.quote || '-'}"\n\n`;
+                }
+                answerText += `[꿈과 노력] ${item.futurePlan || '-'}`;
+
+                yeepSubmissions.push({
+                    unit: '2단원',
+                    num: item.studentInfo || '',
+                    result: item.topGroup || '창업가 정신',
+                    topAbilities: item.topAbilities || [],
+                    entrepreneur: item.entrepreneur || {},
+                    futurePlan: item.futurePlan || '',
+                    answer: answerText,
+                    time: timeStr
+                });
+            });
+        }
+        window.renderDashboard();
+    });
+
+    window.clearYeepData = function() {
+        if (confirm("정말로 2단원의 모든 제출 데이터를 삭제하시겠습니까?")) {
+            remove(ref(db, 'yeep_activity_submissions'))
+                .then(() => alert("2단원 데이터가 성공적으로 삭제되었습니다."))
+                .catch((err) => alert("삭제 실패: " + err.message));
+        }
+    };
+</script>
+
 <script>
-    function getSubmissions() {
+    function getLocalSubmissions() {
         return JSON.parse(localStorage.getItem('career_submissions') || '[]');
     }
 
     function renderDashboard() {
         const selectedUnit = document.getElementById('unitSelect').value;
         const selectedClass = parseInt(document.getElementById('classSelect').value);
-        const allData = getSubmissions();
+        
+        let allData = [];
+        if (selectedUnit === '2단원') {
+            allData = window.yeepSubmissions || [];
+        } else {
+            allData = getLocalSubmissions();
+        }
 
-        // 단원 선택에 따른 컬럼 제목 변경
         const thResult = document.getElementById('thResult');
         const thAnswer = document.getElementById('thAnswer');
         const tableTitle = document.getElementById('tableTitle');
@@ -147,19 +212,23 @@
             thResult.innerText = '흥미 유형 / 적성';
             thAnswer.innerText = '어울리는 직업 탐색 및 작성 이유';
             tableTitle.innerText = '📝 [1단원] 흥미 유형별 직업 탐색 답변 내역';
+        } else if (selectedUnit === '2단원') {
+            thResult.innerText = '최고 역량군';
+            thAnswer.innerText = '추천 창업가 정보 및 노력할 점';
+            tableTitle.innerText = '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역';
         } else {
             thResult.innerText = '학습 성격 유형';
             thAnswer.innerText = '나의 성격 유형 분석 및 실천 다짐';
             tableTitle.innerText = '📝 [3단원] 학습 성격 유형 및 실천 다짐 답변 내역';
         }
 
-        // 선택 단원 및 선택 학급 데이터 필터링
         const filteredData = allData.filter(item => {
             const unitName = item.unit || '1단원';
-            const isMatchUnit = selectedUnit === '1단원' 
-                ? unitName.includes('1단원') 
-                : (unitName.includes('2단원') || unitName.includes('3단원') || unitName.includes('성격'));
-            
+            let isMatchUnit = false;
+            if (selectedUnit === '1단원') isMatchUnit = unitName.includes('1단원');
+            else if (selectedUnit === '2단원') isMatchUnit = unitName.includes('2단원');
+            else isMatchUnit = unitName.includes('3단원') || unitName.includes('성격');
+
             const numStr = String(item.num || '').trim();
             let studentClass = 0;
             if (numStr.length >= 4) {
@@ -171,7 +240,6 @@
             return isMatchUnit && (studentClass === selectedClass || numStr.startsWith(String(selectedClass)));
         });
 
-        // 학번별 최신 제출 정보 맵
         const studentMap = {};
         filteredData.forEach(item => {
             const numStr = String(item.num || '').trim();
@@ -182,7 +250,6 @@
             }
         });
 
-        // 1. 그리드 렌더링 (1번 ~ 40번)
         const gridContainer = document.getElementById('studentGrid');
         gridContainer.innerHTML = '';
         let submittedCount = 0;
@@ -200,7 +267,6 @@
                     <div class="status">제출완료</div>
                     <div class="type-badge" title="${data.result}">${mainResult}</div>
                 `;
-                // 학생 번호 클릭 시 해당 학생 개별 발표 모달 오픈
                 card.onclick = () => openPresentModal(data);
             } else {
                 card.className = 'student-card unsubmitted';
@@ -215,7 +281,6 @@
 
         document.getElementById('submitCount').innerText = `제출 인원: ${submittedCount}명 / 40명`;
 
-        // 2. 주관식 답변 테이블 렌더링
         const tbody = document.getElementById('dataList');
         tbody.innerHTML = '';
 
@@ -224,7 +289,7 @@
             return;
         }
 
-        filteredData.reverse().forEach(item => {
+        [...filteredData].reverse().forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${item.num}</strong></td>
@@ -236,7 +301,6 @@
         });
     }
 
-    // 발표 모드 열기 (target: 'all'이면 전체 보기, 객체이면 개별 제출 데이터)
     function openPresentModal(target) {
         const selectedUnit = document.getElementById('unitSelect').value;
         const selectedClass = parseInt(document.getElementById('classSelect').value);
@@ -245,16 +309,22 @@
         presentList.innerHTML = '';
 
         if (target === 'all') {
-            // [전체 발표 모드]
             modalTitle.innerText = `🎤 ${selectedClass}반 [${selectedUnit}] 전체 학생 발표 보기`;
             
-            const allData = getSubmissions();
+            let allData = [];
+            if (selectedUnit === '2단원') {
+                allData = window.yeepSubmissions || [];
+            } else {
+                allData = getLocalSubmissions();
+            }
+
             const filteredData = allData.filter(item => {
                 const unitName = item.unit || '1단원';
-                const isMatchUnit = selectedUnit === '1단원' 
-                    ? unitName.includes('1단원') 
-                    : (unitName.includes('2단원') || unitName.includes('3단원') || unitName.includes('성격'));
-                
+                let isMatchUnit = false;
+                if (selectedUnit === '1단원') isMatchUnit = unitName.includes('1단원');
+                else if (selectedUnit === '2단원') isMatchUnit = unitName.includes('2단원');
+                else isMatchUnit = unitName.includes('3단원') || unitName.includes('성격');
+
                 const numStr = String(item.num || '').trim();
                 let studentClass = 0;
                 if (numStr.length >= 4) {
@@ -283,7 +353,6 @@
                 });
             }
         } else {
-            // [개별 번호 클릭 발표 모드]
             modalTitle.innerText = `🎓 ${target.num}번 학생 발표 내용`;
             const card = document.createElement('div');
             card.className = 'present-card';
@@ -309,7 +378,14 @@
     }
 
     function downloadCSV() {
-        const data = getSubmissions();
+        const selectedUnit = document.getElementById('unitSelect').value;
+        let data = [];
+        if (selectedUnit === '2단원') {
+            data = window.yeepSubmissions || [];
+        } else {
+            data = getLocalSubmissions();
+        }
+
         if (data.length === 0) return alert("다운로드할 데이터가 없습니다.");
 
         let csv = "\uFEFF제출단원,학번,결과/유형,주관식답변,제출시간\n";
@@ -328,13 +404,23 @@
     }
 
     function clearData() {
-        if (confirm("정말로 학생들의 모든 제출 데이터를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
-            localStorage.removeItem('career_submissions');
-            renderDashboard();
+        const selectedUnit = document.getElementById('unitSelect').value;
+        if (selectedUnit === '2단원') {
+            if (window.clearYeepData) window.clearYeepData();
+        } else {
+            if (confirm("정말로 학생들의 모든 제출 데이터를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")) {
+                localStorage.removeItem('career_submissions');
+                renderDashboard();
+            }
         }
     }
 
-    // 초기 화면 렌더링
+    window.renderDashboard = renderDashboard;
+    window.openPresentModal = openPresentModal;
+    window.closePresentModal = closePresentModal;
+    window.downloadCSV = downloadCSV;
+    window.clearData = clearData;
+
     renderDashboard();
 </script>
 
