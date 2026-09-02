@@ -111,33 +111,11 @@
     .score-input-wrap { width: 75px; }
     .score-input-wrap input { margin-bottom: 0; text-align: center; font-weight: bold; }
 
-    /* 창업가 가이드 카드 가로 스크롤 */
-    .cards-scroll {
-      display: flex;
-      gap: 15px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-    }
-    .entre-card {
-      min-width: 240px;
-      max-width: 240px;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 14px;
-      font-size: 13px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    }
-    .entre-card h4 { margin: 0 0 6px 0; font-size: 16px; color: #1e3a8a; }
-    .entre-card .tag { display: inline-block; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-bottom: 8px; }
-    .entre-card p { margin: 4px 0; color: #475569; line-height: 1.4; }
-
     /* 추천 창업가 표 */
     .table-input { width: 100%; border-collapse: collapse; margin-top: 10px; }
     .table-input th, .table-input td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
     .table-input th { background: #f1f5f9; width: 30%; font-size: 14px; }
-    .table-input input, .table-input textarea { margin-bottom: 0; }
+    .table-input input { margin-bottom: 0; }
 
     .submit-btn {
       width: 100%;
@@ -233,58 +211,9 @@
       <input type="text" id="topAbility3" placeholder="3순위 역량 (예: 위험 감수 역량)" required>
     </div>
 
-    <!-- 3. 추천 창업가 정리 -->
+    <!-- 3. 추천 창업가 정리 (카드 및 공통점/배울점 삭제 반영) -->
     <div class="section">
       <div class="section-title">3. 추천 창업가 정리</div>
-      
-      <p style="font-size: 13px; color: #475569; margin-top:-5px; margin-bottom:10px;">
-        💡 <strong>어떤 창업가를 적어야 할지 막막하다면?</strong> 아래 카드 옆으로 넘겨보고 마음에 드는 창업가를 참고해 적어보세요!
-      </p>
-
-      <!-- 창업가 정보 참고 카드 -->
-      <div class="cards-scroll">
-        <div class="entre-card">
-          <h4>스티브 잡스</h4>
-          <span class="tag">애플 (Apple)</span>
-          <p>💬 "늘 갈망하고, 우직하게 참아라."</p>
-          <p><strong>공통점:</strong> 새로운 제품에 호기심이 많고 남들과 다른 생각을 즐긴다.</p>
-          <p><strong>배울 점:</strong> 실패해도 다른 기회를 찾아 다시 도전하는 집요함.</p>
-        </div>
-
-        <div class="entre-card">
-          <h4>김슬아</h4>
-          <span class="tag">마켓컬리 (컬리)</span>
-          <p>💬 "불편함을 참지 않고 해결하는 것이 창업이다."</p>
-          <p><strong>공통점:</strong> 평소 생활 속 불편함을 그냥 넘기지 않고 개선하려 한다.</p>
-          <p><strong>배울 점:</strong> 작은 문제도 직접 몸으로 뛰어 해결책을 찾는 실행력.</p>
-        </div>
-
-        <div class="entre-card">
-          <h4>김봉진</h4>
-          <span class="tag">우아한형제들 (배달의민족)</span>
-          <p>💬 "위트와 유머가 세상을 바꾼다."</p>
-          <p><strong>공통점:</strong> 친구들과 함께 재미있고 유쾌한 분위기를 만드는 것을 좋아한다.</p>
-          <p><strong>배울 점:</strong> 자신만의 독창적인 문화와 디자인을 밀고 나가는 자신감.</p>
-        </div>
-
-        <div class="entre-card">
-          <h4>마크 저커버그</h4>
-          <span class="tag">메타 (페이스북)</span>
-          <p>💬 "가장 큰 위험은 아무런 위험도 무릅쓰지 않는 것이다."</p>
-          <p><strong>공통점:</strong> 사람들과 대화하고 연결되는 경험을 중요하게 여긴다.</p>
-          <p><strong>배울 점:</strong> 아이디어가 떠오르면 완벽하지 않아도 일단 만들어보는 속도.</p>
-        </div>
-
-        <div class="entre-card">
-          <h4>제프 베조스</h4>
-          <span class="tag">아마존 (Amazon)</span>
-          <p>💬 "고객의 입장에서 생각하면 답이 보인다."</p>
-          <p><strong>공통점:</strong> 다른 사람의 의견이나 상대방의 입장을 잘 들어주는 편이다.</p>
-          <p><strong>배울 점:</strong> 눈앞의 결과보다 먼 미래를 내다보고 끈기 있게 준비하는 점.</p>
-        </div>
-      </div>
-
-      <!-- 입력 테이블 -->
       <table class="table-input">
         <tr>
           <th>이름</th>
@@ -298,18 +227,10 @@
           <th>명언</th>
           <td><input type="text" id="entrepreneurQuote" placeholder="예: 늘 갈망하고, 우직하게 참아라." required></td>
         </tr>
-        <tr>
-          <th>나와의 공통점</th>
-          <td><textarea id="entrepreneurSame" rows="2" placeholder="위 참고 카드를 보고 나와 비슷하다고 느낀 점을 적어보세요." required></textarea></td>
-        </tr>
-        <tr>
-          <th>배울 점</th>
-          <td><textarea id="entrepreneurLearn" rows="2" placeholder="이 창업가에게 본받고 싶은 태도나 행동을 적어보세요." required></textarea></td>
-        </tr>
       </table>
     </div>
 
-    <!-- 4. 꿈을 이루기 위한 노력 (예시 문구 강화) -->
+    <!-- 4. 꿈을 이루기 위한 노력 -->
     <div class="section">
       <div class="section-title">4. 자신의 꿈을 이루는 데 특히 필요한 핵심 역량과 노력할 점</div>
       <textarea id="futurePlan" rows="4" placeholder="예: 나의 꿈인 웹 디자이너가 되기 위해 부족한 '집단 창의 역량'을 키우고 싶다. 이를 위해 앞으로 모둠 활동을 할 때 내 고집만 피우지 않고 친구들의 의견을 끝까지 경청하고 조율하는 연습을 할 것이다." required></textarea>
@@ -376,9 +297,7 @@
       entrepreneur: {
         name: document.getElementById('entrepreneurName').value.trim(),
         company: document.getElementById('entrepreneurCompany').value.trim(),
-        quote: document.getElementById('entrepreneurQuote').value.trim(),
-        samePoint: document.getElementById('entrepreneurSame').value.trim(),
-        learnPoint: document.getElementById('entrepreneurLearn').value.trim()
+        quote: document.getElementById('entrepreneurQuote').value.trim()
       },
       futurePlan: document.getElementById('futurePlan').value.trim(),
       timestamp: serverTimestamp()
