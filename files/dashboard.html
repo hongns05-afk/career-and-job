@@ -146,27 +146,30 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let yeepSubmissions = [];
+    window.yeepSubmissions = [];
 
     onValue(ref(db, 'yeep_activity_submissions'), (snapshot) => {
         const val = snapshot.val();
-        yeepSubmissions = [];
+        window.yeepSubmissions = [];
         if (val) {
             Object.keys(val).forEach(key => {
                 const item = val[key];
                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-';
                 
+                // 학번 필드 키 호환 처리 (studentInfo, num, studentNum 중 어떤 필드명이든 감지)
+                const rawNum = item.studentInfo || item.num || item.studentNum || '';
+
                 let answerText = '';
                 if (item.entrepreneur) {
                     answerText += `[추천 창업가] ${item.entrepreneur.name || '-'} (${item.entrepreneur.company || '-'})\n`;
                     answerText += `명언: "${item.entrepreneur.quote || '-'}"\n\n`;
                 }
-                answerText += `[꿈과 노력] ${item.futurePlan || '-'}`;
+                answerText += `[꿈과 노력] ${item.futurePlan || item.answer || '-'}`;
 
-                yeepSubmissions.push({
+                window.yeepSubmissions.push({
                     unit: '2단원',
-                    num: item.studentInfo || '',
-                    result: item.topGroup || '창업가 정신',
+                    num: rawNum,
+                    result: item.topGroup || item.result || '창업가 정신',
                     topAbilities: item.topAbilities || [],
                     entrepreneur: item.entrepreneur || {},
                     futurePlan: item.futurePlan || '',
@@ -175,7 +178,9 @@
                 });
             });
         }
-        window.renderDashboard();
+        if (typeof window.renderDashboard === 'function') {
+            window.renderDashboard();
+        }
     });
 
     window.clearYeepData = function() {
@@ -188,22 +193,22 @@
 </script>
 
 <script>
-    // 학번 파싱 유틸리티 함수 (예: 10140 -> 반: 1, 번호: 40)
+    // 학번 파싱 유틸리티 (10140 -> 반: 1, 번호: 40)
     function parseStudentInfo(numStr) {
-        const cleanStr = String(numStr || '').trim();
+        const cleanStr = String(numStr || '').replace(/[^0-9]/g, '').trim();
         let studentClass = 0;
         let studentNo = 0;
 
         if (cleanStr.length === 5) {
-            // 5자리: 예) 10140 -> 1학년 01반 40번
+            // 10140 -> 1학년 01반 40번
             studentClass = parseInt(cleanStr.substring(1, 3));
             studentNo = parseInt(cleanStr.substring(3));
         } else if (cleanStr.length === 4) {
-            // 4자리: 예) 1140 -> 1학년 1반 40번
+            // 1140 -> 1학년 1반 40번
             studentClass = parseInt(cleanStr.substring(1, 2));
             studentNo = parseInt(cleanStr.substring(2));
         } else if (cleanStr.length === 3) {
-            // 3자리: 예) 105 -> 1반 5번
+            // 105 -> 1반 5번
             studentClass = parseInt(cleanStr.substring(0, 1));
             studentNo = parseInt(cleanStr.substring(1));
         } else {
