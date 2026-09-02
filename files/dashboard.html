@@ -120,7 +120,7 @@
     </table>
 </div>
 
-<!-- 발표 모드 모달 창 (개별 & 전체 공용) -->
+<!-- 발표 모드 모달 창 -->
 <div class="modal" id="presentModal">
     <div class="modal-content">
         <span class="modal-close" onclick="closePresentModal()">&times;</span>
@@ -148,7 +148,6 @@
 
     let yeepSubmissions = [];
 
-    // Firebase 2단원 실시간 수신
     onValue(ref(db, 'yeep_activity_submissions'), (snapshot) => {
         const val = snapshot.val();
         yeepSubmissions = [];
@@ -189,6 +188,31 @@
 </script>
 
 <script>
+    // 학번 파싱 유틸리티 함수 (예: 10140 -> 반: 1, 번호: 40)
+    function parseStudentInfo(numStr) {
+        const cleanStr = String(numStr || '').trim();
+        let studentClass = 0;
+        let studentNo = 0;
+
+        if (cleanStr.length === 5) {
+            // 5자리: 예) 10140 -> 1학년 01반 40번
+            studentClass = parseInt(cleanStr.substring(1, 3));
+            studentNo = parseInt(cleanStr.substring(3));
+        } else if (cleanStr.length === 4) {
+            // 4자리: 예) 1140 -> 1학년 1반 40번
+            studentClass = parseInt(cleanStr.substring(1, 2));
+            studentNo = parseInt(cleanStr.substring(2));
+        } else if (cleanStr.length === 3) {
+            // 3자리: 예) 105 -> 1반 5번
+            studentClass = parseInt(cleanStr.substring(0, 1));
+            studentNo = parseInt(cleanStr.substring(1));
+        } else {
+            studentNo = parseInt(cleanStr);
+        }
+
+        return { studentClass, studentNo };
+    }
+
     function getLocalSubmissions() {
         return JSON.parse(localStorage.getItem('career_submissions') || '[]');
     }
@@ -229,22 +253,13 @@
             else if (selectedUnit === '2단원') isMatchUnit = unitName.includes('2단원');
             else isMatchUnit = unitName.includes('3단원') || unitName.includes('성격');
 
-            const numStr = String(item.num || '').trim();
-            let studentClass = 0;
-            if (numStr.length >= 4) {
-                studentClass = parseInt(numStr.substring(1, numStr.length - 2));
-            } else if (numStr.length === 3) {
-                studentClass = parseInt(numStr.substring(0, 1));
-            }
-
-            return isMatchUnit && (studentClass === selectedClass || numStr.startsWith(String(selectedClass)));
+            const { studentClass } = parseStudentInfo(item.num);
+            return isMatchUnit && studentClass === selectedClass;
         });
 
         const studentMap = {};
         filteredData.forEach(item => {
-            const numStr = String(item.num || '').trim();
-            let studentNo = parseInt(numStr.slice(-2));
-            if (isNaN(studentNo)) studentNo = parseInt(numStr);
+            const { studentNo } = parseStudentInfo(item.num);
             if (studentNo >= 1 && studentNo <= 40) {
                 studentMap[studentNo] = item;
             }
@@ -325,15 +340,8 @@
                 else if (selectedUnit === '2단원') isMatchUnit = unitName.includes('2단원');
                 else isMatchUnit = unitName.includes('3단원') || unitName.includes('성격');
 
-                const numStr = String(item.num || '').trim();
-                let studentClass = 0;
-                if (numStr.length >= 4) {
-                    studentClass = parseInt(numStr.substring(1, numStr.length - 2));
-                } else if (numStr.length === 3) {
-                    studentClass = parseInt(numStr.substring(0, 1));
-                }
-
-                return isMatchUnit && (studentClass === selectedClass || numStr.startsWith(String(selectedClass)));
+                const { studentClass } = parseStudentInfo(item.num);
+                return isMatchUnit && studentClass === selectedClass;
             });
 
             if (filteredData.length === 0) {
