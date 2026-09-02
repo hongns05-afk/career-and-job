@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>부저 실시간 순위 화면</title>
+  <style>
+    body {
+      font-family: '맑은 고딕', sans-serif;
+      text-align: center;
+      background-color: #1e272e;
+      color: white;
+      padding: 30px 20px;
+      margin: 0;
+    }
+    h1 { font-size: 32px; color: #eccc68; margin-bottom: 20px; }
+    .rank-list { max-width: 500px; margin: 20px auto; text-align: left; }
+    .rank-item {
+      background: #485460;
+      padding: 15px 20px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      font-size: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rank-1 { background: #ff4757; font-weight: bold; font-size: 26px; border: 2px solid #ff6b81; }
+    .reset-btn {
+      padding: 15px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      background-color: #2ed573;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .reset-btn:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+
+<h1>🚨 선착순 부저 실시간 순위</h1>
+<button class="reset-btn" onclick="resetBuzzer()">🔄 부저 리셋 (다음 문제)</button>
+
+<div class="rank-list" id="rankList">
+  <p style="text-align:center; font-size:18px; color:#a4b0be;">부저 대기 중...</p>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const buzzerRef = ref(db, 'buzzer_submissions');
+
+  onValue(buzzerRef, (snapshot) => {
+    const list = document.getElementById('rankList');
+    list.innerHTML = '';
+    
+    if (!snapshot.exists()) {
+      list.innerHTML = '<p style="text-align:center; font-size:18px; color:#a4b0be;">부저 대기 중...</p>';
+      return;
+    }
+
+    const data = [];
+    snapshot.forEach((child) => {
+      data.push(child.val());
+    });
+
+    data.sort((a, b) => a.timestamp - b.timestamp);
+
+    data.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = `rank-item ${index === 0 ? 'rank-1' : ''}`;
+      div.innerHTML = `<span>🥇 ${index + 1}등: ${item.name}</span>`;
+      list.appendChild(div);
+    });
+  });
+
+  window.resetBuzzer = function() {
+    if (confirm("부저 기록을 초기화하시겠습니까?")) {
+      remove(buzzerRef);
+    }
+  };
+</script>
+
+</body>
+</html>
