@@ -5,98 +5,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>진로와 직업 온라인 활동지</title>
   <style>
-    * { box-sizing: border-box; }
     body {
       font-family: '맑은 고딕', sans-serif;
-      background-color: #f8fafc;
+      background-color: #f8f9fa;
       margin: 0;
-      padding: 20px;
-      color: #334155;
+      padding: 30px 20px;
+      color: #333;
     }
-    .container {
-      max-width: 600px;
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { font-size: 28px; color: #1e293b; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      max-width: 900px;
       margin: 0 auto;
+    }
+    .card {
       background: white;
-      padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-    h1 {
-      font-size: 24px;
-      color: #1e3a8a;
-      text-align: center;
-      margin-top: 0;
-      margin-bottom: 25px;
-    }
-    .unit-box {
-      margin-bottom: 25px;
-    }
-    .unit-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #475569;
-      border-left: 4px solid #2563eb;
-      padding-left: 10px;
-      margin-bottom: 12px;
-    }
-    .activity-card {
-      display: block;
-      background: #f1f5f9;
-      padding: 16px 20px;
-      border-radius: 10px;
-      text-decoration: none;
-      color: #0f172a;
-      font-weight: bold;
-      font-size: 15px;
-      margin-bottom: 10px;
-      transition: all 0.2s;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       border: 1px solid #e2e8f0;
     }
-    .activity-card:hover {
-      background: #2563eb;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+    .card h2 {
+      font-size: 20px;
+      color: #1e3a8a;
+      margin-top: 0;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #3b82f6;
     }
-    .dashboard-link {
-      display: block;
-      text-align: center;
-      margin-top: 30px;
-      padding: 12px;
-      background: #0f172a;
-      color: white;
-      border-radius: 8px;
-      text-decoration: none;
+    .btn {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 14px 18px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
       font-weight: bold;
-      font-size: 14px;
+      color: white;
+      text-decoration: none;
+      box-sizing: border-box;
+      transition: transform 0.1s ease;
     }
+    .btn:active { transform: scale(0.98); }
+    .btn-blue { background-color: #2563eb; }
+    .btn-dark { background-color: #0f172a; }
+    .btn-green { background-color: #059669; }
+    .btn-purple { background-color: #7c3aed; }
   </style>
 </head>
 <body>
 
-<div class="container">
+<div class="header">
   <h1>📚 진로와 직업 온라인 활동지</h1>
+</div>
 
-  <!-- 1단원 -->
-  <div class="unit-box">
-    <div class="unit-title">1단원 : 자아 이해와 사회적 적응</div>
-    <a href="files/activity_learning_style.html" class="activity-card">
-      🧠 학습 성격 유형 알아보기
+<div class="grid">
+  <!-- I 단원 -->
+  <div class="card">
+    <h2>I . 진로와 나의 이해</h2>
+    <a href="files/activity2_unit2.html" class="btn btn-blue">
+      <span>🧩 활동지 3. 진로 특성에 맞는 직업 찾기</span>
+      <span>풀기 ➔</span>
     </a>
   </div>
 
-  <!-- 2단원 (신규 추가) -->
-  <div class="unit-box">
-    <div class="unit-title">2단원 : 직업 세계와 진로 탐색</div>
-    <a href="files/activity_yeep.html" class="activity-card">
-      🚀 창업가 정신의 핵심 역량 찾기 (YEEP 연계)
+  <!-- II 단원 -->
+  <div class="card">
+    <h2>II . 직업 세계와 진로 탐색</h2>
+    <a href="files/activity_yeep.html" class="btn btn-blue">
+      <span>🚀 활동지. 창업가 정신의 핵심 역량 찾기</span>
+      <span>풀기 ➔</span>
     </a>
   </div>
 
-  <!-- 선생님용 대시보드 -->
-  <a href="files/dashboard.html" class="dashboard-link">
-    📊 선생님용 실시간 제출 현황판
-  </a>
+  <!-- III 단원 -->
+  <div class="card">
+    <h2>III . 진로 설계와 실천</h2>
+    <a href="files/activity3.html" class="btn btn-blue">
+      <span>🧠 활동지. 나의 학습 성격 유형 알아보기</span>
+      <span>풀기 ➔</span>
+    </a>
+  </div>
+
+  <!-- IV 단원 (수업 도우미) -->
+  <div class="card">
+    <h2>IV. 기타 (수업 도우미)</h2>
+    <a href="files/dashboard.html" class="btn btn-dark">
+      <span>📊 [선생님용] 실시간 제출 현황판</span>
+      <span>열기 ➔</span>
+    </a>
+    <a href="files/buzzer.html" class="btn btn-green">
+      <span>🔔 [학생용] 실시간 퀴즈 부저</span>
+      <span>열기 ➔</span>
+    </a>
+    <a href="files/buzzer_teacher.html" class="btn btn-purple">
+      <span>🚨 [선생님용] 부저 실시간 순위판</span>
+      <span>열기 ➔</span>
+    </a>
+  </div>
 </div>
 
 </body>
