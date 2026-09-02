@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>진로 활동지 - 1단원/2단원</title>
+  <title>진로 탐색 활동지 (1단원)</title>
   <style>
     * {
       box-sizing: border-box;
@@ -41,7 +41,7 @@
       margin-bottom: 8px;
       color: #444;
     }
-    input[type="text"], textarea, select {
+    input[type="text"], textarea {
       width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
@@ -50,8 +50,58 @@
     }
     textarea {
       resize: vertical;
-      min-height: 120px;
+      min-height: 100px;
     }
+    
+    /* OX 선택 리스트 스타일 */
+    .question-list {
+      margin-bottom: 25px;
+    }
+    .question-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .question-text {
+      font-size: 15px;
+      color: #333;
+      flex: 1;
+      padding-right: 10px;
+    }
+    .ox-options {
+      display: flex;
+      gap: 10px;
+    }
+    .ox-btn {
+      width: 45px;
+      height: 40px;
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .ox-btn.o-btn:hover { background-color: #e8f5e9; border-color: #4caf50; }
+    .ox-btn.x-btn:hover { background-color: #ffebee; border-color: #f44336; }
+    
+    .ox-btn.o-btn.selected {
+      background-color: #e8f5e9;
+      border: 2px solid #2e7d32;
+      color: #2e7d32;
+    }
+    .ox-btn.x-btn.selected {
+      background-color: #ffebee;
+      border: 2px solid #c62828;
+      color: #c62828;
+    }
+
     .submit-btn {
       width: 100%;
       background-color: #4A90E2;
@@ -80,19 +130,55 @@
   </div>
 
   <div class="form-group">
-    <label for="resultText">나의 진로 적성 / 탐색 결과</label>
-    <input type="text" id="resultText" placeholder="예: 컴퓨터 공학 / 기계 공학">
+    <label>나의 진로 흥미 탐색 (OX 표시하기)</label>
+    <div class="question-list">
+      <div class="question-item" data-q="1">
+        <span class="question-text">1. 나는 사람들과 대화하고 돕는 것이 좋다.</span>
+        <div class="ox-options">
+          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
+          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
+        </div>
+      </div>
+      <div class="question-item" data-q="2">
+        <span class="question-text">2. 나는 기계를 다루거나 조립하는 것을 즐긴다.</span>
+        <div class="ox-options">
+          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
+          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
+        </div>
+      </div>
+      <div class="question-item" data-q="3">
+        <span class="question-text">3. 나는 새로운 아이디어를 제안하는 것을 좋아한다.</span>
+        <div class="ox-options">
+          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
+          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
+        </div>
+      </div>
+      <div class="question-item" data-q="4">
+        <span class="question-text">4. 나는 질서 있고 계획적인 일을 선호한다.</span>
+        <div class="ox-options">
+          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
+          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
+        </div>
+      </div>
+      <div class="question-item" data-q="5">
+        <span class="question-text">5. 나는 생각이나 감정을 자유롭게 표현하는 것을 즐긴다.</span>
+        <div class="ox-options">
+          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
+          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="form-group">
-    <label for="answerText">활동 소감 및 주관식 답변</label>
-    <textarea id="answerText" placeholder="활동을 하며 느끼고 배운 점을 자유롭게 적어주세요."></textarea>
+    <label for="answerText">탐색 결과 요약 및 소감 (주관식 답변)</label>
+    <textarea id="answerText" placeholder="OX 탐색 결과를 바탕으로 자신의 진로 흥미 유형과 느낀 점을 자유롭게 적어주세요."></textarea>
   </div>
 
   <button class="submit-btn" id="submitBtn">선생님께 제출하기</button>
 </div>
 
-<!-- Firebase SDK 및 연동 로직 -->
+<!-- Firebase Realtime Database SDK 및 전송 로직 -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -111,10 +197,17 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // 제출 버튼 클릭 이벤트 연결
+  // OX 버튼 선택 함수
+  window.selectOX = function(btn, value) {
+    const parent = btn.closest('.ox-options');
+    parent.querySelectorAll('.ox-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    parent.dataset.selected = value;
+  };
+
+  // 제출 버튼 이벤트
   document.getElementById('submitBtn').addEventListener('click', function() {
     const studentNum = document.getElementById('studentNum').value.trim();
-    const resultText = document.getElementById('resultText').value.trim();
     const answerText = document.getElementById('answerText').value.trim();
 
     if (!studentNum) {
@@ -122,22 +215,32 @@
       return;
     }
 
+    // 선택된 OX 답변 수집
+    const oxResults = [];
+    document.querySelectorAll('.question-item').forEach((item, index) => {
+      const selected = item.querySelector('.ox-options').dataset.selected || "미선택";
+      oxResults.push(`${index + 1}번:${selected}`);
+    });
+
+    const resultSummary = oxResults.join(', ');
+
     const submissionData = {
       num: studentNum,
-      result: resultText || "제출 완료",
+      result: resultSummary, // 예: "1번:O, 2번:X, 3번:O..."
       answer: answerText || "",
-      unit: "1단원", // 대시보드에서 1단원으로 필터링됨
+      unit: "1단원", // 대시보드 1단원 필터링에 연결
       time: new Date().toLocaleString('ko-KR')
     };
 
-    // Firebase에 저장
+    // Firebase 데이터베이스로 전송
     push(ref(db, 'career_submissions'), submissionData)
       .then(() => {
         alert("1단원 활동지가 성공적으로 제출되었습니다!");
-        // 제출 후 입력창 초기화
+        // 초기화
         document.getElementById('studentNum').value = '';
-        document.getElementById('resultText').value = '';
         document.getElementById('answerText').value = '';
+        document.querySelectorAll('.ox-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.ox-options').forEach(o => delete o.dataset.selected);
       })
       .catch((error) => {
         alert("제출 중 오류가 발생했습니다: " + error.message);
