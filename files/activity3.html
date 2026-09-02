@@ -1,0 +1,206 @@
+<<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>활동지 3. 진로 특성에 맞는 직업 찾기</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #f8fafc; color: #334155; line-height: 1.6; }
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 25px; }
+        h2 { color: #1e293b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-top: 0; }
+        
+        /* 학생 정보 입력 (이름 삭제, 학번만 유지) */
+        .student-info { background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .student-info input { padding: 8px 12px; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; width: 120px; }
+        
+        /* 1번 문제 스타일 */
+        .q-title { font-weight: bold; font-size: 1.1rem; color: #0f172a; margin-bottom: 12px; }
+        .guide-box { background: #f1f5f9; padding: 10px 15px; border-radius: 6px; font-size: 0.9rem; color: #475569; margin-bottom: 15px; }
+        .jobs-container { display: flex; flex-wrap: wrap; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; min-height: 60px; margin-bottom: 15px; }
+        
+        /* 직업 카드 및 오답 표시 전용 스타일 */
+        .job-card { background: white; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 20px; cursor: pointer; user-select: none; font-weight: 500; transition: all 0.2s; }
+        .job-card.selected { background: #2563eb; color: white; border-color: #2563eb; font-weight: bold; }
+        .job-card.wrong { background: #fef2f2 !important; color: #dc2626 !important; border-color: #ef4444 !important; font-weight: bold; }
+
+        .types-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+        .type-box { background: white; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 12px; min-height: 100px; }
+        .type-name { font-weight: bold; color: #1e293b; font-size: 0.95rem; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; }
+
+        /* 2번 문제 스타일 */
+        textarea { width: 100%; height: 100px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 0.95rem; resize: vertical; }
+
+        .submit-btn { width: 100%; padding: 16px; background: #2563eb; color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .submit-btn:hover { background: #1d4ed8; }
+        .msg-box { margin-top: 10px; font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>활동지 3. 진로 특성에 맞는 직업 찾기</h2>
+        
+        <!-- 개인정보 최소화를 위해 학번만 수집 -->
+        <div class="student-info">
+            <label for="studentId"><b>학번 (5자리):</b> </label>
+            <input type="text" id="studentId" placeholder="예: 10101" maxlength="5">
+        </div>
+
+        <!-- 1번 문제 -->
+        <div style="margin-bottom: 35px;">
+            <div class="q-title">1. 다음 직업들을 해당하는 흥미 유형 상자에 배치해 보세요.</div>
+            <div class="guide-box">💡 <b>방법:</b> 아래 직업을 터치하여 선택한 후, 이동시키고 싶은 흥미 유형 상자를 터치하세요.</div>
+            
+            <div class="jobs-container" id="jobsList">
+                <div class="job-card" data-job="경찰관">경찰관</div>
+                <div class="job-card" data-job="사서">사서</div>
+                <div class="job-card" data-job="심리학자">심리학자</div>
+                <div class="job-card" data-job="영화감독">영화감독</div>
+                <div class="job-card" data-job="간호사">간호사</div>
+                <div class="job-card" data-job="변호사">변호사</div>
+                <div class="job-card" data-job="건축가">건축가</div>
+                <div class="job-card" data-job="회계사">회계사</div>
+            </div>
+
+            <div class="types-grid">
+                <div class="type-box" data-type="실재형(R)"><div class="type-name">R 실재형 (현장형)</div></div>
+                <div class="type-box" data-type="탐구형(I)"><div class="type-name">I 탐구형 (탐구형)</div></div>
+                <div class="type-box" data-type="예술형(A)"><div class="type-name">A 예술형 (예술형)</div></div>
+                <div class="type-box" data-type="사회형(S)"><div class="type-name">S 사회형 (사회형)</div></div>
+                <div class="type-box" data-type="기업형(E)"><div class="type-name">E 기업형 (진취형)</div></div>
+                <div class="type-box" data-type="관습형(C)"><div class="type-name">C 관습형 (사무형)</div></div>
+            </div>
+        </div>
+
+        <!-- 2번 문제 -->
+        <div style="margin-bottom: 25px;">
+            <div class="q-title">2. 나의 흥미 유형과 적성에 어울리는 직업을 탐색하고, 그 이유를 적어보세요.</div>
+            <textarea id="q2Answer" placeholder="나의 흥미 유형과 관련하여 관심 있는 직업과 이유를 자유롭게 작성하세요."></textarea>
+        </div>
+
+        <button class="submit-btn" onclick="checkAndSubmit()">정답 확인 및 제출하기</button>
+        <div id="msgBox" class="msg-box"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+            authDomain: "activity3-bcbca.firebaseapp.com",
+            databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+            projectId: "activity3-bcbca",
+            storageBucket: "activity3-bcbca.firebasestorage.app",
+            messagingSenderId: "698284558768",
+            appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 1번 문제 정답 데이터셋
+        const correctAnswers = {
+            "실재형(R)": ["경찰관", "건축가"],
+            "탐구형(I)": ["심리학자"],
+            "예술형(A)": ["영화감독"],
+            "사회형(S)": ["간호사"],
+            "기업형(E)": ["변호사"],
+            "관습형(C)": ["사서", "회계사"]
+        };
+
+        let selectedJob = null;
+
+        // 터치 클릭 선택 기능
+        document.querySelectorAll('.job-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.job-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedJob = card;
+            });
+        });
+
+        document.querySelectorAll('.type-box, .jobs-container').forEach(box => {
+            box.addEventListener('click', () => {
+                if (selectedJob) {
+                    box.appendChild(selectedJob);
+                    selectedJob.classList.remove('selected', 'wrong'); // 오답 표시 초기화
+                    selectedJob = null;
+                }
+            });
+        });
+
+        // 채점 및 제출 함수
+        function checkAndSubmit() {
+            const id = document.getElementById('studentId').value.trim();
+            const q2 = document.getElementById('q2Answer').value.trim();
+            const msgBox = document.getElementById('msgBox');
+
+            if (id.length !== 5 || isNaN(id)) {
+                alert('학번 5자리를 숫자만 정확히 입력해 주세요. (예: 10101)');
+                return;
+            }
+
+            // 오답 상태 초기화
+            document.querySelectorAll('.job-card').forEach(c => c.classList.remove('wrong'));
+
+            let isAllCorrect = true;
+            let unplacedCount = document.getElementById('jobsList').querySelectorAll('.job-card').length;
+
+            if (unplacedCount > 0) {
+                alert('아직 상자에 배치하지 않은 직업이 있습니다. 모든 직업을 배치해 주세요.');
+                return;
+            }
+
+            // 1번 문제 채점 진행
+            document.querySelectorAll('.type-box').forEach(box => {
+                const typeName = box.getAttribute('data-type');
+                const correctList = correctAnswers[typeName] || [];
+                const currentJobs = box.querySelectorAll('.job-card');
+
+                currentJobs.forEach(jobCard => {
+                    const jobName = jobCard.getAttribute('data-job');
+                    if (!correctList.includes(jobName)) {
+                        jobCard.classList.add('wrong'); // 틀린 직업 빨간색 표시
+                        isAllCorrect = false;
+                    }
+                });
+            });
+
+            if (!isAllCorrect) {
+                msgBox.style.color = '#dc2626';
+                msgBox.innerText = '❌ 빨간색으로 표시된 오답이 있습니다. 다시 확인 후 배치해 보세요!';
+                return;
+            }
+
+            if (!q2) {
+                alert('1번 문제는 모두 정답입니다! 2번 문제 답안을 작성해 주세요.');
+                msgBox.style.color = '#2563eb';
+                msgBox.innerText = '🎉 1번 문제 정답! 2번 문제 내용을 작성해 주세요.';
+                return;
+            }
+
+            // 1, 2번 모두 통과 시 Firebase 최종 제출
+            const q1Data = {};
+            document.querySelectorAll('.type-box').forEach(box => {
+                const typeName = box.getAttribute('data-type');
+                q1Data[typeName] = Array.from(box.querySelectorAll('.job-card')).map(j => j.getAttribute('data-job'));
+            });
+
+            database.ref('submits/' + id).set({
+                studentId: id,
+                q1Answers: q1Data,
+                q2Answer: q2,
+                submittedAt: new Date().toLocaleTimeString('ko-KR')
+            }).then(() => {
+                msgBox.style.color = '#16a34a';
+                msgBox.innerText = '✅ 모든 문제가 정답입니다. 성공적으로 제출되었습니다!';
+                alert('제출이 완료되었습니다. 수고하셨습니다!');
+            }).catch(err => {
+                alert('제출 오류 발생: ' + err.message);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진로와 직업 온라인 활동지 세트</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px 15px; background: #f8fafc; color: #1e293b; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 1.8rem; color: #0f172a; margin: 0; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .unit-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .unit-title { font-size: 1.2rem; font-weight: bold; color: #0f172a; margin-bottom: 16px; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; }
+        
+        .activity-list { display: flex; flex-direction: column; gap: 10px; }
+        .act-btn { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 10px; font-weight: bold; text-decoration: none; transition: all 0.2s; cursor: pointer; word-break: keep-all; }
+        
+        .act-active { background: #2563eb; color: white; }
+        .act-active:hover { background: #1d4ed8; }
+
+        .act-helper { background: #059669; color: white; }
+        .act-helper:hover { background: #047857; }
+        
+        .act-teacher { background: #0f172a; color: #4ade80; border: 1px solid #1e293b; }
+        .act-teacher:hover { background: #1e293b; }
+
+        .act-disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; text-align: center; justify-content: center; padding: 14px; }
+        
+        .btn-text { font-size: 0.95rem; }
+        .btn-arrow { font-size: 0.9rem; white-space: nowrap; margin-left: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>📚 진로와 직업 온라인 활동지</h1>
+        </div>
+
+        <div class="grid">
+            <!-- 1단원 -->
+            <div class="unit-card">
+                <div class="unit-title">Ⅰ. 진로와 나의 이해</div>
+                <div class="activity-list">
+                    <a href="files/activity3.html" class="act-btn act-active">
+                        <span class="btn-text">🧩 활동지 3. 진로 특성에 맞는 직업 찾기</span>
+                        <span class="btn-arrow">풀기 ➔</span>
+                    </a>
+                    <div class="act-btn act-teacher" onclick="openDashboard()">
+                        <span class="btn-text">📊 [선생님용] 실시간 제출 현황판</span>
+                        <span class="btn-arrow">열기 ➔</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단원 -->
+            <div class="unit-card">
+                <div class="unit-title">Ⅱ. 직업 세계와 진로 탐색</div>
+                <div class="activity-list">
+                    <div class="act-btn act-disabled">준비 중인 활동지입니다</div>
+                </div>
+            </div>
+
+            <!-- 3단원 -->
+            <div class="unit-card">
+                <div class="unit-title">Ⅲ. 진로 설계와 실천</div>
+                <div class="activity-list">
+                    <a href="files/activity_unit2.html" class="act-btn act-active">
+                        <span class="btn-text">🧠 활동지. 나의 학습 성격 유형 알아보기</span>
+                        <span class="btn-arrow">풀기 ➔</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4단원 -->
+            <div class="unit-card">
+                <div class="unit-title">Ⅳ. 기타 (수업 도우미)</div>
+                <div class="activity-list">
+                    <a href="https://buzzin.live" class="act-btn act-helper">
+                        <span class="btn-text">🔔 수업용 실시간 퀴즈 부저 (Buzzin)</span>
+                        <span class="btn-arrow">열기 ➔</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDashboard() {
+            const ADMIN_PASSWORD = "1234"; // 선생님 비밀번호
+            
+            const inputPassword = prompt("선생님 전용 비밀번호를 입력해주세요:");
+            
+            if (inputPassword === null) return;
+            
+            if (inputPassword === ADMIN_PASSWORD) {
+                window.location.href = "files/dashboard.html";
+            } else {
+                alert("비밀번호가 올바르지 않습니다!");
+            }
+        }
+    </script>
+
+</body>
+</html>
