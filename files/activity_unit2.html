@@ -1,251 +1,97 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>진로 탐색 활동지 (1단원)</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
-    }
-    body {
-      background-color: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-    .container {
-      width: 100%;
-      max-width: 700px;
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 25px;
-      font-size: 24px;
-      border-bottom: 2px solid #4A90E2;
-      padding-bottom: 10px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: #444;
-    }
-    input[type="text"], textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 15px;
-    }
-    textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-    
-    /* OX 선택 리스트 스타일 */
-    .question-list {
-      margin-bottom: 25px;
-    }
-    .question-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-    }
-    .question-text {
-      font-size: 15px;
-      color: #333;
-      flex: 1;
-      padding-right: 10px;
-    }
-    .ox-options {
-      display: flex;
-      gap: 10px;
-    }
-    .ox-btn {
-      width: 45px;
-      height: 40px;
-      border: 1px solid #ccc;
-      background: #fff;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-    .ox-btn.o-btn:hover { background-color: #e8f5e9; border-color: #4caf50; }
-    .ox-btn.x-btn:hover { background-color: #ffebee; border-color: #f44336; }
-    
-    .ox-btn.o-btn.selected {
-      background-color: #e8f5e9;
-      border: 2px solid #2e7d32;
-      color: #2e7d32;
-    }
-    .ox-btn.x-btn.selected {
-      background-color: #ffebee;
-      border: 2px solid #c62828;
-      color: #c62828;
-    }
-
-    .submit-btn {
-      width: 100%;
-      background-color: #4A90E2;
-      color: white;
-      border: none;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .submit-btn:hover {
-      background-color: #357ABD;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선생님용 통합 제출 현황판</title>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; padding: 20px; background: #f8fafc; color: #1e293b; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { font-size: 1.5rem; margin: 0; }
+        .btn { padding: 10px 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-excel { background: #16a34a; color: white; }
+        .btn-clear { background: #ef4444; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; font-size: 0.95rem; }
+        th { background: #f1f5f9; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; background: #e0f2fe; color: #0369a1; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>📋 진로 탐색 활동지 (1단원)</h1>
-  
-  <div class="form-group">
-    <label for="studentNum">학번 및 이름</label>
-    <input type="text" id="studentNum" placeholder="예: 10101 홍길동">
-  </div>
-
-  <div class="form-group">
-    <label>나의 진로 흥미 탐색 (OX 표시하기)</label>
-    <div class="question-list">
-      <div class="question-item" data-q="1">
-        <span class="question-text">1. 나는 사람들과 대화하고 돕는 것이 좋다.</span>
-        <div class="ox-options">
-          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
-          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
+    <div class="header">
+        <h1>📊 통합 제출 현황판</h1>
+        <div>
+            <button class="btn btn-excel" onclick="downloadCSV()">📥 Excel(CSV) 다운로드</button>
+            <button class="btn btn-clear" onclick="clearData()">🗑️ 데이터 초기화</button>
         </div>
-      </div>
-      <div class="question-item" data-q="2">
-        <span class="question-text">2. 나는 기계를 다루거나 조립하는 것을 즐긴다.</span>
-        <div class="ox-options">
-          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
-          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
-        </div>
-      </div>
-      <div class="question-item" data-q="3">
-        <span class="question-text">3. 나는 새로운 아이디어를 제안하는 것을 좋아한다.</span>
-        <div class="ox-options">
-          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
-          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
-        </div>
-      </div>
-      <div class="question-item" data-q="4">
-        <span class="question-text">4. 나는 질서 있고 계획적인 일을 선호한다.</span>
-        <div class="ox-options">
-          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
-          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
-        </div>
-      </div>
-      <div class="question-item" data-q="5">
-        <span class="question-text">5. 나는 생각이나 감정을 자유롭게 표현하는 것을 즐긴다.</span>
-        <div class="ox-options">
-          <button class="ox-btn o-btn" onclick="selectOX(this, 'O')">O ✔</button>
-          <button class="ox-btn x-btn" onclick="selectOX(this, 'X')">O ❌</button>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label for="answerText">탐색 결과 요약 및 소감 (주관식 답변)</label>
-    <textarea id="answerText" placeholder="OX 탐색 결과를 바탕으로 자신의 진로 흥미 유형과 느낀 점을 자유롭게 적어주세요."></textarea>
-  </div>
-
-  <button class="submit-btn" id="submitBtn">선생님께 제출하기</button>
+    <table>
+        <thead>
+            <tr>
+                <th>제출 단원</th>
+                <th>학번</th>
+                <th>성격 유형 / 결과</th>
+                <th>주관식 작성 내용</th>
+                <th>제출 시간</th>
+            </tr>
+        </thead>
+        <tbody id="dataList"></tbody>
+    </table>
 </div>
 
-<!-- Firebase Realtime Database SDK 및 전송 로직 -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<script>
+    function loadData() {
+        const data = JSON.parse(localStorage.getItem('career_submissions') || '[]');
+        const tbody = document.getElementById('dataList');
+        tbody.innerHTML = '';
 
-  // activity3의 Firebase 설정 사용
-  const firebaseConfig = {
-    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
-    authDomain: "activity3-bcbca.firebaseapp.com",
-    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
-    projectId: "activity3-bcbca",
-    storageBucket: "activity3-bcbca.firebasestorage.app",
-    messagingSenderId: "698284558768",
-    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
-  };
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #94a3b8;">제출된 데이터가 없습니다.</td></tr>';
+            return;
+        }
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  // OX 버튼 선택 함수
-  window.selectOX = function(btn, value) {
-    const parent = btn.closest('.ox-options');
-    parent.querySelectorAll('.ox-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    parent.dataset.selected = value;
-  };
-
-  // 제출 버튼 이벤트
-  document.getElementById('submitBtn').addEventListener('click', function() {
-    const studentNum = document.getElementById('studentNum').value.trim();
-    const answerText = document.getElementById('answerText').value.trim();
-
-    if (!studentNum) {
-      alert("학번과 이름을 입력해 주세요.");
-      return;
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="badge">${item.unit || '1단원'}</span></td>
+                <td>${item.num}</td>
+                <td>${item.result || '-'}</td>
+                <td>${item.answer}</td>
+                <td>${item.time}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
-    // 선택된 OX 답변 수집
-    const oxResults = [];
-    document.querySelectorAll('.question-item').forEach((item, index) => {
-      const selected = item.querySelector('.ox-options').dataset.selected || "미선택";
-      oxResults.push(`${index + 1}번:${selected}`);
-    });
+    function downloadCSV() {
+        const data = JSON.parse(localStorage.getItem('career_submissions') || '[]');
+        if (data.length === 0) return alert("다운로드할 데이터가 없습니다.");
 
-    const resultSummary = oxResults.join(', ');
+        let csv = "\uFEFF단원,학번,결과/유형,주관식답변,제출시간\n";
+        data.forEach(item => {
+            const cleanAnswer = `"${(item.answer || '').replace(/"/g, '""')}"`;
+            csv += `"${item.unit || '1단원'}","${item.num}","${item.result || '-'}",${cleanAnswer},"${item.time}"\n`;
+        });
 
-    const submissionData = {
-      num: studentNum,
-      result: resultSummary, // 예: "1번:O, 2번:X, 3번:O..."
-      answer: answerText || "",
-      unit: "1단원", // 대시보드 1단원 필터링에 연결
-      time: new Date().toLocaleString('ko-KR')
-    };
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.append ? document.createElement('a') : document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `진로활동_제출현황_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+    }
 
-    // Firebase 데이터베이스로 전송
-    push(ref(db, 'career_submissions'), submissionData)
-      .then(() => {
-        alert("1단원 활동지가 성공적으로 제출되었습니다!");
-        // 초기화
-        document.getElementById('studentNum').value = '';
-        document.getElementById('answerText').value = '';
-        document.querySelectorAll('.ox-btn').forEach(b => b.classList.remove('selected'));
-        document.querySelectorAll('.ox-options').forEach(o => delete o.dataset.selected);
-      })
-      .catch((error) => {
-        alert("제출 중 오류가 발생했습니다: " + error.message);
-      });
-  });
+    function clearData() {
+        if (confirm("정말로 모든 제출 데이터를 삭제하시겠습니까?")) {
+            localStorage.removeItem('career_submissions');
+            loadData();
+        }
+    }
+
+    loadData();
 </script>
 
 </body>
