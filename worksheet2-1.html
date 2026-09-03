@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>워크시트 2-2</title>
+    <title>워크시트 2-1</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
         body { background-color: #f4f7fb; color: #1e293b; padding: 20px; display: flex; justify-content: center; }
@@ -31,7 +31,7 @@
 <body>
 
 <div class="container">
-    <h1>활동지 2-2</h1>
+    <h1>활동지 2-1</h1>
 
     <div class="student-info">
         <label for="student-id">학번</label>
@@ -75,8 +75,8 @@
         btn.disabled = true;
         btn.innerText = '확인 중...';
 
-        // 이미 제출된 학번이 있는지 검사
-        db.ref('worksheet2_2_submissions')
+        // 이미 제출된 학번이 있는지 검사 (worksheet2_1_submissions 경로)
+        db.ref('worksheet2_1_submissions')
           .orderByChild('studentId')
           .equalTo(studentId)
           .once('value')
@@ -86,9 +86,9 @@
                   btn.innerText = '제출하기';
                   alert('이미 제출된 학번입니다. 수정이 필요하면 선생님께 문의해 주세요.');
               } else {
-                  // 제출 기록이 없으면 저장 진행
+                  // 중복이 없으면 제출 처리
                   btn.innerText = '제출 중...';
-                  db.ref('worksheet2_2_submissions').push({
+                  db.ref('worksheet2_1_submissions').push({
                       studentId: studentId,
                       content: content,
                       submittedAt: new Date().toLocaleString('ko-KR')
