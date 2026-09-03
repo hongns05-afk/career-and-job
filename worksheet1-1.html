@@ -11,7 +11,7 @@
         
         h1 { font-size: 1.5rem; margin-bottom: 20px; color: #1e3a8a; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
         
-        /* 학번/이름 입력 영역 */
+        /* 학번 입력 영역 */
         .student-info { margin-bottom: 24px; background: #e0f2fe; padding: 14px 18px; border-radius: 10px; display: flex; align-items: center; gap: 12px; }
         .student-info label { font-weight: bold; color: #0369a1; }
         .student-info input { padding: 8px 12px; font-size: 1rem; border: 1px solid #7dd3fc; border-radius: 6px; width: 180px; outline: none; }
@@ -107,20 +107,21 @@
     <button class="submit-btn" onclick="submitWorksheet()">제출하기</button>
 </div>
 
-<!-- Firebase Realtime Database 라이브러리 추가 -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<!-- Firebase 호환 SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    // Firebase 설정
+<script>
+    // Firebase 초기화
     const firebaseConfig = {
-        databaseURL: "https://career-and-job-default-rtdb.firebaseio.com" // 사용 중이신 DB URL
+        databaseURL: "https://career-and-job-default-rtdb.firebaseio.com"
     };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // 홀랜드 분류 정답 정의
+    // 홀랜드 분류 정답
     const correctAnswers = {
         "R": ["운동 선수"],
         "I": ["로봇 연구원", "물리학자", "생물학자"],
@@ -132,13 +133,13 @@
 
     let selectedWordElem = null;
 
-    window.selectWord = function(elem) {
+    function selectWord(elem) {
         if(selectedWordElem) selectedWordElem.classList.remove('selected');
         selectedWordElem = elem;
         elem.classList.add('selected');
-    };
+    }
 
-    window.placeWord = function(cardElem) {
+    function placeWord(cardElem) {
         if(!selectedWordElem) return;
         const placedContainer = cardElem.querySelector('.placed-words');
         
@@ -154,7 +155,7 @@
         selectedWordElem.style.display = 'none';
         selectedWordElem.classList.remove('selected');
         selectedWordElem = null;
-    };
+    }
 
     function returnToBox(tagElem, text) {
         const words = document.querySelectorAll('.word-card');
@@ -164,8 +165,7 @@
         tagElem.remove();
     }
 
-    // 제출 및 검증 함수
-    window.submitWorksheet = function() {
+    function submitWorksheet() {
         const studentId = document.getElementById('student-id').value.trim();
         const jobTitle = document.getElementById('job-title').value.trim();
         const jobDesc = document.getElementById('job-desc').value.trim();
@@ -192,23 +192,22 @@
         });
 
         if(totalPlaced < 15) {
-            alert('1번 보기의 카드를 모두 카테고리에 배치해야 제출할 수 있습니다.');
+            alert('1번 보기의 15개 카드를 모두 카테고리에 맞춰 배치해야 합니다.');
             return;
         }
 
         if(!isCorrect) {
-            alert('1번 홀랜드 흥미 유형 분류가 올바르지 않습니다. 다시 확인해 보세요!');
+            alert('1번 홀랜드 흥미 유형 분류가 올바르지 않습니다. 다시 생각해보세요!');
             return;
         }
 
         if(!jobTitle || !jobDesc) {
-            alert('2번 주관식 답란(관심 직업 및 진로 특성)을 입력해주세요.');
+            alert('2번 주관식 답란을 모두 입력해주세요.');
             return;
         }
 
-        // 1단원 전용 Firebase 경로로 전송
-        const submissionRef = ref(db, 'holland_activity_submissions');
-        push(submissionRef, {
+        // 1단원 전용 경로 저장
+        db.ref('holland_activity_submissions').push({
             studentId: studentId,
             jobTitle: jobTitle,
             jobDesc: jobDesc,
@@ -219,7 +218,7 @@
         }).catch(err => {
             alert('제출 실패: ' + err.message);
         });
-    };
+    }
 </script>
 
 </body>
