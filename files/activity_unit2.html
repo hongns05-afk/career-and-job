@@ -56,9 +56,9 @@
 <div class="container">
     <h1>진로 활동 2. 나의 학습 성격 유형 알아보기</h1>
 
-    <!-- 학번 입력 (이름 항목 제거됨) -->
+    <!-- 학번 입력 -->
     <div class="student-info">
-        <input type="text" id="studentNum" placeholder="학번 (예: 10101)" oninput="checkFormCompletion()">
+        <input type="text" id="studentNum" placeholder="학번 (예: 10101)">
     </div>
 
     <!-- 1번 문항 -->
@@ -124,13 +124,29 @@
 
     <!-- 3번 주관식 -->
     <div class="section-title">3. 나의 학습 성격 유형에 알맞은 효과적인 학습 행동 목표를 적어 보자. (교과서 134쪽 참고)</div>
-    <textarea id="actionPlan" placeholder="위의 성격 유형 특징 및 학습 전략을 참고하여 학습 행동 목표를 작성하세요." oninput="checkFormCompletion()"></textarea>
+    <textarea id="actionPlan" placeholder="위의 성격 유형 특징 및 학습 전략을 참고하여 학습 행동 목표를 작성하세요."></textarea>
 
     <!-- 제출 버튼 -->
-    <button id="submitBtn" class="submit-btn" disabled onclick="submitData()">모든 항목을 입력해야 제출할 수 있습니다</button>
+    <button id="submitBtn" class="submit-btn" disabled>모든 항목을 입력해야 제출할 수 있습니다</button>
 </div>
 
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+      authDomain: "activity3-bcbca.firebaseapp.com",
+      databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+      projectId: "activity3-bcbca",
+      storageBucket: "activity3-bcbca.firebasestorage.app",
+      messagingSenderId: "698284558768",
+      appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
     const questions = [
         "연극이나 역할 놀이를 통해 학습하는 것을 좋아한다.", "학교에서 하는 수업 방식이 내게 맞는 것 같다.", "사물이나 어떤 일에 대해서 따지기 좋아한다.", "친구가 나에게 잘못했더라도 쉽게 용서해 준다.",
         "스스로 공부하는 분위기를 좋아한다.", "수업 시간에 노트 정리를 꼼꼼히 한다.", "친구들과 어울리기보다 혼자서 생각하거나 공부하는 게 더 좋다.", "동화책을 읽을 때, 내가 주인공이 된다.",
@@ -195,12 +211,18 @@
             <td>${idx + 1}</td>
             <td class="q-text">${q}</td>
             <td>
-                <button class="ox-btn" id="btn-o-${idx}" onclick="selectOX(${idx}, 'O')">O</button>
-                <button class="ox-btn" id="btn-x-${idx}" onclick="selectOX(${idx}, 'X')">X</button>
+                <button type="button" class="ox-btn" id="btn-o-${idx}">O</button>
+                <button type="button" class="ox-btn" id="btn-x-${idx}">X</button>
             </td>
         `;
         tbody.appendChild(tr);
+
+        document.getElementById(`btn-o-${idx}`).addEventListener('click', () => selectOX(idx, 'O'));
+        document.getElementById(`btn-x-${idx}`).addEventListener('click', () => selectOX(idx, 'X'));
     });
+
+    document.getElementById('studentNum').addEventListener('input', checkFormCompletion);
+    document.getElementById('actionPlan').addEventListener('input', checkFormCompletion);
 
     function selectOX(idx, value) {
         userAnswers[idx] = value;
@@ -285,7 +307,9 @@
         }
     }
 
-    function submitData() {
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        if(this.disabled) return;
+
         const num = document.getElementById('studentNum').value.trim();
         const plan = document.getElementById('actionPlan').value.trim();
 
@@ -302,21 +326,22 @@
         ];
         scores.sort((a, b) => b.score - a.score);
 
-        const submission = {
-            unit: "2단원 (학습 성격 유형)",
-            num: num,
-            result: `${scores[0].type} (행동:${action}, 규범:${rules}, 탐구:${explore}, 이상:${ideal})`,
+        const resultSummary = `${scores[0].type} (행동:${action}, 규범:${rules}, 탐구:${explore}, 이상:${ideal})`;
+
+        const newRef = push(ref(db, 'yeep_activity_submissions'));
+        set(newRef, {
+            unit: '3단원',
+            studentInfo: num,
+            result: resultSummary,
             answer: plan,
-            time: new Date().toLocaleString()
-        };
-
-        let existingData = JSON.parse(localStorage.getItem('career_submissions') || '[]');
-        existingData.push(submission);
-        localStorage.setItem('career_submissions', JSON.stringify(existingData));
-
-        alert("제출이 성공적으로 완료되었습니다!");
-        window.location.href = "../index.html";
-    }
+            timestamp: Date.now()
+        }).then(() => {
+            alert("제출이 성공적으로 완료되었습니다!");
+            window.location.href = "../index.html";
+        }).catch((err) => {
+            alert("제출 실패: " + err.message);
+        });
+    });
 </script>
 
 </body>
