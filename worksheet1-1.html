@@ -164,40 +164,41 @@
         if(!jobTitle || !jobDesc) { alert('2번 답란을 모두 입력해주세요.'); return; }
 
         btn.disabled = true;
-        btn.innerText = '제출 중...';
+        btn.innerText = '확인 중...';
 
-        // 3초 타임아웃 처리
-        let isHandled = false;
-        const timeoutTimer = setTimeout(() => {
-            if (!isHandled) {
-                isHandled = true;
-                btn.disabled = false;
-                btn.innerText = '제출하기';
-                alert('Firebase 규칙 오류: 콘솔에서 .write 권한을 true로 설정했는지 확인해주세요.');
-            }
-        }, 3000);
-
-        db.ref('holland_activity_submissions').push({
-            studentId: studentId,
-            jobTitle: jobTitle,
-            jobDesc: jobDesc,
-            submittedAt: new Date().toLocaleString('ko-KR')
-        }).then(() => {
-            if (!isHandled) {
-                isHandled = true;
-                clearTimeout(timeoutTimer);
-                alert('정답입니다! 성공적으로 제출되었습니다.');
-                location.href = 'index.html';
-            }
-        }).catch(err => {
-            if (!isHandled) {
-                isHandled = true;
-                clearTimeout(timeoutTimer);
-                btn.disabled = false;
-                btn.innerText = '제출하기';
-                alert('제출 에러: ' + err.message);
-            }
-        });
+        // 이미 제출된 학번인지 검사
+        db.ref('holland_activity_submissions')
+          .orderByChild('studentId')
+          .equalTo(studentId)
+          .once('value')
+          .then(snapshot => {
+              if (snapshot.exists()) {
+                  btn.disabled = false;
+                  btn.innerText = '제출하기';
+                  alert('이미 제출된 학번입니다. 수정이 필요하면 선생님께 문의해 주세요.');
+              } else {
+                  // 중복이 없을 때만 제출
+                  btn.innerText = '제출 중...';
+                  db.ref('holland_activity_submissions').push({
+                      studentId: studentId,
+                      jobTitle: jobTitle,
+                      jobDesc: jobDesc,
+                      submittedAt: new Date().toLocaleString('ko-KR')
+                  }).then(() => {
+                      alert('정답입니다! 성공적으로 제출되었습니다.');
+                      location.href = 'index.html';
+                  }).catch(err => {
+                      btn.disabled = false;
+                      btn.innerText = '제출하기';
+                      alert('제출 에러: ' + err.message);
+                  });
+              }
+          })
+          .catch(err => {
+              btn.disabled = false;
+              btn.innerText = '제출하기';
+              alert('조회 오류: ' + err.message);
+          });
     }
 </script>
 
