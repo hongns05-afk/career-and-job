@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진로 활동 2. 나의 학습 성격 유형 알아보기</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 20px 15px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.5rem; color: #0f172a; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-top: 0; }
+        
+        .student-info { display: flex; gap: 15px; margin-bottom: 25px; background: #f1f5f9; padding: 15px; border-radius: 10px; }
+        .student-info input { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; width: 100%; }
+        
+        .section-title { font-size: 1.1rem; font-weight: bold; margin: 25px 0 15px 0; color: #1d4ed8; }
+        
+        /* O, X 테이블 */
+        .q-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .q-table th, .q-table td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: center; }
+        .q-table th { background: #f8fafc; font-weight: bold; }
+        .q-text { text-align: left !important; }
+        
+        .ox-btn { padding: 6px 16px; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 0 2px; }
+        .ox-btn.active-o { background: #22c55e; color: white; border-color: #16a34a; }
+        .ox-btn.active-x { background: #ef4444; color: white; border-color: #dc2626; }
+
+        /* 2번 합계 테이블 */
+        .result-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .result-table th, .result-table td { border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-size: 0.9rem; }
+        .type-action { background: #eff6ff; font-weight: bold; color: #1d4ed8; }
+        .type-rules { background: #fefce8; font-weight: bold; color: #a16207; }
+        .type-explore { background: #f0fdf4; font-weight: bold; color: #15803d; }
+        .type-ideal { background: #fff1f2; font-weight: bold; color: #be123c; }
+
+        .final-result { background: #e0f2fe; padding: 15px; border-radius: 10px; text-align: center; font-size: 1.2rem; font-weight: bold; color: #0369a1; margin-bottom: 20px; }
+
+        /* 유형별 특징 상세 설명 카드 */
+        .type-detail-card { display: none; border-radius: 12px; padding: 20px; margin-bottom: 25px; border: 2px solid #cbd5e1; background: #fafafa; }
+        .type-detail-card h3 { margin-top: 0; font-size: 1.2rem; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+        .detail-box { background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .detail-box h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #2563eb; }
+        .detail-box ul { margin: 0; padding-left: 18px; font-size: 0.88rem; color: #334155; }
+        .detail-box li { margin-bottom: 4px; }
+
+        textarea { width: 100%; height: 110px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; resize: vertical; }
+
+        .submit-btn { width: 100%; padding: 15px; background: #cbd5e1; color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: not-allowed; transition: all 0.3s; margin-top: 20px; }
+        .submit-btn.active { background: #2563eb; cursor: pointer; }
+        .submit-btn.active:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>진로 활동 2. 나의 학습 성격 유형 알아보기</h1>
+
+    <!-- 학번 입력 -->
+    <div class="student-info">
+        <input type="text" id="studentNum" placeholder="학번 (예: 10101)">
+    </div>
+
+    <!-- 1번 문항 -->
+    <div class="section-title">1. 다음에 제시된 항목을 읽고 나의 생각과 같거나 비슷하면 O, 다르거나 차이가 있으면 X를 표시해 보자.</div>
+    <table class="q-table">
+        <thead>
+            <tr><th style="width: 10%;">번호</th><th>검사 항목</th><th style="width: 25%;">O / X</th></tr>
+        </thead>
+        <tbody id="qTableBody"></tbody>
+    </table>
+
+    <!-- 2번 결과 계산 -->
+    <div class="section-title">2. 1에서 표시한 번호에 표시하고, 그 개수의 합계를 적어 보자.</div>
+    <table class="result-table">
+        <tr class="type-action">
+            <td>1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49</td>
+            <td>행동형</td>
+            <td id="score-action">0개</td>
+        </tr>
+        <tr class="type-rules">
+            <td>2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50</td>
+            <td>규범형</td>
+            <td id="score-rules">0개</td>
+        </tr>
+        <tr class="type-explore">
+            <td>3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51</td>
+            <td>탐구형</td>
+            <td id="score-explore">0개</td>
+        </tr>
+        <tr class="type-ideal">
+            <td>4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52</td>
+            <td>이상형</td>
+            <td id="score-ideal">0개</td>
+        </tr>
+    </table>
+
+    <div class="final-result" id="finalTypeDisplay">
+        나의 학습 성격 유형: <span style="color: #64748b;">O/X 검사를 진행해 주세요</span>
+    </div>
+
+    <!-- 유형별 맞춤 특징 안내 카드 -->
+    <div id="typeDetailCard" class="type-detail-card">
+        <h3 id="cardTitle">💡 나의 학습 성격 유형별 특징</h3>
+        <div class="detail-grid">
+            <div class="detail-box">
+                <h4>📌 특징</h4>
+                <ul id="listTrait"></ul>
+            </div>
+            <div class="detail-box">
+                <h4>📚 학습 전략</h4>
+                <ul id="listStrategy"></ul>
+            </div>
+            <div class="detail-box">
+                <h4>🎯 자기 관리법</h4>
+                <ul id="listManagement"></ul>
+            </div>
+            <div class="detail-box">
+                <h4>⚠️ 보완해야 할 점</h4>
+                <ul id="listImprovement"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3번 주관식 -->
+    <div class="section-title">3. 나의 학습 성격 유형에 알맞은 효과적인 학습 행동 목표를 적어 보자. (교과서 134쪽 참고)</div>
+    <textarea id="actionPlan" placeholder="위의 성격 유형 특징 및 학습 전략을 참고하여 학습 행동 목표를 작성하세요."></textarea>
+
+    <!-- 제출 버튼 -->
+    <button id="submitBtn" class="submit-btn" disabled>모든 항목을 입력해야 제출할 수 있습니다</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+      authDomain: "activity3-bcbca.firebaseapp.com",
+      databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+      projectId: "activity3-bcbca",
+      storageBucket: "activity3-bcbca.firebasestorage.app",
+      messagingSenderId: "698284558768",
+      appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const questions = [
+        "연극이나 역할 놀이를 통해 학습하는 것을 좋아한다.", "학교에서 하는 수업 방식이 내게 맞는 것 같다.", "사물이나 어떤 일에 대해서 따지기 좋아한다.", "친구가 나에게 잘못했더라도 쉽게 용서해 준다.",
+        "스스로 공부하는 분위기를 좋아한다.", "수업 시간에 노트 정리를 꼼꼼히 한다.", "친구들과 어울리기보다 혼자서 생각하거나 공부하는 게 더 좋다.", "동화책을 읽을 때, 내가 주인공이 된다.",
+        "책으로 공부하는 것보다 체험 학습이나 현장 학습을 좋아한다.", "공부할 때는 미리 계획을 세워서 하는 것이 좋다.", "남들 보기에 별로 중요해 보이지 않는 것에도 깊이 파고든다.", "감정 표현이 풍부하다.",
+        "활동적인 특별 활동이나 스포츠에 관심이 많다.", "등교 시간이나 학원 시간에 늦지 않는다.", "한번 집중하면 옆에서 무슨 일이 일어나는지 모른다.", "이것저것 생각은 많으나 실제 행동으로 옮기는 것이 적다.",
+        "짧은 시간에 집중적으로 공부하는 것을 좋아한다.", "토론 수업을 통해 배우는 것보다 선생님이 직접 가르쳐 주는 수업이 더 좋다.", "잘난 척하는 것처럼 보여서 오해받을 때가 있다.", "칭찬받거나 꾸지람을 들으면 기분이 쉽게 좋아지거나 나빠진다.",
+        "활동적이다.", "공공질서를 잘 지킨다.", "여러 가지 다양한 것에 대해 아는 것이 많다.", "친구 마음을 잘 이해한다.",
+        "새롭고 흥미진진한 일을 찾는다.", "남을 잘 돕는다.", "모든 것을 근거(증거)에 따라 설명하려 한다.", "마음이 따뜻하고 성격이 좋다는 말을 자주 듣는다.",
+        "해야 할 일이 있으면 빨리 해버린다.", "책임감이 있다.", "이것저것 꼼꼼히 따져 본다.", "슬픈 일을 보면 쉽게 눈물이 난다.",
+        "무슨 일이든 스스로 알아서 한다.", "계획적이다.", "이야기할 때 요점만 간단하게 말한다.", "남에게 친절하고 배려를 잘한다.",
+        "용감하다.", "미리미리 준비를 잘하는 편이다.", "생각을 많이 한다.", "원칙을 중요하다고 느끼지만, 나만의 생각과 느낌에 따라 생각하고 결정한다.",
+        "경쟁심이 강하다.", "일을 차근차근 차례대로 한다.", "나만의 생각과 느낌이 있지만 그래도 원칙에 따라 생각하고 결정한다.", "작은 일에도 슬퍼하거나 감동한다.",
+        "어려움을 무릅쓰고서라도 어떤 일을 하고자 한다.", "나의 생활은 매일 똑같다.", "좋은 점과 나쁜 점을 잘 찾아서 지적한다.", "최고가 되거나 완전하기를 바란다.",
+        "모든 일에 적극적이고 열심히 한다.", "규칙을 잘 지킨다.", "다음에 무슨 일이 일어날지 잘 짐작한다.", "마음이 넓은 편이다."
+    ];
+
+    const typeDetails = {
+        '행동형': {
+            sub: '"예측불허 럭비공"',
+            color: '#1d4ed8',
+            bg: '#eff6ff',
+            trait: ['자유, 자발성', '경쟁, 모험을 통해 성장', '미래를 위해 준비한다는 생각보다는 현재를 즐김', '변화와 자극적인 일을 선호함'],
+            strategy: ['자신의 학습 수준을 정확히 알기', '시청각 자료를 활용하여 공부', '실생활과 연결시켜 공부', '짧은 시간 집중 학습'],
+            management: ['목표를 가급적 크고 높게 스스로 설정', '목표를 달성했을 때 스스로 즐거움의 보상 주기', '스스로 정한 약속은 반드시 지키기', '재학 기간 중 반장 같은 리더 경험해 보기'],
+            improvement: ['논리적이고 체계적으로 계획을 세우고 책임 있고 끈기 있게 노력하는 행동을 습관화함']
+        },
+        '규범형': {
+            sub: '"꼼꼼쟁이"',
+            color: '#a16207',
+            bg: '#fefce8',
+            trait: ['책임, 성실', '성실하고 책임감이 강함', '모든 일을 계획적이고 조직적으로 처리', '질서와 규율을 강조, 만인에게 공평하게 적용'],
+            strategy: ['기초에서 심화로 차근차근 문제 풀기', '반드시 요약 정리, 도표화 학습, 반복 학습', '학습 시 요점과 주변 요소 구분하여 공부', '장기 학습계획을 수립하여 공부'],
+            management: ['목표 수립 시 과정과 절차에 대해 자세히 검토', '규칙적으로 생활하며 공부', '주변의 지나친 기대나 스스로 과도한 요구를 조절', '일정한 장소에서 일정한 분량을 학습'],
+            improvement: ['다른 사람의 시선으로 바라보는 연습, 다양하고 새로운 변화와 시도를 해보는 노력이 필요함']
+        },
+        '탐구형': {
+            sub: '"호기심투성이"',
+            color: '#15803d',
+            bg: '#f0fdf4',
+            trait: ['진리 탐구', '끊임없이 의문을 제시', '새로운 발견과 탐구에 몰입', '사교적인 기술이 부족함'],
+            strategy: ['개념과 원리 위주로 공부', '다소 어려운 문제를 풀어가며 흥미 유지', '개념 이해 후 핵심을 체계적으로 정리'],
+            management: ['자신의 능력을 충분히 인식한 후 목표를 설정', '공부 시간을 다소 길게 잡아도 무방', '일의 우선순위를 정한 후 집중해서 실행', '좋아하는 여가를 유지하며, 흥미와 호기심을 끌어올리기'],
+            improvement: ['타인의 감정이나 노력에 관심을 갖구 현실의 중요성을 인정하는 태도를 기름']
+        },
+        '이상형': {
+            sub: '"상상력이 풍부한 이상형"',
+            color: '#be123c',
+            bg: '#fff1f2',
+            trait: ['자아실현', '인간관계를 중시하고 자신에 대한 이해를 갈망', '타인의 감정에 대한 공감력이 뛰어남', '자기를 인정해 주고 용기와 격려를 해줄 때 능력 발휘'],
+            strategy: ['선생님에 대한 좋은 감정 갖기', '개념과 공식보다 배경 지식 알아보기', '학습 내용 이해 후 반복적으로 문제 풀기', '쉬운 문제를 풀어가며 자신감을 유지하기'],
+            management: ['단기간에 달성 가능성 높은 것 위주로 목표 세우기', '단기 목표도 단계를 작게 나누어서 수립하기', '시간 계획대로 실천하며 성공 경험을 통해 자신감 키우기', '롤모델 설정하기'],
+            improvement: ['객관적인 정보와 목표를 세우면 끝까지 해내기 위해 노력하는 태도를 기름']
+        }
+    };
+
+    const userAnswers = new Array(52).fill(null);
+
+    const tbody = document.getElementById('qTableBody');
+    questions.forEach((q, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td class="q-text">${q}</td>
+            <td>
+                <button type="button" class="ox-btn" id="btn-o-${idx}">O</button>
+                <button type="button" class="ox-btn" id="btn-x-${idx}">X</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        document.getElementById(`btn-o-${idx}`).addEventListener('click', () => selectOX(idx, 'O'));
+        document.getElementById(`btn-x-${idx}`).addEventListener('click', () => selectOX(idx, 'X'));
+    });
+
+    document.getElementById('studentNum').addEventListener('input', checkFormCompletion);
+    document.getElementById('actionPlan').addEventListener('input', checkFormCompletion);
+
+    function selectOX(idx, value) {
+        userAnswers[idx] = value;
+        document.getElementById(`btn-o-${idx}`).className = `ox-btn ${value === 'O' ? 'active-o' : ''}`;
+        document.getElementById(`btn-x-${idx}`).className = `ox-btn ${value === 'X' ? 'active-x' : ''}`;
+        
+        calculateScores();
+        checkFormCompletion();
+    }
+
+    function calculateScores() {
+        let action = 0, rules = 0, explore = 0, ideal = 0;
+
+        userAnswers.forEach((ans, idx) => {
+            if (ans === 'O') {
+                const qNum = idx + 1;
+                if ([1,5,9,13,17,21,25,29,33,37,41,45,49].includes(qNum)) action++;
+                else if ([2,6,10,14,18,22,26,30,34,38,42,46,50].includes(qNum)) rules++;
+                else if ([3,7,11,15,19,23,27,31,35,39,43,47,51].includes(qNum)) explore++;
+                else if ([4,8,12,16,20,24,28,32,36,40,44,48,52].includes(qNum)) ideal++;
+            }
+        });
+
+        document.getElementById('score-action').innerText = `${action}개`;
+        document.getElementById('score-rules').innerText = `${rules}개`;
+        document.getElementById('score-explore').innerText = `${explore}개`;
+        document.getElementById('score-ideal').innerText = `${ideal}개`;
+
+        const scores = [
+            { type: '행동형', score: action },
+            { type: '규범형', score: rules },
+            { type: '탐구형', score: explore },
+            { type: '이상형', score: ideal }
+        ];
+        scores.sort((a, b) => b.score - a.score);
+
+        const top = scores[0];
+        const card = document.getElementById('typeDetailCard');
+
+        if (top.score > 0) {
+            const info = typeDetails[top.type];
+            document.getElementById('finalTypeDisplay').innerHTML = `나의 학습 성격 유형: <span style="color: ${info.color};">${top.type}</span> (${top.score}점)`;
+
+            card.style.display = 'block';
+            card.style.backgroundColor = info.bg;
+            card.style.borderColor = info.color;
+            document.getElementById('cardTitle').innerHTML = `🔍 <span style="color: ${info.color};">${top.type}</span> ${info.sub}의 학습 특징`;
+
+            fillList('listTrait', info.trait);
+            fillList('listStrategy', info.strategy);
+            fillList('listManagement', info.management);
+            fillList('listImprovement', info.improvement);
+        } else {
+            card.style.display = 'none';
+        }
+    }
+
+    function fillList(elementId, arr) {
+        const ul = document.getElementById(elementId);
+        ul.innerHTML = '';
+        arr.forEach(item => {
+            const li = document.createElement('li');
+            li.innerText = item;
+            ul.appendChild(li);
+        });
+    }
+
+    function checkFormCompletion() {
+        const num = document.getElementById('studentNum').value.trim();
+        const plan = document.getElementById('actionPlan').value.trim();
+        const allAnswered = userAnswers.every(ans => ans !== null);
+
+        const btn = document.getElementById('submitBtn');
+        if (num && plan && allAnswered) {
+            btn.disabled = false;
+            btn.className = 'submit-btn active';
+            btn.innerText = '활동지 제출하기';
+        } else {
+            btn.disabled = true;
+            btn.className = 'submit-btn';
+            btn.innerText = '모든 항목(학번 + O/X 52개 + 주관식)을 입력해야 제출할 수 있습니다';
+        }
+    }
+
+    /* 3단원 대시보드 실시간 연동 제출 스크립트 */
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        if(this.disabled) return;
+
+        const num = document.getElementById('studentNum').value.trim();
+        const plan = document.getElementById('actionPlan').value.trim();
+
+        const action = parseInt(document.getElementById('score-action').innerText) || 0;
+        const rules = parseInt(document.getElementById('score-rules').innerText) || 0;
+        const explore = parseInt(document.getElementById('score-explore').innerText) || 0;
+        const ideal = parseInt(document.getElementById('score-ideal').innerText) || 0;
+
+        const scores = [
+            { type: '행동형', score: action },
+            { type: '규범형', score: rules },
+            { type: '탐구형', score: explore },
+            { type: '이상형', score: ideal }
+        ];
+        scores.sort((a, b) => b.score - a.score);
+
+        const topType = `${scores[0].type} (${scores[0].score}점)`;
+
+        // 3단원 DB 경로: learning_activity_submissions
+        const newRef = push(ref(db, 'learning_activity_submissions'));
+        
+        set(newRef, {
+            unit: '3단원',
+            studentInfo: num,
+            learningType: topType,
+            strength: `행동:${action}, 규범:${rules}, 탐구:${explore}, 이상:${ideal}`,
+            improvement: plan,
+            timestamp: Date.now()
+        }).then(() => {
+            alert("제출이 성공적으로 완료되었습니다!");
+            window.location.href = "../index.html";
+        }).catch((err) => {
+            alert("제출 실패: " + err.message);
+        });
+    });
+</script>
+
+</body>
+</html>

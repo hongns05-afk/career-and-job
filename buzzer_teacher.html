@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>교사용 실시간 부저 대시보드</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    h1 { margin: 0; font-size: 24px; color: #1e3a8a; }
+    .btn-group { display: flex; gap: 10px; }
+    
+    button {
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .reset-btn { background-color: #ef4444; color: white; }
+    .reset-btn:hover { background-color: #dc2626; }
+    .excel-btn { background-color: #10b981; color: white; }
+    .excel-btn:hover { background-color: #059669; }
+
+    /* 1등 전용 카드 스타일 */
+    .winner-card {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+      border: 2px solid #f59e0b;
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+    .winner-card h2 { margin: 0 0 8px 0; font-size: 18px; color: #b45309; }
+    .winner-name { font-size: 32px; font-weight: 800; color: #78350f; }
+
+    /* 순위 리스트 테이블 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: center;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    th { background-color: #f8fafc; color: #475569; font-size: 15px; }
+    tr:hover { background-color: #f1f5f9; }
+
+    .rank-badge {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      border-radius: 50%;
+      font-weight: bold;
+      color: white;
+      background-color: #94a3b8;
+    }
+    .rank-1 { background-color: #f59e0b; }
+    .rank-2 { background-color: #94a3b8; }
+    .rank-3 { background-color: #b45309; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🚨 실시간 선착순 부저 현황</h1>
+    <div class="btn-group">
+      <button class="reset-btn" id="resetBtn">🔄 부저 리셋</button>
+      <button class="excel-btn" id="excelBtn">📊 엑셀 저장</button>
+    </div>
+  </div>
+
+  <!-- 1등 명예의 전당 -->
+  <div class="winner-card" id="winnerCard" style="display: none;">
+    <h2>🏆 1등 눌림 감지!</h2>
+    <div class="winner-name" id="winnerName">-</div>
+  </div>
+
+  <!-- 순위 목록 -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 15%;">순위</th>
+        <th style="width: 40%;">학번 (이름)</th>
+        <th style="width: 45%;">눌른 시간</th>
+      </tr>
+    </thead>
+    <tbody id="buzzerList">
+      <tr>
+        <td colspan="3" class="empty-state">학생들이 부저를 누르면 여기에 실시간으로 표시됩니다.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const buzzerRef = ref(db, 'buzzer_submissions');
+
+  let currentSubmissions = [];
+
+  // 실시간 부저 제출 감지
+  onValue(buzzerRef, (snapshot) => {
+    const data = snapshot.val();
+    const tbody = document.getElementById('buzzerList');
+    const winnerCard = document.getElementById('winnerCard');
+    const winnerName = document.getElementById('winnerName');
+
+    if (!data) {
+      currentSubmissions = [];
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-state">학생들이 부저를 누르면 여기에 실시간으로 표시됩니다.</td></tr>';
+      winnerCard.style.display = 'none';
+      return;
+    }
+
+    // 데이터 배열 변환 및 시간순 정렬 (오름차순)
+    const list = Object.keys(data).map(key => ({
+      id: key,
+      name: data[key].name || data[key].studentInfo || '미입력',
+      timestamp: data[key].timestamp || 0
+    })).sort((a, b) => a.timestamp - b.timestamp);
+
+    currentSubmissions = list;
+    tbody.innerHTML = '';
+
+    // 1등 전용 카드 표시
+    if (list.length > 0) {
+      winnerCard.style.display = 'block';
+      winnerName.innerText = list[0].name;
+    }
+
+    // 순위 목록 생성
+    list.forEach((item, index) => {
+      const rank = index + 1;
+      const date = item.timestamp ? new Date(item.timestamp) : new Date();
+      const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${date.getMilliseconds().toString().padStart(3, '0')}`;
+
+      let rankClass = 'rank-badge';
+      if (rank === 1) rankClass += ' rank-1';
+      else if (rank === 2) rankClass += ' rank-2';
+      else if (rank === 3) rankClass += ' rank-3';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="${rankClass}">${rank}</span></td>
+        <td style="font-weight: bold; font-size: 16px;">${item.name}</td>
+        <td style="color: #64748b;">${timeStr}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+
+  // 🔄 부저 초기화 (리셋)
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm("부저 현황을 초기화하시겠습니까? (학생들이 다시 누를 수 있게 됩니다)")) {
+      remove(buzzerRef).then(() => {
+        alert("부저가 성공적으로 리셋되었습니다!");
+      }).catch(err => {
+        alert("리셋 실패: " + err.message);
+      });
+    }
+  });
+
+  // 📊 엑셀(CSV) 저장
+  document.getElementById('excelBtn').addEventListener('click', () => {
+    if (currentSubmissions.length === 0) {
+      alert("다운로드할 부저 기록이 없습니다.");
+      return;
+    }
+
+    let csvContent = "\uFEFF순위,학번(이름),시간\n";
+    currentSubmissions.forEach((item, index) => {
+      const date = item.timestamp ? new Date(item.timestamp) : new Date();
+      const timeStr = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`;
+      csvContent += `${index + 1},"${item.name}","${timeStr}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `선착순_부저_기록_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진로 특성에 맞는 직업 찾기</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: #f4f7fb; color: #1e293b; padding: 20px; display: flex; justify-content: center; }
+        .container { max-width: 800px; width: 100%; background: #fff; padding: 28px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        
+        h1 { font-size: 1.5rem; margin-bottom: 20px; color: #1e3a8a; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+        
+        /* 학번 입력 영역 */
+        .student-info { margin-bottom: 24px; background: #e0f2fe; padding: 14px 18px; border-radius: 10px; display: flex; align-items: center; gap: 12px; }
+        .student-info label { font-weight: bold; color: #0369a1; }
+        .student-info input { padding: 8px 12px; font-size: 1rem; border: 1px solid #7dd3fc; border-radius: 6px; width: 140px; outline: none; }
+
+        .question-title { font-weight: 700; font-size: 1.05rem; margin: 24px 0 12px; color: #0f172a; }
+        
+        /* 보기 카드는 터치형 */
+        .words-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 16px; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; min-height: 60px; }
+        .word-card { background: #fff; border: 1.5px solid #d97706; color: #b45309; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.9rem; user-select: none; transition: all 0.2s; }
+        .word-card.selected { background: #f59e0b; color: #fff; border-color: #d97706; }
+
+        /* 홀랜드 그리드 */
+        .holland-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 30px; }
+        @media (max-width: 600px) { .holland-grid { grid-template-columns: 1fr; } }
+        .holland-card { border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; background: #fafafa; cursor: pointer; min-height: 110px; transition: border-color 0.2s; }
+        .holland-card:hover { border-color: #3b82f6; }
+        .type-header { font-weight: bold; color: #1d4ed8; margin-bottom: 8px; font-size: 0.95rem; }
+        .placed-words { display: flex; flex-wrap: wrap; gap: 6px; }
+        .placed-tag { background: #2563eb; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+        /* 손글씨 변환 최적화 입력창 */
+        .text-input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; resize: vertical; outline: none; line-height: 1.5; }
+        .text-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        /* 제출 버튼 */
+        .submit-btn { width: 100%; padding: 16px; background: #2563eb; color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .submit-btn:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>진로 특성에 맞는 직업 찾기</h1>
+
+    <div class="student-info">
+        <label for="student-id">학번</label>
+        <input type="text" id="student-id" placeholder="예: 10101" maxlength="5" autocomplete="off">
+    </div>
+
+    <div class="question-title">1. 아래 보기를 터치한 후 해당되는 홀랜드 흥미 유형 칸을 터치해 봅시다.</div>
+    
+    <!-- 보기 영역 -->
+    <div class="words-box" id="words-box">
+        <div class="word-card" onclick="selectWord(this)">로봇 연구원</div>
+        <div class="word-card" onclick="selectWord(this)">운동 선수</div>
+        <div class="word-card" onclick="selectWord(this)">물리학자</div>
+        <div class="word-card" onclick="selectWord(this)">생물학자</div>
+        <div class="word-card" onclick="selectWord(this)">영화감독</div>
+        <div class="word-card" onclick="selectWord(this)">화가</div>
+        <div class="word-card" onclick="selectWord(this)">가수</div>
+        <div class="word-card" onclick="selectWord(this)">간호사</div>
+        <div class="word-card" onclick="selectWord(this)">교사</div>
+        <div class="word-card" onclick="selectWord(this)">상담가</div>
+        <div class="word-card" onclick="selectWord(this)">변호사</div>
+        <div class="word-card" onclick="selectWord(this)">쇼호스트</div>
+        <div class="word-card" onclick="selectWord(this)">사서</div>
+        <div class="word-card" onclick="selectWord(this)">세무사</div>
+        <div class="word-card" onclick="selectWord(this)">회계사</div>
+    </div>
+
+    <!-- 홀랜드 6가지 분류 칸 -->
+    <div class="holland-grid">
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">R (실재형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">I (탐구형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">A (예술형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">S (사회형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">E (기업형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">C (관습형)</div>
+            <div class="placed-words"></div>
+        </div>
+    </div>
+
+    <div class="question-title">2. 자신의 관심 직업과 필요한 진로 특성을 적어 봅시다. (펜 필기 가능)</div>
+    <input type="text" id="job-title" class="text-input" placeholder="나의 관심 직업 (예: 경찰관)" autocomplete="off">
+    <textarea id="job-desc" class="text-input" rows="4" placeholder="관심 직업에 요구되는 진로 특성을 적어주세요." autocomplete="off"></textarea>
+
+    <button class="submit-btn" onclick="submitWorksheet()">제출하기</button>
+</div>
+
+<script>
+    let selectedWordElem = null;
+
+    // 보기 터치 선택
+    function selectWord(elem) {
+        if(selectedWordElem) selectedWordElem.classList.remove('selected');
+        selectedWordElem = elem;
+        elem.classList.add('selected');
+    }
+
+    // 분류 카드 터치 시 이동
+    function placeWord(cardElem) {
+        if(!selectedWordElem) return;
+        const placedContainer = cardElem.querySelector('.placed-words');
+        
+        const tag = document.createElement('span');
+        tag.className = 'placed-tag';
+        tag.innerText = selectedWordElem.innerText;
+        tag.onclick = function(e) {
+            e.stopPropagation();
+            returnToBox(this, selectedWordElem.innerText);
+        };
+        
+        placedContainer.appendChild(tag);
+        selectedWordElem.style.display = 'none';
+        selectedWordElem.classList.remove('selected');
+        selectedWordElem = null;
+    }
+
+    // 다시 보기 영역으로 복귀
+    function returnToBox(tagElem, text) {
+        const words = document.querySelectorAll('.word-card');
+        words.forEach(w => {
+            if(w.innerText === text) w.style.display = 'inline-block';
+        });
+        tagElem.remove();
+    }
+
+    // 제출 검증 및 데이터 저장
+    function submitWorksheet() {
+        const studentId = document.getElementById('student-id').value.trim();
+        const jobTitle = document.getElementById('job-title').value.trim();
+        const jobDesc = document.getElementById('job-desc').value.trim();
+
+        if(!studentId || studentId.length !== 5) {
+            alert('학번 5자리를 정확히 입력해주세요. (예: 10101)');
+            return;
+        }
+
+        if(!jobTitle || !jobDesc) {
+            alert('2번 주관식 답란(관심 직업 및 진로 특성)을 작성해야 제출할 수 있습니다.');
+            return;
+        }
+
+        const submission = {
+            studentId: studentId,
+            jobTitle: jobTitle,
+            jobDesc: jobDesc,
+            submittedAt: new Date().toLocaleString('ko-KR')
+        };
+
+        // 제출 현황판 연동 데이터 저장
+        let submissions = JSON.parse(localStorage.getItem('worksheet1_submissions') || '[]');
+        submissions.push(submission);
+        localStorage.setItem('worksheet1_submissions', JSON.stringify(submissions));
+
+        alert('성공적으로 제출되었습니다!');
+        location.href = 'index.html';
+    }
+</script>
+
+</body>
+</html>

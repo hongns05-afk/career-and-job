@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>창업가 정신의 핵심 역량 찾기</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 15px;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 25px 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    h1 {
+      font-size: 22px;
+      color: #1e3a8a;
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 10px;
+      margin-top: 0;
+      word-break: keep-all;
+    }
+    .info-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 14px;
+      border-radius: 6px;
+      margin-bottom: 25px;
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+    .info-box a { color: #2563eb; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 4px; }
+    .section {
+      margin-bottom: 25px;
+      background: #fafafa;
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid #eaeaea;
+    }
+    .section-title {
+      font-size: 17px;
+      font-weight: bold;
+      color: #0f172a;
+      margin-bottom: 15px;
+    }
+    label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #334155; }
+    input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-bottom: 12px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    input:focus, textarea:focus { border-color: #3b82f6; background-color: #fff; }
+
+    /* 그래프 스타일 */
+    .chart-container {
+      background: #ffffff;
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 15px;
+    }
+    .scale-header {
+      display: flex;
+      justify-content: space-between;
+      padding-left: 140px;
+      padding-right: 85px;
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 12px;
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 5px;
+    }
+    .chart-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 10px;
+    }
+    .chart-label {
+      width: 130px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #334155;
+      flex-shrink: 0;
+    }
+    .bar-bg {
+      flex: 1;
+      height: 28px;
+      background-color: #f1f5f9;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      min-width: 80px;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background-color: #3b82f6;
+      border-radius: 6px;
+      transition: width 0.4s ease, background-color 0.3s;
+    }
+    .score-input-wrap { width: 75px; flex-shrink: 0; }
+    .score-input-wrap input { margin-bottom: 0; text-align: center; font-weight: bold; }
+
+    /* 추천 창업가 표 */
+    .table-input { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .table-input th, .table-input td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
+    .table-input th { background: #f1f5f9; width: 30%; font-size: 14px; word-break: keep-all; }
+    .table-input input { margin-bottom: 0; }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .submit-btn:hover { background-color: #1d4ed8; }
+
+    /* 모바일 및 태블릿 반응형 레이아웃 */
+    @media (max-width: 600px) {
+      .container { padding: 18px 12px; }
+      .scale-header { display: none; }
+      
+      .chart-row {
+        flex-wrap: wrap;
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #f1f5f9;
+      }
+      .chart-label {
+        width: auto;
+        flex: 1;
+      }
+      .score-input-wrap {
+        width: 80px;
+      }
+      .bar-bg {
+        width: 100%;
+        flex: none;
+        height: 24px;
+        margin-top: 6px;
+      }
+      .table-input th { width: 35%; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🚀 진로 활동 : 창업가 정신의 핵심 역량 찾기</h1>
+
+  <div class="info-box">
+    📍 <strong>진단 방법:</strong><br>
+    <a href="https://yeep.go.kr/compt/comptQuestion.do?continueYn=N" target="_blank">YEEP 핵심역량 진단 사이트 바로가기 ➔</a><br>
+    사이트에서 검사를 완료한 후, 나의 결과지에 나온 점수를 입력하면 그래프가 자동으로 생성됩니다!
+  </div>
+
+  <form id="activityForm">
+    <!-- 학생 정보 -->
+    <div class="section">
+      <div class="section-title">👤 학생 정보</div>
+      <input type="text" id="studentInfo" placeholder="학번을 입력하세요 (예: 10305)" inputmode="numeric" required>
+    </div>
+
+    <!-- 1. 역량군 점수 & 그래프 -->
+    <div class="section">
+      <div class="section-title">1. 창업가 정신 핵심 역량 진단 결과 정리</div>
+      <p style="font-size: 13px; color: #64748b; margin-top:-8px; margin-bottom:15px;">각 역량군의 점수(0~100점)를 입력하면 실시간으로 그래프가 그려집니다.</p>
+
+      <div class="chart-container">
+        <div class="scale-header">
+          <span>0</span>
+          <span>20</span>
+          <span>40</span>
+          <span>60</span>
+          <span>80</span>
+          <span>100</span>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-label">가치 창출 역량군</div>
+          <div class="score-input-wrap">
+            <input type="number" id="score1" min="0" max="100" placeholder="점수" inputmode="numeric" pattern="[0-9]*" oninput="updateGraph(1)" required>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="bar1"></div></div>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-label">도전 역량군</div>
+          <div class="score-input-wrap">
+            <input type="number" id="score2" min="0" max="100" placeholder="점수" inputmode="numeric" pattern="[0-9]*" oninput="updateGraph(2)" required>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="bar2"></div></div>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-label">자기 주도 역량군</div>
+          <div class="score-input-wrap">
+            <input type="number" id="score3" min="0" max="100" placeholder="점수" inputmode="numeric" pattern="[0-9]*" oninput="updateGraph(3)" required>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="bar3"></div></div>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-label">집단 창의 역량군</div>
+          <div class="score-input-wrap">
+            <input type="number" id="score4" min="0" max="100" placeholder="점수" inputmode="numeric" pattern="[0-9]*" oninput="updateGraph(4)" required>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="bar4"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 높은 역량 적기 -->
+    <div class="section">
+      <div class="section-title">2. 가장 높은 핵심 역량군과 핵심 역량 3가지</div>
+      <label>가장 높은 핵심 역량군</label>
+      <input type="text" id="topGroup" placeholder="예: 자기 주도 역량군" required>
+      
+      <label>상위 핵심 역량 3가지</label>
+      <input type="text" id="topAbility1" placeholder="1순위 역량 (예: 자율성)" required>
+      <input type="text" id="topAbility2" placeholder="2순위 역량 (예: 끈기)" required>
+      <input type="text" id="topAbility3" placeholder="3순위 역량 (예: 위험 감수 역량)" required>
+    </div>
+
+    <!-- 3. 추천 창업가 정리 -->
+    <div class="section">
+      <div class="section-title">3. 추천 창업가 정리</div>
+      <table class="table-input">
+        <tr>
+          <th>이름</th>
+          <td><input type="text" id="entrepreneurName" placeholder="예: 스티브 잡스" required></td>
+        </tr>
+        <tr>
+          <th>설립한 회사</th>
+          <td><input type="text" id="entrepreneurCompany" placeholder="예: 애플" required></td>
+        </tr>
+        <tr>
+          <th>명언</th>
+          <td><input type="text" id="entrepreneurQuote" placeholder="예: 늘 갈망하고, 우직하게 참아라." required></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 4. 꿈을 이루기 위한 노력 -->
+    <div class="section">
+      <div class="section-title">4. 자신의 꿈을 이루는 데 특히 필요한 핵심 역량과 노력할 점</div>
+      <textarea id="futurePlan" rows="4" placeholder="예: 나의 꿈인 웹 디자이너가 되기 위해 부족한 '집단 창의 역량'을 키우고 싶다. 이를 위해 앞으로 모둠 활동을 할 때 내 고집만 피우지 않고 친구들의 의견을 끝까지 경청하고 조율하는 연습을 할 것이다." required></textarea>
+    </div>
+
+    <button type="submit" class="submit-btn">제출하기 🚀</button>
+  </form>
+</div>
+
+<script>
+  function updateGraph(num) {
+    const val = document.getElementById('score' + num).value;
+    const bar = document.getElementById('bar' + num);
+    
+    let score = parseFloat(val);
+    if (isNaN(score)) score = 0;
+    if (score > 100) score = 100;
+    if (score < 0) score = 0;
+
+    bar.style.width = score + '%';
+    
+    if (score >= 70) {
+      bar.style.backgroundColor = '#2563eb';
+    } else {
+      bar.style.backgroundColor = '#f97316';
+    }
+  }
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  document.getElementById('activityForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const topAb1 = document.getElementById('topAbility1').value.trim();
+    const topAb2 = document.getElementById('topAbility2').value.trim();
+    const topAb3 = document.getElementById('topAbility3').value.trim();
+    
+    const entName = document.getElementById('entrepreneurName').value.trim();
+    const entCompany = document.getElementById('entrepreneurCompany').value.trim();
+    const entQuote = document.getElementById('entrepreneurQuote').value.trim();
+
+    const data = {
+      unit: '2단원',
+      studentInfo: document.getElementById('studentInfo').value.trim(),
+      scores: {
+        valueCreation: document.getElementById('score1').value,
+        challenge: document.getElementById('score2').value,
+        selfDirected: document.getElementById('score3').value,
+        collectiveCreativity: document.getElementById('score4').value
+      },
+      topGroup: document.getElementById('topGroup').value.trim(),
+      // 대시보드 호환성을 높이기 위해 배열과 문자열 둘 다 지원
+      topAbilities: [topAb1, topAb2, topAb3],
+      topAbilitiesText: `${topAb1}, ${topAb2}, ${topAb3}`,
+      entrepreneur: {
+        name: entName,
+        company: entCompany,
+        quote: entQuote
+      },
+      entrepreneurText: `${entName} (${entCompany}) - "${entQuote}"`,
+      futurePlan: document.getElementById('futurePlan').value.trim(),
+      timestamp: serverTimestamp()
+    };
+
+    push(ref(db, 'yeep_activity_submissions'), data)
+      .then(() => {
+        alert('성공적으로 제출되었습니다!');
+        location.reload();
+      })
+      .catch((err) => {
+        alert('제출 실패: ' + err.message);
+      });
+  });
+</script>
+
+</body>
+</html>
