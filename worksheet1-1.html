@@ -18,7 +18,7 @@
 
         .question-title { font-weight: 700; font-size: 1.05rem; margin: 24px 0 12px; color: #0f172a; }
         
-        /* 보기 카드는 터치형 */
+        /* 보기 영역 */
         .words-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 16px; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; min-height: 60px; }
         .word-card { background: #fff; border: 1.5px solid #d97706; color: #b45309; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.9rem; user-select: none; transition: all 0.2s; }
         .word-card.selected { background: #f59e0b; color: #fff; border-color: #d97706; }
@@ -39,6 +39,7 @@
         /* 제출 버튼 */
         .submit-btn { width: 100%; padding: 16px; background: #2563eb; color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
         .submit-btn:hover { background: #1d4ed8; }
+        .submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -47,11 +48,11 @@
     <h1>진로 특성에 맞는 직업 찾기</h1>
 
     <div class="student-info">
-        <label for="student-id">학번 및 이름</label>
-        <input type="text" id="student-id" placeholder="예: 10101 홍길동" autocomplete="off">
+        <label for="student-id">학번</label>
+        <input type="text" id="student-id" placeholder="예: 10101" autocomplete="off">
     </div>
 
-    <div class="question-title">1. 아래 보기를 터치한 후 해당되는 홀랜드 흥미 유형 칸을 터치해 봅시다. (배치된 태그를 누르면 취소됩니다)</div>
+    <div class="question-title">1. 아래 보기를 터치한 후 해당되는 홀랜드 흥미 유형 칸을 터치해 봅시다. (배치된 단어를 누르면 취소됩니다)</div>
     
     <!-- 보기 영역 -->
     <div class="words-box" id="words-box">
@@ -104,7 +105,7 @@
     <input type="text" id="job-title" class="text-input" placeholder="나의 관심 직업 (예: 경찰관)" autocomplete="off">
     <textarea id="job-desc" class="text-input" rows="4" placeholder="관심 직업에 요구되는 진로 특성을 적어주세요." autocomplete="off"></textarea>
 
-    <button class="submit-btn" onclick="submitWorksheet()">제출하기</button>
+    <button id="submit-btn" class="submit-btn" onclick="submitWorksheet()">제출하기</button>
 </div>
 
 <!-- Firebase SDK -->
@@ -112,15 +113,19 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    const firebaseConfig = {
-        databaseURL: "https://career-and-job-default-rtdb.firebaseio.com"
-    };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+    let db = null;
+    try {
+        const firebaseConfig = {
+            databaseURL: "https://career-and-job-default-rtdb.firebaseio.com"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.database();
+    } catch(e) {
+        console.error("Firebase 초기화 에러:", e);
     }
-    const db = firebase.database();
 
-    // 정답 세팅 (I: 로봇 연구원, 물리학자, 생물학자)
     const correctAnswers = {
         "R": ["운동 선수"],
         "I": ["로봇 연구원", "물리학자", "생물학자"],
@@ -146,7 +151,7 @@
         const tag = document.createElement('span');
         tag.className = 'placed-tag';
         tag.setAttribute('data-word', text);
-        tag.innerText = text + ' ✖';
+        tag.innerText = text + ' ✕';
         
         tag.onclick = function(e) {
             e.stopPropagation();
@@ -170,13 +175,15 @@
     }
 
     function submitWorksheet() {
+        const btn = document.getElementById('submit-btn');
+
         try {
             const studentId = document.getElementById('student-id').value.trim();
             const jobTitle = document.getElementById('job-title').value.trim();
             const jobDesc = document.getElementById('job-desc').value.trim();
 
             if(!studentId) {
-                alert('학번과 이름을 입력해주세요.');
+                alert('학번을 입력해주세요.');
                 return;
             }
 
@@ -191,7 +198,6 @@
 
                 const targetCorrect = correctAnswers[type];
 
-                // 유연한 정답 비교 (개수가 같고 모든 요소가 포함되는지 확인)
                 if(placedTags.length !== targetCorrect.length) {
                     isCorrect = false;
                 } else {
@@ -204,12 +210,12 @@
             });
 
             if(totalPlaced < 15) {
-                alert('1번 보기의 15개 카드를 모두 카테고리에 나눠 배치해 주세요.');
+                alert('1번 보기의 15개 카드를 모두 카테고리에 맞춰 배치해 주세요.');
                 return;
             }
 
             if(!isCorrect) {
-                alert('1번 홀랜드 흥미 유형 분류가 정답과 일치하지 않습니다. 카드를 다시 확인해 보세요!');
+                alert('1번 정답이 일부 틀렸습니다. 다시 확인해 보세요!');
                 return;
             }
 
@@ -218,21 +224,36 @@
                 return;
             }
 
-            // Firebase 제출
+            if(!db) {
+                alert('데이터베이스 연결 실패: 인터넷 연결 상태를 확인해 주세요.');
+                return;
+            }
+
+            // 제출 진행 상태 변경
+            btn.disabled = true;
+            btn.innerText = '제출 중...';
+
+            // 데이터 전송
             db.ref('holland_activity_submissions').push({
                 studentId: studentId,
                 jobTitle: jobTitle,
                 jobDesc: jobDesc,
                 submittedAt: new Date().toLocaleString('ko-KR')
-            }).then(() => {
-                alert('정답입니다! 성공적으로 제출되었습니다.');
-                location.href = 'index.html';
-            }).catch(err => {
-                alert('제출 실패: ' + err.message);
+            }, function(error) {
+                if (error) {
+                    btn.disabled = false;
+                    btn.innerText = '제출하기';
+                    alert('제출 실패 에러: ' + error.message);
+                } else {
+                    alert('정답입니다! 성공적으로 제출되었습니다.');
+                    location.href = 'index.html';
+                }
             });
 
-        } catch(e) {
-            alert('오류가 발생했습니다: ' + e.message);
+        } catch(err) {
+            btn.disabled = false;
+            btn.innerText = '제출하기';
+            alert('오류가 발생했습니다: ' + err.message);
         }
     }
 </script>
