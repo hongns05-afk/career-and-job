@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진로와 직업 온라인 활동지</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7fb;
+            color: #1e293b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 960px;
+            width: 100%;
+        }
+
+        /* 메인 타이틀 */
+        .header {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 40px;
+            color: #0f172a;
+        }
+
+        /* 2x2 카드 그리드 레이아웃 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 카드 스타일 */
+        .card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #3b82f6;
+            margin-bottom: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 공통 버튼 스타일 */
+        .btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-radius: 12px;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 테마별 버튼 색상 */
+        .btn-blue {
+            background-color: #2563eb;
+        }
+
+        .btn-dark {
+            background-color: #0f172a;
+        }
+
+        .btn-green {
+            background-color: #059669;
+        }
+
+        .btn-purple {
+            background-color: #8b5cf6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 메인 타이틀 -->
+        <h1 class="header">📚 진로와 직업 온라인 활동지</h1>
+
+        <!-- 2x2 카드 영역 -->
+        <div class="grid-container">
+            
+            <!-- I 단원 -->
+            <div class="card">
+                <h2 class="card-title">I . 진로와 나의 이해</h2>
+                <div class="button-group">
+                    <a href="worksheet1-1.html" class="btn btn-blue">
+                        <span class="btn-left">🧩 진로 특성에 맞는 직업 찾기</span>
+                        <span>풀기 ➔</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- II 단원 -->
+            <div class="card">
+                <h2 class="card-title">II . 직업 세계와 진로 탐색</h2>
+                <div class="button-group">
+                    <a href="worksheet2-1.html" class="btn btn-blue">
+                        <span class="btn-left">🚀 창업가 정신 핵심 역량 찾기</span>
+                        <span>풀기 ➔</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- III 단원 -->
+            <div class="card">
+                <h2 class="card-title">III . 진로 설계와 실천</h2>
+                <div class="button-group">
+                    <a href="worksheet3-1.html" class="btn btn-blue">
+                        <span class="btn-left">🧠 나의 학습 성격 유형 알아보기</span>
+                        <span>풀기 ➔</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- IV 단원 (수업 도우미) -->
+            <div class="card">
+                <h2 class="card-title">IV. 기타 (수업 도우미)</h2>
+                <div class="button-group">
+                    <a href="dashboard.html" class="btn btn-dark">
+                        <span class="btn-left">📊 [선생님용] 실시간 제출 현황판</span>
+                        <span>열기 ➔</span>
+                    </a>
+                    <a href="buzzer.html" class="btn btn-green">
+                        <span class="btn-left">🔔 [학생용] 실시간 퀴즈 부저</span>
+                        <span>열기 ➔</span>
+                    </a>
+                    <a href="buzzer_teacher.html" class="btn btn-purple">
+                        <span class="btn-left">🚨 [선생님용] 부저 실시간 순위판</span>
+                        <span>열기 ➔</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
