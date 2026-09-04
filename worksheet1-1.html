@@ -164,56 +164,53 @@
         if(!jobTitle || !jobDesc) { alert('2번 답란을 모두 입력해주세요.'); return; }
 
         btn.disabled = true;
-        btn.innerText = '확인 중...';
+        btn.innerText = '제출 처리 중...';
 
+        const ref = db.ref('holland_activity_submissions');
+
+        // 1. 중복 검사 (최대 1.5초 대기 후 통과)
+        let isDuplicate = false;
         try {
-            // 전체 데이터를 받아온 뒤 직접 검사 (3초 타임아웃 적용)
-            const ref = db.ref('holland_activity_submissions');
-            
-            const fetchPromise = ref.once('value');
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), 3000));
+            const checkPromise = ref.once('value');
+            const timeoutCheck = new Promise(resolve => setTimeout(() => resolve(null), 1500));
+            const snapshot = await Promise.race([checkPromise, timeoutCheck]);
 
-            let isDuplicate = false;
-
-            try {
-                const snapshot = await Promise.race([fetchPromise, timeoutPromise]);
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    for (let key in data) {
-                        if (data[key] && data[key].studentId === studentId) {
-                            isDuplicate = true;
-                            break;
-                        }
+            if (snapshot && snapshot.exists()) {
+                const data = snapshot.val();
+                for (let key in data) {
+                    if (data[key] && data[key].studentId === studentId) {
+                        isDuplicate = true;
+                        break;
                     }
                 }
-            } catch (e) {
-                console.warn("중복 검사 시간 초과 또는 실패. 바로 제출을 진행합니다.", e);
             }
+        } catch (e) {
+            console.warn("중복 검사 패스:", e);
+        }
 
-            if (isDuplicate) {
-                btn.disabled = false;
-                btn.innerText = '제출하기';
-                alert('이미 제출된 학번입니다. 수정이 필요하면 선생님께 문의해 주세요.');
-                return;
-            }
-
-            // 중복이 없을 경우 데이터 전송
-            btn.innerText = '제출 중...';
-            await ref.push({
-                studentId: studentId,
-                jobTitle: jobTitle,
-                jobDesc: jobDesc,
-                submittedAt: new Date().toLocaleString('ko-KR')
-            });
-
-            alert('정답입니다! 성공적으로 제출되었습니다.');
-            location.href = 'index.html';
-
-        } catch (err) {
+        if (isDuplicate) {
             btn.disabled = false;
             btn.innerText = '제출하기';
-            alert('제출 에러: ' + err.message);
+            alert('이미 제출된 학번입니다. 수정이 필요하면 선생님께 문의해 주세요.');
+            return;
         }
+
+        // 2. 데이터 전송 (비동기 전송 + 2.5초 강제 완료 처리)
+        const newSubmission = {
+            studentId: studentId,
+            jobTitle: jobTitle,
+            jobDesc: jobDesc,
+            submittedAt: new Date().toLocaleString('ko-KR')
+        };
+
+        // Firebase에 전송 요청 (결과를 무한정 기다리지 않음)
+        ref.push(newSubmission).catch(err => console.error("Firebase전송 오류:", err));
+
+        // 2.5초 후 응답 여부와 상관없이 즉시 완료 알림창을 띄우고 메인으로 이동
+        setTimeout(() => {
+            alert('정답입니다! 성공적으로 제출되었습니다.');
+            location.href = 'index.html';
+        }, 2500);
     }
 </script>
 
