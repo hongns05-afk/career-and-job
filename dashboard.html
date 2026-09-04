@@ -1,457 +1,530 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>실시간 제출 현황판</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #fcefeee6;
-      margin: 0;
-      padding: 25px;
-      color: #333;
-    }
-    .dashboard-card {
-      max-width: 1280px;
-      margin: 0 auto;
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.03);
-    }
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .main-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: #1e293b;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .top-btn-group { display: flex; gap: 10px; }
-    .btn {
-      border: none;
-      border-radius: 8px;
-      padding: 10px 18px;
-      font-weight: bold;
-      font-size: 14px;
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-presentation { background-color: #a855f7; }
-    .btn-excel { background-color: #10b981; }
-    .btn-delete-all { background-color: #ef4444; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학습 활동 실시간 대시보드</title>
+    <!-- SheetJS 엑셀 추출 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+        }
 
-    /* 비밀번호 인증 구역 */
-    .auth-box {
-      text-align: center;
-      padding: 50px 20px;
-      background: #f8fafc;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      margin-top: 20px;
-    }
-    .auth-box h2 { font-size: 1.3rem; color: #1e293b; margin-bottom: 16px; }
-    .auth-box input {
-      padding: 12px 16px;
-      font-size: 1rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      width: 220px;
-      text-align: center;
-      outline: none;
-    }
-    .auth-box button {
-      padding: 12px 24px;
-      font-size: 1rem;
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-left: 8px;
-      font-weight: bold;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
 
-    .dashboard-content { display: none; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
 
-    .filter-bg {
-      background-color: #f1f5f9;
-      border-radius: 12px;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
-    .filter-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
-      color: #334155;
-      font-size: 15px;
-    }
-    select {
-      padding: 8px 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: bold;
-      outline: none;
-      background: white;
-    }
+        /* 헤더 영역 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            background: var(--card-bg);
+            padding: 20px 28px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
 
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    .section-title { font-size: 17px; font-weight: bold; color: #1e293b; }
-    .submission-info { font-size: 15px; font-weight: bold; color: #2563eb; }
+        .header-title h1 {
+            font-size: 1.6rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .grid-40 {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 10px;
-      margin-bottom: 35px;
-    }
-    .num-card {
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px 6px;
-      text-align: center;
-      background: #f8fafc;
-      color: #64748b;
-      min-height: 62px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .num-card .num { font-weight: bold; font-size: 14px; }
-    .num-card .status { font-size: 11px; margin-top: 2px; }
+        .header-title p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
 
-    .num-card.submitted {
-      background-color: #d1fae5;
-      border-color: #a7f3d0;
-      color: #065f46;
-    }
-    .num-card.submitted .status { font-weight: bold; }
-    .num-card.submitted .result-text {
-      font-size: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 90px;
-      margin-top: 2px;
-      background: #10b981;
-      color: white;
-      padding: 1px 4px;
-      border-radius: 4px;
-    }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .table-container {
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th {
-      background-color: #f8fafc;
-      padding: 14px;
-      font-size: 14px;
-      font-weight: bold;
-      color: #334155;
-      border-bottom: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
-    }
-    th:last-child { border-right: none; }
-    td {
-      padding: 16px 14px;
-      font-size: 13px;
-      color: #334155;
-      border-bottom: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
-      vertical-align: top;
-      line-height: 1.5;
-    }
-    td:last-child { border-right: none; }
+        select.activity-select {
+            padding: 10px 16px;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            outline: none;
+            background-color: #fff;
+            font-weight: 600;
+            color: var(--primary-dark);
+            cursor: pointer;
+        }
 
-    .btn-delete {
-      background-color: #fee2e2;
-      color: #ef4444;
-      border: 1px solid #fca5a5;
-      padding: 5px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 12px;
-    }
-    .btn-delete:hover { background-color: #fecaca; }
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s, transform 0.1s;
+        }
 
-    @media (max-width: 1024px) {
-      .grid-40 { grid-template-columns: repeat(5, 1fr); }
-    }
-  </style>
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-excel {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .btn-excel:hover {
+            background-color: #15803d;
+        }
+
+        .btn-present {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-present:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* 현황 요약 카운터 */
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stats-info {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .stats-count {
+            font-size: 1.4rem;
+            color: #2563eb;
+            margin-left: 6px;
+        }
+
+        /* 제출 카드 그리드 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .student-badge {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+            font-size: 1.05rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .submit-time {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+        }
+
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .field-label {
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.85rem;
+            margin-bottom: 2px;
+        }
+
+        .field-content {
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            word-break: break-all;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            background: #e2e8f0;
+            color: #334155;
+            font-size: 0.85rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .no-data {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: #fff;
+            border-radius: 16px;
+            color: var(--text-sub);
+            font-size: 1.1rem;
+        }
+
+        /* 📺 발표 모드 (전체 화면 상태일 때 스타일 확대) */
+        :fullscreen body, :-webkit-full-screen body {
+            padding: 40px;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        :fullscreen header, :-webkit-full-screen header {
+            background: #1e293b;
+            color: #fff;
+        }
+
+        :fullscreen .header-title h1, :-webkit-full-screen .header-title h1 {
+            color: #f8fafc;
+        }
+
+        :fullscreen .header-title p, :-webkit-full-screen .header-title p {
+            color: #94a3b8;
+        }
+
+        :fullscreen .card, :-webkit-full-screen .card {
+            background: #1e293b;
+            border-color: #334155;
+            color: #f8fafc;
+            font-size: 1.15rem;
+            padding: 24px;
+        }
+
+        :fullscreen .field-content, :-webkit-full-screen .field-content {
+            background: #0f172a;
+            color: #f1f5f9;
+            font-size: 1.1rem;
+        }
+
+        :fullscreen .student-badge, :-webkit-full-screen .student-badge {
+            font-size: 1.25rem;
+            padding: 6px 16px;
+        }
+
+        :fullscreen .stats-bar, :-webkit-full-screen .stats-bar {
+            background: #1e3a8a;
+            border-color: #1d4ed8;
+            color: #f8fafc;
+        }
+
+        :fullscreen .stats-info, :-webkit-full-screen .stats-info {
+            color: #93c5fd;
+            font-size: 1.3rem;
+        }
+
+        :fullscreen .stats-count, :-webkit-full-screen .stats-count {
+            color: #ffffff;
+            font-size: 1.6rem;
+        }
+    </style>
 </head>
 <body>
 
-<div class="dashboard-card">
-  <!-- 헤더 -->
-  <div class="header-row">
-    <div class="main-title">📊 실시간 제출 현황판 (교사용)</div>
-    <div class="top-btn-group">
-      <button class="btn btn-presentation">🔮 전체 발표 모드</button>
-      <button class="btn btn-excel">📥 Excel(CSV) 다운로드</button>
-      <button class="btn btn-delete-all">🗑️ 데이터 전체 삭제</button>
-    </div>
-  </div>
+    <!-- 헤더 영역 -->
+    <header>
+        <div class="header-title">
+            <h1>📌 실시간 활동 제출 대시보드</h1>
+            <p>학생들이 제출한 실시간 활동 결과를 한눈에 확인하세요.</p>
+        </div>
+        <div class="header-controls">
+            <select id="activity-select" class="activity-select" onchange="switchActivity(this.value)">
+                <option value="1-1">1-1. 기업가 정신이란?</option>
+                <option value="2-1">2-1. 핵심 역량 진단</option>
+                <option value="3-1">3-1. 학습 성격 유형</option>
+            </select>
+            <button class="btn btn-excel" onclick="downloadExcel()">📊 Excel 다운로드</button>
+            <button class="btn btn-present" onclick="togglePresentationMode()">📺 전체 발표 모드</button>
+        </div>
+    </header>
 
-  <!-- 비밀번호 입력 영역 -->
-  <div id="auth-area" class="auth-box">
-    <h2>🔒 교사 인증이 필요합니다</h2>
-    <input type="password" id="access-code" placeholder="비밀번호 4자리" maxlength="4" onkeyup="if(window.event.keyCode==13){checkPassword()}">
-    <button onclick="checkPassword()">확인</button>
-  </div>
-
-  <!-- 대시보드 콘텐츠 구역 -->
-  <div id="dashboard-area" class="dashboard-content">
-    <!-- 조건 선택 드롭다운 -->
-    <div class="filter-bg">
-      <div class="filter-item">
-        📘 활동지 선택:
-        <select id="worksheetSelect" onchange="renderDashboard()">
-          <option value="unit1" selected>1단원 (진로 특성에 맞는 직업 찾기)</option>
-          <option value="unit2">2단원 (창업가 정신의 핵심 역량 찾기)</option>
-          <option value="unit3">3단원 (나의 학습 성격 유형 알아보기)</option>
-        </select>
-      </div>
-      <div class="filter-item">
-        🏫 학급 선택:
-        <select id="classSelect" onchange="renderDashboard()">
-          <option value="1">1반</option><option value="2">2반</option>
-          <option value="3">3반</option><option value="4">4반</option>
-          <option value="5">5반</option><option value="6">6반</option>
-          <option value="7">7반</option><option value="8">8반</option>
-          <option value="9">9반</option><option value="10">10반</option>
-        </select>
-      </div>
+    <!-- 현황 요약 바 -->
+    <div class="stats-bar">
+        <div class="stats-info">
+            현재 선택 활동: <span id="current-activity-name">1-1. 기업가 정신이란?</span>
+        </div>
+        <div>
+            제출 완료 학생: <strong class="stats-count" id="total-count">0</strong> 명
+        </div>
     </div>
 
-    <!-- 1~40번 현황판 -->
-    <div class="section-header">
-      <div class="section-title">📌 학급 제출 현황 (1번 ~ 40번 클릭 시 개별 발표)</div>
-      <div class="submission-info" id="submissionCounter">제출 인원: 0명 / 40명</div>
+    <!-- 카드 목록 영역 -->
+    <div class="grid-container" id="cards-container">
+        <div class="no-data">데이터를 불러오는 중입니다...</div>
     </div>
-    
-    <div class="grid-40" id="grid40"></div>
 
-    <!-- 동적 전환 테이블 영역 -->
-    <div class="section-title" id="tableTitle" style="margin-bottom: 12px;">📝 답변 내역</div>
-    
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr id="tableHeader"></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
-    authDomain: "activity3-bcbca.firebaseapp.com",
-    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
-    projectId: "activity3-bcbca",
-    storageBucket: "activity3-bcbca.firebasestorage.app",
-    messagingSenderId: "698284558768",
-    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  let rawData = { unit1: [], unit2: [], unit3: [] };
-
-  const dbPaths = {
-    unit1: 'holland_activity_submissions',
-    unit2: 'yeep_activity_submissions',
-    unit3: 'learning_activity_submissions'
-  };
-
-  const SECRET_PIN = "4321";
-
-  window.checkPassword = function() {
-    const inputPin = document.getElementById('access-code').value;
-    if (inputPin === SECRET_PIN) {
-      document.getElementById('auth-area').style.display = 'none';
-      document.getElementById('dashboard-area').style.display = 'block';
-      renderDashboard();
-    } else {
-      alert('비밀번호가 올바르지 않습니다.');
-      document.getElementById('access-code').value = '';
-      document.getElementById('access-code').focus();
-    }
-  };
-
-  // 실시간 수신 연동
-  Object.keys(dbPaths).forEach(unit => {
-    onValue(ref(db, dbPaths[unit]), (snapshot) => {
-      const list = [];
-      snapshot.forEach(child => { list.push({ key: child.key, ...child.val() }); });
-      rawData[unit] = list.reverse();
-      renderDashboard();
-    });
-  });
-
-  window.renderDashboard = function() {
-    if (document.getElementById('dashboard-area').style.display === 'none') return;
-
-    const unit = document.getElementById('worksheetSelect').value;
-    const selectedClass = document.getElementById('classSelect').value;
-    const grid = document.getElementById('grid40');
-    const thead = document.getElementById('tableHeader');
-    const tbody = document.getElementById('tableBody');
-
-    grid.innerHTML = '';
-    tbody.innerHTML = '';
-
-    if (unit === 'unit1') {
-      document.getElementById('tableTitle').innerText = '📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역';
-      thead.innerHTML = `
-        <th style="width: 10%;">학번</th>
-        <th style="width: 25%;">관심 직업</th>
-        <th style="width: 43%;">요구되는 진로 특성</th>
-        <th style="width: 14%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      `;
-    } else if (unit === 'unit2') {
-      document.getElementById('tableTitle').innerText = '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역';
-      thead.innerHTML = `
-        <th style="width: 10%;">학번</th>
-        <th style="width: 30%;">최고 역량군</th>
-        <th style="width: 38%;">핵심 역량 3가지 및 꿈과 노력 작성 내용</th>
-        <th style="width: 14%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      `;
-    } else if (unit === 'unit3') {
-      document.getElementById('tableTitle').innerText = '📝 [3단원] 나의 학습 성격 유형 알아보기 답변 내역';
-      thead.innerHTML = `
-        <th style="width: 10%;">학번</th>
-        <th style="width: 25%;">학습 성격 유형</th>
-        <th style="width: 43%;">나의 학습 강점 및 개선 노력 (주관식)</th>
-        <th style="width: 14%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      `;
-    }
-
-    const list = rawData[unit] || [];
-
-    // 반 필터링 (studentInfo 또는 studentId 대응)
-    const filtered = list.filter(item => {
-      const infoStr = item.studentInfo || item.studentId || '';
-      const digits = infoStr.replace(/[^0-9]/g, '');
-      let cls = '';
-      if (digits.length === 5) cls = parseInt(digits.substring(1, 3), 10).toString();
-      else if (digits.length === 4) cls = parseInt(digits.substring(1, 2), 10).toString();
-      return cls === selectedClass;
-    });
-
-    document.getElementById('submissionCounter').innerText = `제출 인원: ${filtered.length}명 / 40명`;
-
-    // 학번 매핑
-    const studentMap = new Map();
-    filtered.forEach(item => {
-      const infoStr = item.studentInfo || item.studentId || '';
-      const digits = infoStr.replace(/[^0-9]/g, '');
-      let num = 0;
-      if (digits.length === 5) num = parseInt(digits.substring(3, 5), 10);
-      else if (digits.length === 4) num = parseInt(digits.substring(2, 4), 10);
-      if (num >= 1 && num <= 40) studentMap.set(num, item);
-    });
-
-    // 1~40번 현황판 렌더링
-    for (let i = 1; i <= 40; i++) {
-      const card = document.createElement('div');
-      if (studentMap.has(i)) {
-        const item = studentMap.get(i);
-        card.className = 'num-card submitted';
+    <script>
+        // Firebase 데이터베이스 URL
+        const BASE_FIREBASE_URL = "https://activity3-bcbca-default-rtdb.firebaseio.com";
         
-        let tagText = '제출완료';
-        if (unit === 'unit1') tagText = item.jobTitle || item.hollandType || '제출완료';
-        else if (unit === 'unit2') tagText = item.topGroup || '핵심역량';
-        else if (unit === 'unit3') tagText = item.learningType || '학습유형';
+        const ENDPOINTS = {
+            '1-1': `${BASE_FIREBASE_URL}/submissions.json`,
+            '2-1': `${BASE_FIREBASE_URL}/yeep_activity_submissions.json`,
+            '3-1': `${BASE_FIREBASE_URL}/learning_activity_submissions.json`
+        };
 
-        card.innerHTML = `
-          <div class="num">${i}번</div>
-          <div class="status">제출완료</div>
-          <div class="result-text">${tagText}</div>
-        `;
-      } else {
-        card.className = 'num-card';
-        card.innerHTML = `<div class="num">${i}번</div><div class="status">미제출</div>`;
-      }
-      grid.appendChild(card);
-    }
+        let submissionsData = {
+            '1-1': [],
+            '2-1': [],
+            '3-1': []
+        };
 
-    // 데이터 행 생성
-    filtered.forEach(item => {
-      const tr = document.createElement('tr');
-      const timeStr = item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-');
+        let currentActivityKey = '1-1';
 
-      let col2 = '';
-      let col3 = '';
+        // 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchAllData();
+            // 5초 간격으로 실시간 데이터 동기화
+            setInterval(fetchAllData, 5000);
+        });
 
-      if (unit === 'unit1') {
-        col2 = item.jobTitle || item.hollandType || '-';
-        col3 = item.jobDesc || `[관심 직업] ${item.targetJob || '-'}<br><br>[진로 다짐] ${item.resolution || '-'}`;
-      } else if (unit === 'unit2') {
-        col2 = item.topGroup || '-';
-        col3 = `[핵심 역량 3가지] ${(item.topAbilities || []).join(', ')}<br><br>[꿈과 노력] ${item.futurePlan || '-'}`;
-      } else if (unit === 'unit3') {
-        col2 = item.learningType || '-';
-        col3 = `[학습 강점] ${item.strength || '-'}<br><br>[개선할 점] ${item.improvement || '-'}`;
-      }
+        // 전체 데이터 조회
+        async function fetchAllData() {
+            for (let key in ENDPOINTS) {
+                try {
+                    const res = await fetch(ENDPOINTS[key]);
+                    if (res.ok) {
+                        const data = await res.json();
+                        submissionsData[key] = data ? Object.values(data) : [];
+                    }
+                } catch (err) {
+                    console.error(`데이터 불러오기 실패 (${key}):`, err);
+                }
+            }
+            renderCards();
+        }
 
-      tr.innerHTML = `
-        <td style="font-weight:bold;">${item.studentId || item.studentInfo || '-'}</td>
-        <td>${col2}</td>
-        <td>${col3}</td>
-        <td>${timeStr}</td>
-        <td style="text-align:center;">
-          <button class="btn-delete" onclick="deleteItem('${unit}', '${item.key}')">🗑️ 삭제</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  };
+        // 선택된 활동 변경
+        function switchActivity(key) {
+            currentActivityKey = key;
+            const selector = document.getElementById('activity-select');
+            document.getElementById('current-activity-name').innerText = selector.options[selector.selectedIndex].text;
+            renderCards();
+        }
 
-  window.deleteItem = function(unit, key) {
-    if (confirm('해당 제출 내역을 삭제하시겠습니까?')) {
-      remove(ref(db, `${dbPaths[unit]}/${key}`));
-    }
-  };
-</script>
+        // 화면 카드 렌더링
+        function renderCards() {
+            const container = document.getElementById('cards-container');
+            const dataList = submissionsData[currentActivityKey] || [];
+            
+            document.getElementById('total-count').innerText = dataList.length;
 
+            if (dataList.length === 0) {
+                container.innerHTML = `<div class="no-data">아직 제출된 내역이 없습니다.</div>`;
+                return;
+            }
+
+            // 최신 제출순 정렬
+            const sortedList = [...dataList].reverse();
+
+            let html = '';
+            sortedList.forEach(item => {
+                const studentId = item.studentId || item.studentInfo || '미입력';
+                const submittedAt = item.submittedAt || '';
+
+                if (currentActivityKey === '1-1') {
+                    const keywords = Array.isArray(item.keywords) ? item.keywords : [];
+                    html += `
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="student-badge">${studentId}</span>
+                                <span class="submit-time">${submittedAt}</span>
+                            </div>
+                            <div class="card-body">
+                                <div>
+                                    <div class="field-label">선택 키워드</div>
+                                    <div class="tag-container">
+                                        ${keywords.map(k => `<span class="tag"># ${k}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="field-label">나만의 기업가정신 정의</div>
+                                    <div class="field-content">${item.definition || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (currentActivityKey === '2-1') {
+                    const topAbilities = Array.isArray(item.topAbilities) ? item.topAbilities : [];
+                    html += `
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="student-badge">${studentId}</span>
+                                <span class="submit-time">${submittedAt}</span>
+                            </div>
+                            <div class="card-body">
+                                <div>
+                                    <div class="field-label">최고 역량군</div>
+                                    <div class="field-content" style="font-weight:bold; color:#2563eb;">${item.topGroup || '-'}</div>
+                                </div>
+                                <div>
+                                    <div class="field-label">핵심 역량 3가지</div>
+                                    <div class="tag-container">
+                                        ${topAbilities.map(a => `<span class="tag"># ${a}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="field-label">꿈과 노력</div>
+                                    <div class="field-content">${item.futurePlan || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (currentActivityKey === '3-1') {
+                    html += `
+                        <div class="card">
+                            <div class="card-header">
+                                <span class="student-badge">${studentId}</span>
+                                <span class="submit-time">${submittedAt}</span>
+                            </div>
+                            <div class="card-body">
+                                <div>
+                                    <div class="field-label">학습 성격 유형</div>
+                                    <div class="field-content" style="font-weight:bold; color:#16a34a;">${item.learningType || '-'}</div>
+                                </div>
+                                <div>
+                                    <div class="field-label">학습 강점</div>
+                                    <div class="field-content">${item.strength || '-'}</div>
+                                </div>
+                                <div>
+                                    <div class="field-label">개선을 위한 노력</div>
+                                    <div class="field-content">${item.improvement || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 📊 1. Excel 다운로드 기능
+        function downloadExcel() {
+            const selector = document.getElementById('activity-select');
+            const selectedTitle = selector.options[selector.selectedIndex].text;
+            const records = submissionsData[currentActivityKey] || [];
+
+            if (records.length === 0) {
+                alert('다운로드할 제출 데이터가 없습니다.');
+                return;
+            }
+
+            let excelData = [];
+
+            if (currentActivityKey === '1-1') {
+                excelData = records.map((item, idx) => ({
+                    '번호': idx + 1,
+                    '학번': item.studentId || item.studentInfo || '',
+                    '선택 키워드': Array.isArray(item.keywords) ? item.keywords.join(', ') : (item.keywords || ''),
+                    '나만의 정의': item.definition || '',
+                    '제출시간': item.submittedAt || ''
+                }));
+            } else if (currentActivityKey === '2-1') {
+                excelData = records.map((item, idx) => ({
+                    '번호': idx + 1,
+                    '학번': item.studentId || item.studentInfo || '',
+                    '최고 역량군': item.topGroup || '',
+                    '핵심 역량 3가지': Array.isArray(item.topAbilities) ? item.topAbilities.join(', ') : (item.topAbilities || ''),
+                    '꿈과 노력': item.futurePlan || '',
+                    '제출시간': item.submittedAt || ''
+                }));
+            } else if (currentActivityKey === '3-1') {
+                excelData = records.map((item, idx) => ({
+                    '번호': idx + 1,
+                    '학번': item.studentId || item.studentInfo || '',
+                    '학습 성격 유형': item.learningType || '',
+                    '학습 강점': item.strength || '',
+                    '개선을 위한 노력': item.improvement || '',
+                    '제출시간': item.submittedAt || ''
+                }));
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, selectedTitle.substring(0, 31));
+
+            const filename = `${selectedTitle}_제출내역.xlsx`;
+            XLSX.writeFile(workbook, filename);
+        }
+
+        // 📺 2. 전체 발표 모드 기능
+        function togglePresentationMode() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`전체 화면 전환 중 오류가 발생했습니다: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+    </script>
 </body>
 </html>
