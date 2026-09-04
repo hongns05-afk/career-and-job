@@ -58,7 +58,7 @@
 
     <!-- 학번 입력 -->
     <div class="student-info">
-        <input type="text" id="studentNum" placeholder="학번 (예: 10101)">
+        <input type="text" id="studentNum" placeholder="학번 (예: 10101)" maxlength="5">
     </div>
 
     <!-- 1번 문항 -->
@@ -299,7 +299,6 @@
         }
     }
 
-    /* 단순 전송 로직 적용 (에러 우회 및 최적화) */
     document.getElementById('submitBtn').addEventListener('click', async function() {
         if(this.disabled) return;
 
@@ -333,7 +332,7 @@
                 unit: '3단원',
                 studentInfo: num,
                 learningType: topType,
-                strength: `행동:${action}, 규범:${rules}, 탐구:${explore}, 이상:${ideal}`,
+                strength: `행동:${action}개 | 규범:${rules}개 | 탐구:${explore}개 | 이상:${ideal}개`,
                 improvement: plan,
                 timestamp: Date.now()
             });
@@ -343,7 +342,7 @@
 
         } catch (err) {
             console.error(err);
-            alert("제출에 실패했습니다: " + err.message + "\n\n파이어베이스 규칙(Rules)이 .write: true 로 설정되어 있는지 확인해 주세요.");
+            alert("제출에 실패했습니다: " + err.message);
             btn.disabled = false;
             btn.innerText = '활동지 제출하기';
         }
