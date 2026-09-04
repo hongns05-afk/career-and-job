@@ -3,209 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>진로 활동 교사 대시보드</title>
+  <title>실시간 제출 현황판</title>
   <style>
     * { box-sizing: border-box; }
-    body {
-      font-family: '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #f1f5f9;
-      margin: 0;
-      padding: 20px;
-      color: #1e293b;
-    }
-    .dashboard-container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .header {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-    .header h1 {
-      margin: 0 0 15px 0;
-      font-size: 24px;
-      color: #0f172a;
-    }
-    .controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    select, button {
-      padding: 10px 16px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 15px;
-      outline: none;
-    }
-    select {
-      background-color: #fff;
-      font-weight: bold;
-      color: #334155;
-      cursor: pointer;
-    }
-    .btn-refresh {
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .btn-refresh:hover { background-color: #1d4ed8; }
+    body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #fdf2f4; color: #1e293b; margin: 0; padding: 25px; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    
+    /* 상단 헤더 */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header h1 { font-size: 1.6rem; margin: 0; display: flex; align-items: center; gap: 8px; color: #0f172a; }
+    .header-btns { display: flex; gap: 10px; }
+    .btn { padding: 10px 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .btn-presentation { background: #a855f7; color: white; }
+    .btn-excel { background: #10b981; color: white; }
+    .btn-delete { background: #ef4444; color: white; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-    /* 학번 현황 그리드 */
-    .status-grid-card {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-    .status-grid-card h3 {
-      margin: 0 0 15px 0;
-      font-size: 18px;
-      color: #334155;
-    }
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 8px;
-    }
-    .student-tile {
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 8px 4px;
-      text-align: center;
-      background-color: #f8fafc;
-      transition: all 0.2s;
-      font-size: 12px;
-    }
-    .student-tile .num {
-      font-weight: bold;
-      font-size: 14px;
-      color: #475569;
-      margin-bottom: 2px;
-    }
-    .student-tile .status {
-      font-size: 11px;
-      color: #94a3b8;
-    }
-    .student-tile.submitted {
-      background-color: #dbeafe;
-      border-color: #93c5fd;
-    }
-    .student-tile.submitted .num { color: #1e40af; }
-    .student-tile.submitted .status { color: #2563eb; font-weight: bold; }
-    .student-tile .tag {
-      font-size: 10px;
-      background: #bfdbfe;
-      color: #1e3a8a;
-      padding: 2px 4px;
-      border-radius: 4px;
-      margin-top: 4px;
-      display: inline-block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
+    /* 필터 바 (활동지 / 학급 선택) */
+    .filter-bar { background: #f1f5f9; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .filter-group { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 0.95rem; }
+    select { padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; background: white; cursor: pointer; }
 
-    /* 테이블 영역 */
-    .table-card {
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-    th, td {
-      padding: 12px 14px;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 14px;
-      vertical-align: top;
-    }
-    th {
-      background-color: #f8fafc;
-      color: #475569;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-    tr:hover { background-color: #f8fafc; }
-    .empty-msg {
-      text-align: center;
-      padding: 40px;
-      color: #64748b;
-    }
+    /* 학급 제출 현황 그리드 */
+    .section-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .student-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; margin-bottom: 30px; }
+    .student-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .student-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
+    .student-card .num { font-weight: bold; font-size: 0.95rem; color: #334155; }
+    .student-card .status { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+    .student-card.submitted { background: #eff6ff; border-color: #bfdbfe; }
+    .student-card.submitted .num { color: #1d4ed8; }
+    .student-card.submitted .status { color: #2563eb; font-weight: bold; }
 
-    @media (max-width: 768px) {
-      .grid-container { grid-template-columns: repeat(5, 1fr); }
-    }
+    /* 답변 내역 테이블 */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 12px 15px; text-align: left; font-size: 0.9rem; }
+    th { background: #f8fafc; color: #475569; font-weight: bold; border-top: 1px solid #e2e8f0; }
+    .text-center { text-align: center; }
+    
+    .del-item-btn { background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+    .del-item-btn:hover { background: #fca5a5; }
   </style>
 </head>
 <body>
 
-<div class="dashboard-container">
+<div class="container">
+  <!-- 헤더 -->
   <div class="header">
-    <h1>📊 진로 활동 실시간 제출 현황판</h1>
-    <div class="controls">
-      <select id="unitSelect">
-        <option value="unit1">활동지 1-1 (나의 강점 찾기)</option>
-        <option value="unit2" selected>활동지 2-1 (창업가 정신 역량 진단)</option>
-        <option value="unit3">활동지 3-1 (학습 성격 유형)</option>
-      </select>
-
-      <select id="classSelect">
-        <option value="1">1반</option>
-        <option value="2">2반</option>
-        <option value="3" selected>3반</option>
-        <option value="4">4반</option>
-        <option value="5">5반</option>
-      </select>
-
-      <button class="btn-refresh" id="refreshBtn">🔄 새로고침</button>
+    <h1>📊 실시간 제출 현황판</h1>
+    <div class="header-btns">
+      <button class="btn btn-presentation" id="btnPresentation">🔮 전체 발표 모드</button>
+      <button class="btn btn-excel" id="btnExcel">🧪 Excel(CSV) 다운로드</button>
+      <button class="btn btn-delete" id="btnDeleteAll">🗑️ 데이터 전체 삭제</button>
     </div>
   </div>
 
-  <!-- 1~40번 제출 현황 타일 -->
-  <div class="status-grid-card">
-    <h3 id="gridTitle">📌 학생별 제출 현황 (1~40번)</h3>
-    <div class="grid-container" id="studentGrid"></div>
+  <!-- 필터 선택 바 -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      📘 활동지 선택:
+      <select id="activitySelect">
+        <option value="2단원">2단원 (창업가 정신의 핵심 역량 찾기)</option>
+        <option value="3단원">3단원 (나의 학습 성격 유형 알아보기)</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      🏫 학급 선택:
+      <!-- 1반 ~ 10반으로 복구 완료 -->
+      <select id="classSelect">
+        <option value="1">1반</option>
+        <option value="2">2반</option>
+        <option value="3">3반</option>
+        <option value="4">4반</option>
+        <option value="5">5반</option>
+        <option value="6">6반</option>
+        <option value="7">7반</option>
+        <option value="8">8반</option>
+        <option value="9">9반</option>
+        <option value="10">10반</option>
+      </select>
+    </div>
   </div>
 
-  <!-- 상세 제출 내역 테이블 -->
-  <div class="table-card">
-    <h3>📋 상세 제출 내역</h3>
-    <table>
-      <thead>
-        <tr id="tableHeader">
-          <th style="width: 80px;">학번</th>
-          <th style="width: 140px;">핵심 결과/유형</th>
-          <th>세부 내용</th>
-          <th style="width: 150px;">제출 시간</th>
-        </tr>
-      </thead>
-      <tbody id="submissionTable">
-        <tr>
-          <td colspan="4" class="empty-msg">데이터를 불러오는 중입니다... ⏳</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- 학급 제출 현황 그리드 (1~40번) -->
+  <div class="section-title">
+    📌 학급 제출 현황 (1번 ~ 40번 클릭 시 개별 발표)
+    <span style="color: #2563eb;" id="submissionCounter">제출 인원: 0명 / 40명</span>
   </div>
+  <div class="student-grid" id="studentGrid"></div>
+
+  <!-- 답변 내역 테이블 -->
+  <div class="section-title" id="tableTitle">
+    📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 12%;">학번</th>
+        <th style="width: 20%;">최고 역량군 / 유형</th>
+        <th>핵심 역량 및 작성 내용</th>
+        <th style="width: 18%;">제출 시간</th>
+        <th style="width: 8%; text-align: center;">관리</th>
+      </tr>
+    </thead>
+    <tbody id="submissionTable">
+      <tr><td colspan="5" class="text-center">데이터를 불러오는 중입니다... ⏳</td></tr>
+    </tbody>
+  </table>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -220,187 +129,132 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // 활동지별 DB 경로
-  const dbPaths = {
-    unit1: 'strengths_activity_submissions',
-    unit2: 'yeep_activity_submissions',
-    unit3: 'learning_activity_submissions'
-  };
-
   let rawData = {};
 
-  const unitSelect = document.getElementById('unitSelect');
-  const classSelect = document.getElementById('classSelect');
-  const refreshBtn = document.getElementById('refreshBtn');
-
-  // Firebase 실시간 바인딩 함수
-  function attachFirebaseListener() {
-    const selectedUnit = unitSelect.value;
-    const path = dbPaths[selectedUnit];
-    const dataRef = ref(db, path);
-
-    onValue(dataRef, (snapshot) => {
-      rawData = snapshot.val() || {};
-      renderDashboard();
-    }, (error) => {
-      console.error("Firebase 읽기 에러:", error);
-      document.getElementById('submissionTable').innerHTML = `<tr><td colspan="4" class="empty-msg">데이터 수신 중 오류가 발생했습니다.</td></tr>`;
-    });
-  }
-
-  // 학번 파싱 보조 함수 (예: 10305 -> 반: 3, 번호: 5)
-  function parseStudentInfo(infoStr) {
-    if (!infoStr) return null;
-    const digits = String(infoStr).replace(/[^0-9]/g, '');
-    
-    if (digits.length === 5) { // 5자리 (예: 10305)
-      return {
-        grade: parseInt(digits.substring(0, 1)),
-        classNum: parseInt(digits.substring(1, 3)),
-        studentNum: parseInt(digits.substring(3, 5))
-      };
-    } else if (digits.length === 4) { // 4자리 (예: 1305)
-      return {
-        grade: parseInt(digits.substring(0, 1)),
-        classNum: parseInt(digits.substring(1, 2)),
-        studentNum: parseInt(digits.substring(2, 4))
-      };
-    }
-    return null;
-  }
-
-  // 시간 포맷 변환 함수
-  function formatDate(timestamp) {
-    if (!timestamp) return '-';
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return '-';
-    return date.toLocaleString('ko-KR', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-  }
-
-  // 대시보드 화면 렌더링
-  function renderDashboard() {
-    const selectedClass = parseInt(classSelect.value);
-    const selectedUnit = unitSelect.value;
-
-    const studentMap = {}; // 번호별 저장 객체
-    const filteredList = [];
-
-    // 1. 데이터 필터링 및 매핑
-    Object.keys(rawData).forEach(key => {
-      const item = rawData[key];
-      const infoText = item.studentInfo || item.studentId || '';
-      const parsed = parseStudentInfo(infoText);
-
-      if (parsed && parsed.classNum === selectedClass) {
-        studentMap[parsed.studentNum] = item;
-        filteredList.push({ ...item, parsed, id: key });
-      }
-    });
-
-    // 2. 상단 1~40번 타일 그리드 렌더링
-    const gridContainer = document.getElementById('studentGrid');
-    gridContainer.innerHTML = '';
-
+  // 1~40번 그리드 생성
+  function renderGrid() {
+    const grid = document.getElementById('studentGrid');
+    grid.innerHTML = '';
     for (let i = 1; i <= 40; i++) {
-      const tile = document.createElement('div');
-      tile.className = 'student-tile';
-
-      const submission = studentMap[i];
-
-      if (submission) {
-        tile.classList.add('submitted');
-        
-        let tagText = '';
-        if (selectedUnit === 'unit1') tagText = submission.topStrength || '';
-        else if (selectedUnit === 'unit2') tagText = submission.topGroup || '';
-        else if (selectedUnit === 'unit3') tagText = submission.learningType || '';
-
-        tile.innerHTML = `
-          <div class="num">${i}번</div>
-          <div class="status">제출완료</div>
-          ${tagText ? `<div class="tag">${tagText}</div>` : ''}
-        `;
-      } else {
-        tile.innerHTML = `
-          <div class="num">${i}번</div>
-          <div class="status">미제출</div>
-        `;
-      }
-      gridContainer.appendChild(tile);
+      const card = document.createElement('div');
+      card.className = 'student-card';
+      card.id = `card-num-${i}`;
+      card.innerHTML = `
+        <div class="num">${i}번</div>
+        <div class="status" id="status-num-${i}">미제출</div>
+      `;
+      grid.appendChild(card);
     }
+  }
 
-    // 3. 하단 상세 내역 테이블 렌더링
-    const tbody = document.getElementById('submissionTable');
-    tbody.innerHTML = '';
+  // 데이터 화면 업데이트
+  function updateDashboard() {
+    renderGrid();
+    
+    const selectedUnit = document.getElementById('activitySelect').value;
+    const selectedClass = document.getElementById('classSelect').value;
+    
+    // 테이블 제목 업데이트
+    document.getElementById('tableTitle').innerText = 
+      selectedUnit === '2단원' 
+        ? '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역' 
+        : '📝 [3단원] 나의 학습 성격 유형 진단 답변 내역';
 
-    // 번호순 정렬
-    filteredList.sort((a, b) => a.parsed.studentNum - b.parsed.studentNum);
+    const tableBody = document.getElementById('submissionTable');
+    tableBody.innerHTML = '';
 
-    if (filteredList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">${selectedClass}반의 제출된 데이터가 없습니다.</td></tr>`;
+    if (!rawData) {
+      document.getElementById('submissionCounter').innerText = '제출 인원: 0명 / 40명';
+      tableBody.innerHTML = '<tr><td colspan="5" class="text-center">제출된 데이터가 없습니다.</td></tr>';
       return;
     }
 
-    filteredList.forEach(item => {
-      const tr = document.createElement('tr');
-      const studentIdDisplay = item.studentInfo || item.studentId || '-';
-      const timeDisplay = formatDate(item.timestamp);
+    let submittedCount = 0;
+    const items = Object.entries(rawData);
 
-      let col2 = '-';
-      let col3 = '-';
+    items.forEach(([key, item]) => {
+      // 단원 필터링
+      if (item.unit && !item.unit.includes(selectedUnit.replace('단원', ''))) return;
 
-      // 활동지 유형별 데이터 세팅
-      if (selectedUnit === 'unit1') {
-        col2 = item.topStrength || '-';
-        col3 = `<strong>[강점 예시/이유]</strong> ${item.strengthReason || '-'}<br><strong>[미래 활용]</strong> ${item.futureApplication || '-'}`;
-      } else if (selectedUnit === 'unit2') {
-        col2 = item.topGroup || '-';
+      const studentStr = item.studentInfo || '';
+      
+      // 학번에서 반/번호 추출 (예: 10305 -> 3반 5번, 1035 -> 3반 5번 등)
+      let classNum = '';
+      let seatNum = 0;
 
-        // 최신 2-1 추천 창업가 문자열 조합 예외 처리
-        const entInfo = item.entrepreneurText || 
-          (item.entrepreneur && item.entrepreneur.name 
-            ? `${item.entrepreneur.name} (${item.entrepreneur.company || ''}) - "${item.entrepreneur.quote || ''}"` 
-            : '-');
-
-        col3 = `<strong>[상위 역량 3가지]</strong> ${(item.topAbilities || []).join(', ')}<br>` +
-               `<strong>[추천 창업가]</strong> ${entInfo}<br>` +
-               `<strong>[꿈과 노력]</strong> ${item.futurePlan || '-'}`;
-      } else if (selectedUnit === 'unit3') {
-        col2 = item.learningType || '-';
-        col3 = `<strong>[학습 강점]</strong> ${item.strength || '-'}<br><strong>[개선할 점]</strong> ${item.improvement || '-'}`;
+      if (studentStr.length >= 4) {
+        classNum = parseInt(studentStr.substring(1, 3), 10).toString(); // 2~3번째 자리
+        seatNum = parseInt(studentStr.substring(3), 10); // 4번째 자리 이후
       }
 
-      tr.innerHTML = `
-        <td><strong>${studentIdDisplay}</strong></td>
-        <td><span style="color:#2563eb; font-weight:bold;">${col2}</span></td>
-        <td>${col3}</td>
-        <td style="color:#64748b; font-size:13px;">${timeDisplay}</td>
-      `;
-      tbody.appendChild(tr);
+      // 현재 선택된 반 데이터만 표시
+      if (classNum === selectedClass) {
+        submittedCount++;
+
+        // 카드 상태 업데이트
+        if (seatNum >= 1 && seatNum <= 40) {
+          const card = document.getElementById(`card-num-${seatNum}`);
+          const status = document.getElementById(`status-num-${seatNum}`);
+          if (card && status) {
+            card.classList.add('submitted');
+            status.innerText = '제출완료';
+          }
+        }
+
+        // 테이블 행 추가
+        const tr = document.createElement('tr');
+        const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-';
+
+        tr.innerHTML = `
+          <td><strong>${item.studentInfo}</strong></td>
+          <td><span style="color:#2563eb; font-weight:bold;">${item.learningType || '-'}</span></td>
+          <td>
+            <div><strong>[대표]</strong> ${item.strength || '-'}</div>
+            <div style="color:#64748b; font-size:0.85rem; margin-top:4px;"><strong>[목표/계획]</strong> ${item.improvement || '-'}</div>
+          </td>
+          <td style="font-size:0.85rem; color:#64748b;">${timeStr}</td>
+          <td class="text-center">
+            <button class="del-item-btn" onclick="deleteData('${key}')">삭제</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      }
     });
+
+    document.getElementById('submissionCounter').innerText = `제출 인원: ${submittedCount}명 / 40명`;
+
+    if (submittedCount === 0) {
+      tableBody.innerHTML = '<tr><td colspan="5" class="text-center">선택한 학급의 제출 내역이 없습니다.</td></tr>';
+    }
   }
 
-  // 이벤트 리스너 등록
-  unitSelect.addEventListener('change', () => {
-    attachFirebaseListener();
+  // 실시간 파이어베이스 수신
+  const submissionsRef = ref(db, 'learning_activity_submissions');
+  onValue(submissionsRef, (snapshot) => {
+    rawData = snapshot.val() || {};
+    updateDashboard();
   });
 
-  classSelect.addEventListener('change', () => {
-    renderDashboard();
+  // 셀렉트 박스 변경 이벤트
+  document.getElementById('activitySelect').addEventListener('change', updateDashboard);
+  document.getElementById('classSelect').addEventListener('change', updateDashboard);
+
+  // 개별 삭제 함수 전역 등록
+  window.deleteData = function(key) {
+    if (confirm("이 제출 내역을 삭제하시겠습니까?")) {
+      remove(ref(db, `learning_activity_submissions/${key}`));
+    }
+  };
+
+  // 전체 삭제 버튼
+  document.getElementById('btnDeleteAll').addEventListener('click', () => {
+    if (confirm("⚠️ 정말로 모든 제출 데이터를 삭제하시겠습니까? 복구할 수 없습니다.")) {
+      remove(submissionsRef);
+    }
   });
 
-  refreshBtn.addEventListener('click', () => {
-    attachFirebaseListener();
-  });
-
-  // 초기 실행
-  attachFirebaseListener();
+  // 초기 그리드 세팅
+  renderGrid();
 </script>
 
 </body>
