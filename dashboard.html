@@ -2,97 +2,103 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>실시간 제출 현황판</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #fdf2f4; color: #1e293b; margin: 0; padding: 25px; }
+    body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #fdf2f4; color: #1e293b; margin: 0; padding: 15px; }
     
-    /* 비밀번호 인증 화면 */
+    /* [모바일 완벽 대응] 비밀번호 인증 레이어 */
     .auth-overlay {
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(8px);
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
       display: flex; justify-content: center; align-items: center;
-      z-index: 9999;
+      z-index: 999999 !important; /* 모바일 최상단 고정 */
+      padding: 20px;
     }
     .auth-card {
-      background: white;
-      padding: 35px 30px;
+      background: #ffffff;
+      padding: 30px 20px;
       border-radius: 20px;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-      width: 100%; max-width: 380px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      width: 100%; max-width: 360px;
       text-align: center;
     }
-    .auth-card h2 { margin: 0 0 10px 0; font-size: 1.4rem; color: #0f172a; }
-    .auth-card p { font-size: 0.9rem; color: #64748b; margin-bottom: 20px; }
+    .auth-card h2 { margin: 0 0 10px 0; font-size: 1.3rem; color: #0f172a; }
+    .auth-card p { font-size: 0.88rem; color: #64748b; margin-bottom: 20px; word-break: keep-all; }
     .auth-card input {
-      width: 100%; padding: 12px;
-      border: 1px solid #cbd5e1; border-radius: 10px;
-      font-size: 1rem; text-align: center; margin-bottom: 15px; outline: none;
+      width: 100%; padding: 14px;
+      border: 2px solid #cbd5e1; border-radius: 12px;
+      font-size: 1.1rem; text-align: center; margin-bottom: 15px; outline: none;
+      -webkit-appearance: none;
     }
-    .auth-card input:focus { border-color: #3b82f6; }
+    .auth-card input:focus { border-color: #2563eb; }
     .auth-card button {
-      width: 100%; padding: 12px; background: #2563eb; color: white;
-      border: none; border-radius: 10px; font-size: 1rem; font-weight: bold;
+      width: 100%; padding: 14px; background: #2563eb; color: white;
+      border: none; border-radius: 12px; font-size: 1rem; font-weight: bold;
       cursor: pointer; transition: 0.2s;
     }
-    .auth-card button:hover { background: #1d4ed8; }
-    .auth-error { color: #ef4444; font-size: 0.85rem; margin-top: 10px; display: none; }
+    .auth-card button:active { background: #1d4ed8; }
+    .auth-error { color: #ef4444; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold; }
 
-    /* 대시보드 메인 영역 (인증 전 숨김) */
-    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; }
+    /* 대시보드 메인 영역 (인증 전 강력 숨김) */
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; }
     
     /* 상단 헤더 */
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .header h1 { font-size: 1.6rem; margin: 0; display: flex; align-items: center; gap: 8px; color: #0f172a; }
-    .header-btns { display: flex; gap: 10px; }
-    .btn { padding: 10px 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .header h1 { font-size: 1.4rem; margin: 0; display: flex; align-items: center; gap: 8px; color: #0f172a; }
+    .header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { padding: 8px 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
     .btn-presentation { background: #a855f7; color: white; }
     .btn-excel { background: #10b981; color: white; }
     .btn-delete { background: #ef4444; color: white; }
     .btn-logout { background: #64748b; color: white; }
-    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-    /* 필터 바 (활동지 / 학급 선택) */
-    .filter-bar { background: #f1f5f9; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .filter-group { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 0.95rem; }
-    select { padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; background: white; cursor: pointer; }
+    /* 필터 바 */
+    .filter-bar { background: #f1f5f9; padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .filter-group { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; width: 100%; justify-content: space-between; }
+    @media (min-width: 640px) {
+      .filter-group { width: auto; justify-content: start; }
+    }
+    select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
 
-    /* 학급 제출 현황 그리드 */
-    .section-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .student-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; margin-bottom: 30px; }
-    .student-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; }
-    .student-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-    .student-card .num { font-weight: bold; font-size: 0.95rem; color: #334155; }
-    .student-card .status { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+    /* 학생 그리드 모바일 대응 */
+    .section-title { font-size: 1rem; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .student-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
+    @media (min-width: 640px) {
+      .student-grid { grid-template-columns: repeat(10, 1fr); }
+    }
+    .student-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 2px; text-align: center; }
+    .student-card .num { font-weight: bold; font-size: 0.85rem; color: #334155; }
+    .student-card .status { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
     .student-card.submitted { background: #eff6ff; border-color: #bfdbfe; }
     .student-card.submitted .num { color: #1d4ed8; }
     .student-card.submitted .status { color: #2563eb; font-weight: bold; }
 
-    /* 답변 내역 테이블 */
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border-bottom: 1px solid #e2e8f0; padding: 12px 15px; text-align: left; font-size: 0.9rem; }
-    th { background: #f8fafc; color: #475569; font-weight: bold; border-top: 1px solid #e2e8f0; }
+    /* 테이블 모바일 가로 스크롤 보장 */
+    .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 600px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; font-size: 0.85rem; }
+    th { background: #f8fafc; color: #475569; font-weight: bold; }
     .text-center { text-align: center; }
     
-    .del-item-btn { background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-    .del-item-btn:hover { background: #fca5a5; }
-    
-    .sub-text { font-size: 0.82rem; color: #64748b; margin-top: 4px; }
+    .del-item-btn { background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+    .sub-text { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
   </style>
 </head>
 <body>
 
-<!-- 비밀번호 입력 모달 -->
+<!-- 모바일 최적화 비밀번호 창 -->
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
     <h2>🔒 교사용 대시보드 인증</h2>
-    <p>선생님 인증 비밀번호를 입력해 주세요.</p>
-    <input type="password" id="adminPasswordInput" placeholder="비밀번호 입력">
-    <button id="authBtn">접속하기</button>
-    <div class="auth-error" id="authError">비밀번호가 올바르지 않습니다.</div>
+    <p>선생님 관리용 비밀번호를 입력해 주세요.</p>
+    <input type="password" id="adminPasswordInput" placeholder="비밀번호 입력" inputmode="numeric">
+    <button id="authBtn">확인 및 접속</button>
+    <div class="auth-error" id="authError">⚠️ 비밀번호가 불일치합니다.</div>
   </div>
 </div>
 
@@ -101,9 +107,9 @@
   <div class="header">
     <h1>📊 실시간 제출 현황판</h1>
     <div class="header-btns">
-      <button class="btn btn-presentation" id="btnPresentation">🔮 전체 발표 모드</button>
-      <button class="btn btn-excel" id="btnExcel">🧪 Excel(CSV) 다운로드</button>
-      <button class="btn btn-delete" id="btnDeleteAll">🗑️ 데이터 전체 삭제</button>
+      <button class="btn btn-presentation" id="btnPresentation">🔮 발표</button>
+      <button class="btn btn-excel" id="btnExcel">🧪 엑셀</button>
+      <button class="btn btn-delete" id="btnDeleteAll">🗑️ 전체삭제</button>
       <button class="btn btn-logout" id="btnLogout">🔒 잠금</button>
     </div>
   </div>
@@ -111,15 +117,15 @@
   <!-- 필터 선택 바 -->
   <div class="filter-bar">
     <div class="filter-group">
-      📘 활동지 선택:
+      <span>📘 활동지:</span>
       <select id="activitySelect">
-        <option value="1단원">1단원 (진로 특성에 맞는 직업 찾기)</option>
-        <option value="2단원">2단원 (창업가 정신의 핵심 역량 찾기)</option>
-        <option value="3단원">3단원 (나의 학습 성격 유형 알아보기)</option>
+        <option value="1단원">1단원 (진로 특성 직업)</option>
+        <option value="2단원">2단원 (창업가 정신)</option>
+        <option value="3단원">3단원 (학습 성격 유형)</option>
       </select>
     </div>
     <div class="filter-group">
-      🏫 학급 선택:
+      <span>🏫 학급:</span>
       <select id="classSelect">
         <option value="1">1반</option>
         <option value="2">2반</option>
@@ -135,10 +141,10 @@
     </div>
   </div>
 
-  <!-- 학급 제출 현황 그리드 (1~40번) -->
+  <!-- 학급 제출 현황 그리드 -->
   <div class="section-title">
-    📌 학급 제출 현황 (1번 ~ 40번 클릭 시 개별 발표)
-    <span style="color: #2563eb;" id="submissionCounter">제출 인원: 0명 / 40명</span>
+    <span>📌 학급 제출 현황 (1~40번)</span>
+    <span style="color: #2563eb;" id="submissionCounter">제출: 0명 / 40명</span>
   </div>
   <div class="student-grid" id="studentGrid"></div>
 
@@ -146,20 +152,22 @@
   <div class="section-title" id="tableTitle">
     📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역
   </div>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 10%;">학번</th>
-        <th style="width: 22%;" id="thHeaderType">대표 선택/유형</th>
-        <th id="thHeaderContent">작성 내용</th>
-        <th style="width: 16%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      </tr>
-    </thead>
-    <tbody id="submissionTable">
-      <tr><td colspan="5" class="text-center">데이터를 불러오는 중입니다... ⏳</td></tr>
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 12%;">학번</th>
+          <th style="width: 25%;" id="thHeaderType">대표 선택/유형</th>
+          <th id="thHeaderContent">작성 내용</th>
+          <th style="width: 18%;">제출 시간</th>
+          <th style="width: 10%; text-align: center;">관리</th>
+        </tr>
+      </thead>
+      <tbody id="submissionTable">
+        <tr><td colspan="5" class="text-center">데이터를 불러오는 중입니다... ⏳</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script type="module">
@@ -181,10 +189,10 @@
 
   let rawData = {};
 
-  // 비밀번호 설정 (원하는 비밀번호로 수정 가능)
+  // 비밀번호 설정 (필요시 변경 가능)
   const ADMIN_PASSWORD = "1234";
 
-  // 인증 관련 처리
+  // 인증 관련 요소
   const authOverlay = document.getElementById('authOverlay');
   const mainContainer = document.getElementById('mainContainer');
   const passwordInput = document.getElementById('adminPasswordInput');
@@ -192,7 +200,7 @@
   const authError = document.getElementById('authError');
 
   function checkPassword() {
-    if (passwordInput.value === ADMIN_PASSWORD) {
+    if (passwordInput.value.trim() === ADMIN_PASSWORD) {
       authOverlay.style.display = 'none';
       mainContainer.style.display = 'block';
       authError.style.display = 'none';
@@ -200,6 +208,8 @@
       attachRealtimeListener();
     } else {
       authError.style.display = 'block';
+      passwordInput.value = '';
+      passwordInput.focus();
     }
   }
 
@@ -213,7 +223,6 @@
     authOverlay.style.display = 'flex';
   });
 
-  // 1~40번 그리드 생성
   function renderGrid() {
     const grid = document.getElementById('studentGrid');
     grid.innerHTML = '';
@@ -229,7 +238,6 @@
     }
   }
 
-  // 학번 분석 (10101 -> 1반 1번, 10305 -> 3반 5번)
   function parseStudentInfo(infoStr) {
     if (!infoStr) return { classNum: '', seatNum: 0 };
     const cleanStr = String(infoStr).replace(/[^0-9]/g, '');
@@ -248,7 +256,6 @@
     return { classNum: '', seatNum: 0 };
   }
 
-  // 선택한 단원의 DB 경로 매핑
   function getPathByUnit(unit) {
     if (unit === '1단원') return 'worksheet1_submissions';
     if (unit === '2단원') return 'yeep_activity_submissions';
@@ -256,14 +263,12 @@
     return 'worksheet1_submissions';
   }
 
-  // 대시보드 UI 업데이트
   function updateDashboard() {
     renderGrid();
     
     const selectedUnit = document.getElementById('activitySelect').value;
     const selectedClass = document.getElementById('classSelect').value;
     
-    // 단원별 헤더 및 필드 이름 세팅
     if (selectedUnit === '1단원') {
       document.getElementById('tableTitle').innerText = '📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역';
       document.getElementById('thHeaderType').innerText = '관심 직업';
@@ -282,7 +287,7 @@
     tableBody.innerHTML = '';
 
     if (!rawData || Object.keys(rawData).length === 0) {
-      document.getElementById('submissionCounter').innerText = '제출 인원: 0명 / 40명';
+      document.getElementById('submissionCounter').innerText = '제출: 0명 / 40명';
       tableBody.innerHTML = '<tr><td colspan="5" class="text-center">제출된 데이터가 없습니다.</td></tr>';
       return;
     }
@@ -291,14 +296,12 @@
     const items = Object.entries(rawData);
 
     items.forEach(([key, item]) => {
-      // studentId (1단원) 또는 studentInfo (2단원) 수용
       const studentStr = item.studentId || item.studentInfo || '';
       const { classNum, seatNum } = parseStudentInfo(studentStr);
 
       if (classNum === selectedClass) {
         submittedCount++;
 
-        // 카드 제출 완료 처리
         if (seatNum >= 1 && seatNum <= 40) {
           const card = document.getElementById(`card-num-${seatNum}`);
           const status = document.getElementById(`status-num-${seatNum}`);
@@ -308,7 +311,6 @@
           }
         }
 
-        // 단원별 데이터 필드 추출
         let typeVal = '-';
         let contentVal = '-';
 
@@ -323,7 +325,6 @@
           contentVal = item.improvement || item.content || '-';
         }
 
-        // 시간 데이터 추출
         let timeVal = '-';
         if (item.submittedAt) {
           timeVal = item.submittedAt;
@@ -336,7 +337,7 @@
           <td><strong>${studentStr}</strong></td>
           <td><span style="color:#2563eb;">${typeVal}</span></td>
           <td><div>${contentVal}</div></td>
-          <td style="font-size:0.85rem; color:#64748b;">${timeVal}</td>
+          <td style="font-size:0.8rem; color:#64748b;">${timeVal}</td>
           <td class="text-center">
             <button class="del-item-btn" onclick="deleteData('${key}')">삭제</button>
           </td>
@@ -345,14 +346,13 @@
       }
     });
 
-    document.getElementById('submissionCounter').innerText = `제출 인원: ${submittedCount}명 / 40명`;
+    document.getElementById('submissionCounter').innerText = `제출: ${submittedCount}명 / 40명`;
 
     if (submittedCount === 0) {
       tableBody.innerHTML = '<tr><td colspan="5" class="text-center">선택한 학급의 제출 내역이 없습니다.</td></tr>';
     }
   }
 
-  // 실시간 Firebase 데이터 수신
   function attachRealtimeListener() {
     const selectedUnit = document.getElementById('activitySelect').value;
     const path = getPathByUnit(selectedUnit);
@@ -368,7 +368,6 @@
   document.getElementById('activitySelect').addEventListener('change', attachRealtimeListener);
   document.getElementById('classSelect').addEventListener('change', updateDashboard);
 
-  // 개별 삭제
   window.deleteData = function(key) {
     const selectedUnit = document.getElementById('activitySelect').value;
     const path = getPathByUnit(selectedUnit);
@@ -378,7 +377,6 @@
     }
   };
 
-  // 전체 삭제
   document.getElementById('btnDeleteAll').addEventListener('click', () => {
     const selectedUnit = document.getElementById('activitySelect').value;
     const path = getPathByUnit(selectedUnit);
