@@ -1,113 +1,406 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나의 학습 성격 유형 알아보기</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: #f4f7fb; color: #1e293b; padding: 20px; display: flex; justify-content: center; }
-        .container { max-width: 800px; width: 100%; background: #fff; padding: 28px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-        h1 { font-size: 1.5rem; margin-bottom: 20px; color: #1e3a8a; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
-        .student-info { margin-bottom: 24px; background: #e0f2fe; padding: 14px 18px; border-radius: 10px; display: flex; align-items: center; gap: 12px; }
-        .student-info label { font-weight: bold; color: #0369a1; }
-        .student-info input { padding: 8px 12px; font-size: 1rem; border: 1px solid #7dd3fc; border-radius: 6px; width: 180px; outline: none; }
-        .question-title { font-weight: 700; font-size: 1.05rem; margin: 24px 0 12px; color: #0f172a; }
-        .text-input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; resize: vertical; outline: none; line-height: 1.5; }
-        .submit-btn { width: 100%; padding: 16px; background: #2563eb; color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
-        .submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>진로 활동 교사 대시보드</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+      color: #1e293b;
+    }
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      margin: 0 0 15px 0;
+      font-size: 24px;
+      color: #0f172a;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    select, button {
+      padding: 10px 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+    }
+    select {
+      background-color: #fff;
+      font-weight: bold;
+      color: #334155;
+      cursor: pointer;
+    }
+    .btn-refresh {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .btn-refresh:hover { background-color: #1d4ed8; }
+
+    /* 학번 현황 그리드 */
+    .status-grid-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .status-grid-card h3 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      color: #334155;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+    }
+    .student-tile {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 4px;
+      text-align: center;
+      background-color: #f8fafc;
+      transition: all 0.2s;
+      font-size: 12px;
+    }
+    .student-tile .num {
+      font-weight: bold;
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 2px;
+    }
+    .student-tile .status {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .student-tile.submitted {
+      background-color: #dbeafe;
+      border-color: #93c5fd;
+    }
+    .student-tile.submitted .num { color: #1e40af; }
+    .student-tile.submitted .status { color: #2563eb; font-weight: bold; }
+    .student-tile .tag {
+      font-size: 10px;
+      background: #bfdbfe;
+      color: #1e3a8a;
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-top: 4px;
+      display: inline-block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    /* 테이블 영역 */
+    .table-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f8fafc;
+      color: #475569;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    tr:hover { background-color: #f8fafc; }
+    .empty-msg {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+      .grid-container { grid-template-columns: repeat(5, 1fr); }
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>나의 학습 성격 유형 알아보기</h1>
+<div class="dashboard-container">
+  <div class="header">
+    <h1>📊 진로 활동 실시간 제출 현황판</h1>
+    <div class="controls">
+      <select id="unitSelect">
+        <option value="unit1">활동지 1-1 (나의 강점 찾기)</option>
+        <option value="unit2" selected>활동지 2-1 (창업가 정신 역량 진단)</option>
+        <option value="unit3">활동지 3-1 (학습 성격 유형)</option>
+      </select>
 
-    <div class="student-info">
-        <label for="student-id">학번</label>
-        <input type="text" id="student-id" placeholder="예: 10101" autocomplete="off">
+      <select id="classSelect">
+        <option value="1">1반</option>
+        <option value="2">2반</option>
+        <option value="3" selected>3반</option>
+        <option value="4">4반</option>
+        <option value="5">5반</option>
+      </select>
+
+      <button class="btn-refresh" id="refreshBtn">🔄 새로고침</button>
     </div>
+  </div>
 
-    <div class="question-title">1. 나의 학습 성격 유형을 입력하세요.</div>
-    <input type="text" id="learning-type" class="text-input" placeholder="예: 행동형, 규범형, 탐구형, 이상형" autocomplete="off">
+  <!-- 1~40번 제출 현황 타일 -->
+  <div class="status-grid-card">
+    <h3 id="gridTitle">📌 학생별 제출 현황 (1~40번)</h3>
+    <div class="grid-container" id="studentGrid"></div>
+  </div>
 
-    <div class="question-title">2. 나의 학습 강점을 작성하세요.</div>
-    <textarea id="strength" class="text-input" rows="3" placeholder="자신의 학습 관련 강점을 적어주세요." autocomplete="off"></textarea>
-
-    <div class="question-title">3. 개선을 위한 노력을 작성하세요.</div>
-    <textarea id="improvement" class="text-input" rows="3" placeholder="부족한 점을 보완하기 위한 노력을 적어주세요." autocomplete="off"></textarea>
-
-    <button id="submit-btn" class="submit-btn" onclick="submitWorksheet3()">제출하기</button>
+  <!-- 상세 제출 내역 테이블 -->
+  <div class="table-card">
+    <h3>📋 상세 제출 내역</h3>
+    <table>
+      <thead>
+        <tr id="tableHeader">
+          <th style="width: 80px;">학번</th>
+          <th style="width: 140px;">핵심 결과/유형</th>
+          <th>세부 내용</th>
+          <th style="width: 150px;">제출 시간</th>
+        </tr>
+      </thead>
+      <tbody id="submissionTable">
+        <tr>
+          <td colspan="4" class="empty-msg">데이터를 불러오는 중입니다... ⏳</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<script>
-    const FIREBASE_URL = "https://activity3-bcbca-default-rtdb.firebaseio.com/learning_activity_submissions.json";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    async function submitWorksheet3() {
-        const btn = document.getElementById('submit-btn');
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
 
-        const studentId = document.getElementById('student-id').value.trim();
-        const learningType = document.getElementById('learning-type').value.trim();
-        const strength = document.getElementById('strength').value.trim();
-        const improvement = document.getElementById('improvement').value.trim();
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-        if(!studentId) { alert('학번을 입력해주세요.'); return; }
-        if(!learningType || !strength || !improvement) { alert('모든 항목을 입력해 주세요.'); return; }
+  // 활동지별 DB 경로
+  const dbPaths = {
+    unit1: 'strengths_activity_submissions',
+    unit2: 'yeep_activity_submissions',
+    unit3: 'learning_activity_submissions'
+  };
 
-        btn.disabled = true;
-        btn.innerText = '제출 중...';
+  let rawData = {};
 
-        try {
-            // 중복 제출 체크
-            let isDuplicate = false;
-            const checkRes = await fetch(FIREBASE_URL, { method: 'GET' });
-            if (checkRes.ok) {
-                const data = await checkRes.json();
-                if (data) {
-                    for (let key in data) {
-                        const item = data[key];
-                        if (item && (item.studentId === studentId || item.studentInfo === studentId)) {
-                            isDuplicate = true;
-                            break;
-                        }
-                    }
-                }
-            }
+  const unitSelect = document.getElementById('unitSelect');
+  const classSelect = document.getElementById('classSelect');
+  const refreshBtn = document.getElementById('refreshBtn');
 
-            if (isDuplicate) {
-                btn.disabled = false;
-                btn.innerText = '제출하기';
-                alert('이미 제출된 학번입니다. 수정이 필요하면 선생님께 문의해 주세요.');
-                return;
-            }
+  // Firebase 실시간 바인딩 함수
+  function attachFirebaseListener() {
+    const selectedUnit = unitSelect.value;
+    const path = dbPaths[selectedUnit];
+    const dataRef = ref(db, path);
 
-            const payload = {
-                studentId: studentId,
-                learningType: learningType,
-                strength: strength,
-                improvement: improvement,
-                submittedAt: new Date().toLocaleString('ko-KR')
-            };
+    onValue(dataRef, (snapshot) => {
+      rawData = snapshot.val() || {};
+      renderDashboard();
+    }, (error) => {
+      console.error("Firebase 읽기 에러:", error);
+      document.getElementById('submissionTable').innerHTML = `<tr><td colspan="4" class="empty-msg">데이터 수신 중 오류가 발생했습니다.</td></tr>`;
+    });
+  }
 
-            const postRes = await fetch(FIREBASE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (postRes.ok) {
-                alert('성공적으로 제출되었습니다!');
-                location.href = 'index.html';
-            } else {
-                throw new Error('전송 실패');
-            }
-
-        } catch (err) {
-            btn.disabled = false;
-            btn.innerText = '제출하기';
-            alert('제출 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
-        }
+  // 학번 파싱 보조 함수 (예: 10305 -> 반: 3, 번호: 5)
+  function parseStudentInfo(infoStr) {
+    if (!infoStr) return null;
+    const digits = String(infoStr).replace(/[^0-9]/g, '');
+    
+    if (digits.length === 5) { // 5자리 (예: 10305)
+      return {
+        grade: parseInt(digits.substring(0, 1)),
+        classNum: parseInt(digits.substring(1, 3)),
+        studentNum: parseInt(digits.substring(3, 5))
+      };
+    } else if (digits.length === 4) { // 4자리 (예: 1305)
+      return {
+        grade: parseInt(digits.substring(0, 1)),
+        classNum: parseInt(digits.substring(1, 2)),
+        studentNum: parseInt(digits.substring(2, 4))
+      };
     }
+    return null;
+  }
+
+  // 시간 포맷 변환 함수
+  function formatDate(timestamp) {
+    if (!timestamp) return '-';
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleString('ko-KR', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  }
+
+  // 대시보드 화면 렌더링
+  function renderDashboard() {
+    const selectedClass = parseInt(classSelect.value);
+    const selectedUnit = unitSelect.value;
+
+    const studentMap = {}; // 번호별 저장 객체
+    const filteredList = [];
+
+    // 1. 데이터 필터링 및 매핑
+    Object.keys(rawData).forEach(key => {
+      const item = rawData[key];
+      const infoText = item.studentInfo || item.studentId || '';
+      const parsed = parseStudentInfo(infoText);
+
+      if (parsed && parsed.classNum === selectedClass) {
+        studentMap[parsed.studentNum] = item;
+        filteredList.push({ ...item, parsed, id: key });
+      }
+    });
+
+    // 2. 상단 1~40번 타일 그리드 렌더링
+    const gridContainer = document.getElementById('studentGrid');
+    gridContainer.innerHTML = '';
+
+    for (let i = 1; i <= 40; i++) {
+      const tile = document.createElement('div');
+      tile.className = 'student-tile';
+
+      const submission = studentMap[i];
+
+      if (submission) {
+        tile.classList.add('submitted');
+        
+        let tagText = '';
+        if (selectedUnit === 'unit1') tagText = submission.topStrength || '';
+        else if (selectedUnit === 'unit2') tagText = submission.topGroup || '';
+        else if (selectedUnit === 'unit3') tagText = submission.learningType || '';
+
+        tile.innerHTML = `
+          <div class="num">${i}번</div>
+          <div class="status">제출완료</div>
+          ${tagText ? `<div class="tag">${tagText}</div>` : ''}
+        `;
+      } else {
+        tile.innerHTML = `
+          <div class="num">${i}번</div>
+          <div class="status">미제출</div>
+        `;
+      }
+      gridContainer.appendChild(tile);
+    }
+
+    // 3. 하단 상세 내역 테이블 렌더링
+    const tbody = document.getElementById('submissionTable');
+    tbody.innerHTML = '';
+
+    // 번호순 정렬
+    filteredList.sort((a, b) => a.parsed.studentNum - b.parsed.studentNum);
+
+    if (filteredList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">${selectedClass}반의 제출된 데이터가 없습니다.</td></tr>`;
+      return;
+    }
+
+    filteredList.forEach(item => {
+      const tr = document.createElement('tr');
+      const studentIdDisplay = item.studentInfo || item.studentId || '-';
+      const timeDisplay = formatDate(item.timestamp);
+
+      let col2 = '-';
+      let col3 = '-';
+
+      // 활동지 유형별 데이터 세팅
+      if (selectedUnit === 'unit1') {
+        col2 = item.topStrength || '-';
+        col3 = `<strong>[강점 예시/이유]</strong> ${item.strengthReason || '-'}<br><strong>[미래 활용]</strong> ${item.futureApplication || '-'}`;
+      } else if (selectedUnit === 'unit2') {
+        col2 = item.topGroup || '-';
+
+        // 최신 2-1 추천 창업가 문자열 조합 예외 처리
+        const entInfo = item.entrepreneurText || 
+          (item.entrepreneur && item.entrepreneur.name 
+            ? `${item.entrepreneur.name} (${item.entrepreneur.company || ''}) - "${item.entrepreneur.quote || ''}"` 
+            : '-');
+
+        col3 = `<strong>[상위 역량 3가지]</strong> ${(item.topAbilities || []).join(', ')}<br>` +
+               `<strong>[추천 창업가]</strong> ${entInfo}<br>` +
+               `<strong>[꿈과 노력]</strong> ${item.futurePlan || '-'}`;
+      } else if (selectedUnit === 'unit3') {
+        col2 = item.learningType || '-';
+        col3 = `<strong>[학습 강점]</strong> ${item.strength || '-'}<br><strong>[개선할 점]</strong> ${item.improvement || '-'}`;
+      }
+
+      tr.innerHTML = `
+        <td><strong>${studentIdDisplay}</strong></td>
+        <td><span style="color:#2563eb; font-weight:bold;">${col2}</span></td>
+        <td>${col3}</td>
+        <td style="color:#64748b; font-size:13px;">${timeDisplay}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // 이벤트 리스너 등록
+  unitSelect.addEventListener('change', () => {
+    attachFirebaseListener();
+  });
+
+  classSelect.addEventListener('change', () => {
+    renderDashboard();
+  });
+
+  refreshBtn.addEventListener('click', () => {
+    attachFirebaseListener();
+  });
+
+  // 초기 실행
+  attachFirebaseListener();
 </script>
 
 </body>
