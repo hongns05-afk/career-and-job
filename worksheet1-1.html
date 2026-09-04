@@ -73,17 +73,8 @@
     <button id="submit-btn" class="submit-btn" onclick="submitWorksheet()">제출하기</button>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 <script>
-    const firebaseConfig = {
-        databaseURL: "https://career-and-job-default-rtdb.firebaseio.com"
-    };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.database();
+    const FIREBASE_URL = "https://career-and-job-default-rtdb.firebaseio.com/holland_activity_submissions.json";
 
     const correctAnswers = {
         "R": ["운동 선수"],
@@ -164,53 +155,57 @@
         if(!jobTitle || !jobDesc) { alert('2번 답란을 모두 입력해주세요.'); return; }
 
         btn.disabled = true;
-        btn.innerText = '제출 처리 중...';
+        btn.innerText = '제출 중...';
 
-        const ref = db.ref('holland_activity_submissions');
-
-        // 1. 중복 검사 (최대 1.5초 대기 후 통과)
-        let isDuplicate = false;
         try {
-            const checkPromise = ref.once('value');
-            const timeoutCheck = new Promise(resolve => setTimeout(() => resolve(null), 1500));
-            const snapshot = await Promise.race([checkPromise, timeoutCheck]);
-
-            if (snapshot && snapshot.exists()) {
-                const data = snapshot.val();
-                for (let key in data) {
-                    if (data[key] && data[key].studentId === studentId) {
-                        isDuplicate = true;
-                        break;
+            // 1. HTTP GET으로 기존 데이터 빠르게 조회하여 학번 중복 검사
+            let isDuplicate = false;
+            const checkRes = await fetch(FIREBASE_URL, { method: 'GET' });
+            if (checkRes.ok) {
+                const data = await checkRes.json();
+                if (data) {
+                    for (let key in data) {
+                        if (data[key] && data[key].studentId === studentId) {
+                            isDuplicate = true;
+                            break;
+                        }
                     }
                 }
             }
-        } catch (e) {
-            console.warn("중복 검사 패스:", e);
-        }
 
-        if (isDuplicate) {
+            if (isDuplicate) {
+                btn.disabled = false;
+                btn.innerText = '제출하기';
+                alert('이미 제출된 학번입니다. 수정이 필요하면 선생님께 문의해 주세요.');
+                return;
+            }
+
+            // 2. HTTP POST 방식으로 Firebase 데이터베이스에 즉시 저장
+            const payload = {
+                studentId: studentId,
+                jobTitle: jobTitle,
+                jobDesc: jobDesc,
+                submittedAt: new Date().toLocaleString('ko-KR')
+            };
+
+            const postRes = await fetch(FIREBASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (postRes.ok) {
+                alert('정답입니다! 성공적으로 제출되었습니다.');
+                location.href = 'index.html';
+            } else {
+                throw new Error('전송 실패');
+            }
+
+        } catch (err) {
             btn.disabled = false;
             btn.innerText = '제출하기';
-            alert('이미 제출된 학번입니다. 수정이 필요하면 선생님께 문의해 주세요.');
-            return;
+            alert('제출 처리 중 오류가 발생했습니다. 다시 시도해 주세요.');
         }
-
-        // 2. 데이터 전송 (비동기 전송 + 2.5초 강제 완료 처리)
-        const newSubmission = {
-            studentId: studentId,
-            jobTitle: jobTitle,
-            jobDesc: jobDesc,
-            submittedAt: new Date().toLocaleString('ko-KR')
-        };
-
-        // Firebase에 전송 요청 (결과를 무한정 기다리지 않음)
-        ref.push(newSubmission).catch(err => console.error("Firebase전송 오류:", err));
-
-        // 2.5초 후 응답 여부와 상관없이 즉시 완료 알림창을 띄우고 메인으로 이동
-        setTimeout(() => {
-            alert('정답입니다! 성공적으로 제출되었습니다.');
-            location.href = 'index.html';
-        }, 2500);
     }
 </script>
 
