@@ -100,8 +100,8 @@
     <thead>
       <tr>
         <th style="width: 12%;">학번</th>
-        <th style="width: 20%;">관심 직업 / 대표 특성</th>
-        <th>작성 내용 (진로 특성 및 제출 내용)</th>
+        <th style="width: 22%;">관심 직업 / 대표 항목</th>
+        <th>진로 특성 및 작성 내용</th>
         <th style="width: 18%;">제출 시간</th>
         <th style="width: 8%; text-align: center;">관리</th>
       </tr>
@@ -147,10 +147,10 @@
     }
   }
 
-  // 학번 유연 파싱 (10101 -> 1반 1번, 10305 -> 3반 5번 등)
+  // 학번 분석 (10101 -> 1반 1번, 10305 -> 3반 5번)
   function parseStudentInfo(infoStr) {
     if (!infoStr) return { classNum: '', seatNum: 0 };
-    const cleanStr = infoStr.replace(/[^0-9]/g, '');
+    const cleanStr = String(infoStr).replace(/[^0-9]/g, '');
     
     if (cleanStr.length === 5) {
       return {
@@ -166,7 +166,7 @@
     return { classNum: '', seatNum: 0 };
   }
 
-  // 단원별 DB 경로 지정
+  // 선택한 단원의 DB 경로 매핑
   function getPathByUnit(unit) {
     if (unit === '1단원') return 'worksheet1_submissions';
     if (unit === '2단원') return 'yeep_activity_submissions';
@@ -174,13 +174,14 @@
     return 'worksheet1_submissions';
   }
 
-  // 화면 업데이트
+  // 대시보드 UI 업데이트
   function updateDashboard() {
     renderGrid();
     
     const selectedUnit = document.getElementById('activitySelect').value;
     const selectedClass = document.getElementById('classSelect').value;
     
+    // 단원별 제목
     const titles = {
       '1단원': '📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역',
       '2단원': '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역',
@@ -201,7 +202,7 @@
     const items = Object.entries(rawData);
 
     items.forEach(([key, item]) => {
-      // studentId 또는 studentInfo 호환
+      // studentId 또는 studentInfo 필드 대응
       const studentStr = item.studentId || item.studentInfo || '';
       const { classNum, seatNum } = parseStudentInfo(studentStr);
 
@@ -217,17 +218,17 @@
           }
         }
 
-        // 1단원(jobTitle, jobDesc) 및 2~3단원 항목 유연한 지원
-        const mainTitle = item.jobTitle || item.learningType || item.strength || item.topStrength || '-';
-        const detailContent = item.jobDesc || item.improvement || item.entrepreneurName || item.content || '-';
-        const timeStr = item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-');
+        // 1단원의 jobTitle/jobDesc 및 2~3단원 필드 호환
+        const titleVal = item.jobTitle || item.learningType || item.strength || item.topStrength || '-';
+        const descVal = item.jobDesc || item.improvement || item.entrepreneurName || item.content || '-';
+        const timeVal = item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-');
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${studentStr}</strong></td>
-          <td><span style="color:#2563eb; font-weight:bold;">${mainTitle}</span></td>
-          <td><div>${detailContent}</div></td>
-          <td style="font-size:0.85rem; color:#64748b;">${timeStr}</td>
+          <td><span style="color:#2563eb; font-weight:bold;">${titleVal}</span></td>
+          <td><div>${descVal}</div></td>
+          <td style="font-size:0.85rem; color:#64748b;">${timeVal}</td>
           <td class="text-center">
             <button class="del-item-btn" onclick="deleteData('${key}')">삭제</button>
           </td>
@@ -243,7 +244,7 @@
     }
   }
 
-  // 실시간 DB 수신
+  // 실시간 Firebase 데이터 수신
   function attachRealtimeListener() {
     const selectedUnit = document.getElementById('activitySelect').value;
     const path = getPathByUnit(selectedUnit);
@@ -256,10 +257,7 @@
     });
   }
 
-  // 필터 변경 이벤트
-  document.getElementById('activitySelect').addEventListener('change', () => {
-    attachRealtimeListener();
-  });
+  document.getElementById('activitySelect').addEventListener('change', attachRealtimeListener);
   document.getElementById('classSelect').addEventListener('change', updateDashboard);
 
   // 개별 삭제
@@ -282,7 +280,6 @@
     }
   });
 
-  // 초기화
   renderGrid();
   attachRealtimeListener();
 </script>
