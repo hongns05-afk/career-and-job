@@ -74,7 +74,7 @@
 </div>
 
 <script>
-    const FIREBASE_URL = "https://career-and-job-default-rtdb.firebaseio.com/holland_activity_submissions.json";
+    const FIREBASE_URL = "https://activity3-bcbca-default-rtdb.firebaseio.com/holland_activity_submissions.json";
 
     const correctAnswers = {
         "R": ["운동 선수"],
@@ -158,14 +158,14 @@
         btn.innerText = '제출 중...';
 
         try {
-            // 1. HTTP GET으로 기존 데이터 빠르게 조회하여 학번 중복 검사
             let isDuplicate = false;
             const checkRes = await fetch(FIREBASE_URL, { method: 'GET' });
             if (checkRes.ok) {
                 const data = await checkRes.json();
                 if (data) {
                     for (let key in data) {
-                        if (data[key] && data[key].studentId === studentId) {
+                        const item = data[key];
+                        if (item && (item.studentId === studentId || item.studentInfo === studentId)) {
                             isDuplicate = true;
                             break;
                         }
@@ -180,7 +180,6 @@
                 return;
             }
 
-            // 2. HTTP POST 방식으로 Firebase 데이터베이스에 즉시 저장
             const payload = {
                 studentId: studentId,
                 jobTitle: jobTitle,
