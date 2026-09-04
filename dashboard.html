@@ -63,13 +63,13 @@
     <div class="filter-group">
       📘 활동지 선택:
       <select id="activitySelect">
+        <option value="1단원">1단원 (나의 강점 찾기 및 활용 전략)</option>
         <option value="2단원">2단원 (창업가 정신의 핵심 역량 찾기)</option>
         <option value="3단원">3단원 (나의 학습 성격 유형 알아보기)</option>
       </select>
     </div>
     <div class="filter-group">
       🏫 학급 선택:
-      <!-- 1반 ~ 10반으로 복구 완료 -->
       <select id="classSelect">
         <option value="1">1반</option>
         <option value="2">2반</option>
@@ -94,14 +94,14 @@
 
   <!-- 답변 내역 테이블 -->
   <div class="section-title" id="tableTitle">
-    📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역
+    📝 [1단원] 나의 강점 찾기 및 활용 전략 답변 내역
   </div>
   <table>
     <thead>
       <tr>
         <th style="width: 12%;">학번</th>
-        <th style="width: 20%;">최고 역량군 / 유형</th>
-        <th>핵심 역량 및 작성 내용</th>
+        <th style="width: 20%;">대표 강점 / 역량 / 유형</th>
+        <th>작성 내용 및 계획</th>
         <th style="width: 18%;">제출 시간</th>
         <th style="width: 8%; text-align: center;">관리</th>
       </tr>
@@ -130,6 +130,7 @@
   const db = getDatabase(app);
 
   let rawData = {};
+  let unsubscribeListener = null;
 
   // 1~40번 그리드 생성
   function renderGrid() {
@@ -147,23 +148,52 @@
     }
   }
 
-  // 데이터 화면 업데이트
+  // 학번 정보 수용 정교화 (10101, 1015, 1-1-5 등 지원)
+  function parseStudentInfo(infoStr) {
+    if (!infoStr) return { classNum: '', seatNum: 0 };
+    const cleanStr = infoStr.replace(/[^0-9]/g, '');
+    
+    if (cleanStr.length === 5) {
+      return {
+        classNum: parseInt(cleanStr.substring(1, 3), 10).toString(),
+        seatNum: parseInt(cleanStr.substring(3), 10)
+      };
+    } else if (cleanStr.length === 4) {
+      return {
+        classNum: cleanStr.substring(1, 2),
+        seatNum: parseInt(cleanStr.substring(2), 10)
+      };
+    }
+    return { classNum: '', seatNum: 0 };
+  }
+
+  // 선택한 단원별 실시간 Firebase DB 경로 매핑
+  function getPathByUnit(unit) {
+    if (unit === '1단원') return 'strengths_activity_submissions';
+    if (unit === '2단원') return 'yeep_activity_submissions';
+    if (unit === '3단원') return 'learning_activity_submissions';
+    return 'strengths_activity_submissions';
+  }
+
+  // 화면 현황 렌더링
   function updateDashboard() {
     renderGrid();
     
     const selectedUnit = document.getElementById('activitySelect').value;
     const selectedClass = document.getElementById('classSelect').value;
     
-    // 테이블 제목 업데이트
-    document.getElementById('tableTitle').innerText = 
-      selectedUnit === '2단원' 
-        ? '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역' 
-        : '📝 [3단원] 나의 학습 성격 유형 진단 답변 내역';
+    // 안내 헤더 자동 변환
+    const titles = {
+      '1단원': '📝 [1단원] 나의 강점 찾기 및 활용 전략 답변 내역',
+      '2단원': '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역',
+      '3단원': '📝 [3단원] 나의 학습 성격 유형 진단 답변 내역'
+    };
+    document.getElementById('tableTitle').innerText = titles[selectedUnit] || titles['1단원'];
 
     const tableBody = document.getElementById('submissionTable');
     tableBody.innerHTML = '';
 
-    if (!rawData) {
+    if (!rawData || Object.keys(rawData).length === 0) {
       document.getElementById('submissionCounter').innerText = '제출 인원: 0명 / 40명';
       tableBody.innerHTML = '<tr><td colspan="5" class="text-center">제출된 데이터가 없습니다.</td></tr>';
       return;
@@ -173,25 +203,12 @@
     const items = Object.entries(rawData);
 
     items.forEach(([key, item]) => {
-      // 단원 필터링
-      if (item.unit && !item.unit.includes(selectedUnit.replace('단원', ''))) return;
+      const { classNum, seatNum } = parseStudentInfo(item.studentInfo);
 
-      const studentStr = item.studentInfo || '';
-      
-      // 학번에서 반/번호 추출 (예: 10305 -> 3반 5번, 1035 -> 3반 5번 등)
-      let classNum = '';
-      let seatNum = 0;
-
-      if (studentStr.length >= 4) {
-        classNum = parseInt(studentStr.substring(1, 3), 10).toString(); // 2~3번째 자리
-        seatNum = parseInt(studentStr.substring(3), 10); // 4번째 자리 이후
-      }
-
-      // 현재 선택된 반 데이터만 표시
       if (classNum === selectedClass) {
         submittedCount++;
 
-        // 카드 상태 업데이트
+        // 제출 완료 표시 처리
         if (seatNum >= 1 && seatNum <= 40) {
           const card = document.getElementById(`card-num-${seatNum}`);
           const status = document.getElementById(`status-num-${seatNum}`);
@@ -201,17 +218,16 @@
           }
         }
 
-        // 테이블 행 추가
-        const tr = document.createElement('tr');
+        // 유연한 데이터 키 매핑 (1, 2, 3단원의 서로 다른 데이터 구조 지원)
+        const typeOrStrength = item.learningType || item.strength || item.topStrength || '-';
+        const detailContent = item.improvement || item.entrepreneurName || item.content || '-';
         const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-';
 
+        const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${item.studentInfo}</strong></td>
-          <td><span style="color:#2563eb; font-weight:bold;">${item.learningType || '-'}</span></td>
-          <td>
-            <div><strong>[대표]</strong> ${item.strength || '-'}</div>
-            <div style="color:#64748b; font-size:0.85rem; margin-top:4px;"><strong>[목표/계획]</strong> ${item.improvement || '-'}</div>
-          </td>
+          <td><span style="color:#2563eb; font-weight:bold;">${typeOrStrength}</span></td>
+          <td><div>${detailContent}</div></td>
           <td style="font-size:0.85rem; color:#64748b;">${timeStr}</td>
           <td class="text-center">
             <button class="del-item-btn" onclick="deleteData('${key}')">삭제</button>
@@ -228,33 +244,50 @@
     }
   }
 
-  // 실시간 파이어베이스 수신
-  const submissionsRef = ref(db, 'learning_activity_submissions');
-  onValue(submissionsRef, (snapshot) => {
-    rawData = snapshot.val() || {};
-    updateDashboard();
-  });
+  // 데이터베이스 실시간 연결
+  function attachRealtimeListener() {
+    const selectedUnit = document.getElementById('activitySelect').value;
+    const path = getPathByUnit(selectedUnit);
 
-  // 셀렉트 박스 변경 이벤트
-  document.getElementById('activitySelect').addEventListener('change', updateDashboard);
+    const submissionsRef = ref(db, path);
+    
+    onValue(submissionsRef, (snapshot) => {
+      rawData = snapshot.val() || {};
+      updateDashboard();
+    });
+  }
+
+  // 활동지 선택 시 데이터 다시 받기
+  document.getElementById('activitySelect').addEventListener('change', () => {
+    attachRealtimeListener();
+  });
+  
+  // 학급 변경 시 필터링 수행
   document.getElementById('classSelect').addEventListener('change', updateDashboard);
 
-  // 개별 삭제 함수 전역 등록
+  // 개별 삭제 기능
   window.deleteData = function(key) {
+    const selectedUnit = document.getElementById('activitySelect').value;
+    const path = getPathByUnit(selectedUnit);
+    
     if (confirm("이 제출 내역을 삭제하시겠습니까?")) {
-      remove(ref(db, `learning_activity_submissions/${key}`));
+      remove(ref(db, `${path}/${key}`));
     }
   };
 
-  // 전체 삭제 버튼
+  // 전체 삭제 기능
   document.getElementById('btnDeleteAll').addEventListener('click', () => {
-    if (confirm("⚠️ 정말로 모든 제출 데이터를 삭제하시겠습니까? 복구할 수 없습니다.")) {
-      remove(submissionsRef);
+    const selectedUnit = document.getElementById('activitySelect').value;
+    const path = getPathByUnit(selectedUnit);
+    
+    if (confirm(`⚠️ 정말로 [${selectedUnit}]의 모든 제출 데이터를 삭제하시겠습니까?`)) {
+      remove(ref(db, path));
     }
   });
 
-  // 초기 그리드 세팅
+  // 초기화 및 구동
   renderGrid();
+  attachRealtimeListener();
 </script>
 
 </body>
