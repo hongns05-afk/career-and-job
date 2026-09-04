@@ -7,7 +7,42 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #fdf2f4; color: #1e293b; margin: 0; padding: 25px; }
-    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    
+    /* 비밀번호 인증 화면 */
+    .auth-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999;
+    }
+    .auth-card {
+      background: white;
+      padding: 35px 30px;
+      border-radius: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+      width: 100%; max-width: 380px;
+      text-align: center;
+    }
+    .auth-card h2 { margin: 0 0 10px 0; font-size: 1.4rem; color: #0f172a; }
+    .auth-card p { font-size: 0.9rem; color: #64748b; margin-bottom: 20px; }
+    .auth-card input {
+      width: 100%; padding: 12px;
+      border: 1px solid #cbd5e1; border-radius: 10px;
+      font-size: 1rem; text-align: center; margin-bottom: 15px; outline: none;
+    }
+    .auth-card input:focus { border-color: #3b82f6; }
+    .auth-card button {
+      width: 100%; padding: 12px; background: #2563eb; color: white;
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: bold;
+      cursor: pointer; transition: 0.2s;
+    }
+    .auth-card button:hover { background: #1d4ed8; }
+    .auth-error { color: #ef4444; font-size: 0.85rem; margin-top: 10px; display: none; }
+
+    /* 대시보드 메인 영역 (인증 전 숨김) */
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; }
     
     /* 상단 헤더 */
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -17,6 +52,7 @@
     .btn-presentation { background: #a855f7; color: white; }
     .btn-excel { background: #10b981; color: white; }
     .btn-delete { background: #ef4444; color: white; }
+    .btn-logout { background: #64748b; color: white; }
     .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
     /* 필터 바 (활동지 / 학급 선택) */
@@ -49,7 +85,18 @@
 </head>
 <body>
 
-<div class="container">
+<!-- 비밀번호 입력 모달 -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <h2>🔒 교사용 대시보드 인증</h2>
+    <p>선생님 인증 비밀번호를 입력해 주세요.</p>
+    <input type="password" id="adminPasswordInput" placeholder="비밀번호 입력">
+    <button id="authBtn">접속하기</button>
+    <div class="auth-error" id="authError">비밀번호가 올바르지 않습니다.</div>
+  </div>
+</div>
+
+<div class="container" id="mainContainer">
   <!-- 헤더 -->
   <div class="header">
     <h1>📊 실시간 제출 현황판</h1>
@@ -57,6 +104,7 @@
       <button class="btn btn-presentation" id="btnPresentation">🔮 전체 발표 모드</button>
       <button class="btn btn-excel" id="btnExcel">🧪 Excel(CSV) 다운로드</button>
       <button class="btn btn-delete" id="btnDeleteAll">🗑️ 데이터 전체 삭제</button>
+      <button class="btn btn-logout" id="btnLogout">🔒 잠금</button>
     </div>
   </div>
 
@@ -132,6 +180,38 @@
   const db = getDatabase(app);
 
   let rawData = {};
+
+  // 비밀번호 설정 (원하는 비밀번호로 수정 가능)
+  const ADMIN_PASSWORD = "1234";
+
+  // 인증 관련 처리
+  const authOverlay = document.getElementById('authOverlay');
+  const mainContainer = document.getElementById('mainContainer');
+  const passwordInput = document.getElementById('adminPasswordInput');
+  const authBtn = document.getElementById('authBtn');
+  const authError = document.getElementById('authError');
+
+  function checkPassword() {
+    if (passwordInput.value === ADMIN_PASSWORD) {
+      authOverlay.style.display = 'none';
+      mainContainer.style.display = 'block';
+      authError.style.display = 'none';
+      passwordInput.value = '';
+      attachRealtimeListener();
+    } else {
+      authError.style.display = 'block';
+    }
+  }
+
+  authBtn.addEventListener('click', checkPassword);
+  passwordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    mainContainer.style.display = 'none';
+    authOverlay.style.display = 'flex';
+  });
 
   // 1~40번 그리드 생성
   function renderGrid() {
@@ -309,7 +389,6 @@
   });
 
   renderGrid();
-  attachRealtimeListener();
 </script>
 
 </body>
