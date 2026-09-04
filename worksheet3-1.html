@@ -132,7 +132,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, set, query, orderByChild, equalTo, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -307,7 +307,7 @@
         }
     }
 
-    /* 3단원 대시보드 실시간 연동 제출 스크립트 (중복 체크 추가) */
+    /* 3단원 대시보드 실시간 연동 제출 스크립트 (인덱스 에러 방지 처리 완료) */
     document.getElementById('submitBtn').addEventListener('click', async function() {
         if(this.disabled) return;
 
@@ -319,16 +319,20 @@
         btn.innerText = '중복 검사 중... ⏳';
 
         try {
-            // 중복 제출 검사
+            // 인덱스 없이 전체 목록 받아와서 클라이언트에서 학번 중복 체크 (index not defined 오류 해결)
             const submissionsRef = ref(db, 'learning_activity_submissions');
-            const studentQuery = query(submissionsRef, orderByChild('studentInfo'), equalTo(num));
-            const snapshot = await get(studentQuery);
+            const snapshot = await get(submissionsRef);
 
             if (snapshot.exists()) {
-                alert('이미 제출된 학번입니다! 수정이 필요하시면 선생님께 문의해주세요.');
-                btn.disabled = false;
-                btn.innerText = '활동지 제출하기';
-                return;
+                const data = snapshot.val();
+                const isDuplicate = Object.values(data).some(item => item.studentInfo === num);
+
+                if (isDuplicate) {
+                    alert('이미 제출된 학번입니다! 수정이 필요하시면 선생님께 문의해주세요.');
+                    btn.disabled = false;
+                    btn.innerText = '활동지 제출하기';
+                    return;
+                }
             }
 
             btn.innerText = '제출 중... 🚀';
