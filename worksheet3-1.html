@@ -132,7 +132,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, set, query, orderByChild, equalTo, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -307,44 +307,65 @@
         }
     }
 
-    /* 3단원 대시보드 실시간 연동 제출 스크립트 */
-    document.getElementById('submitBtn').addEventListener('click', function() {
+    /* 3단원 대시보드 실시간 연동 제출 스크립트 (중복 체크 추가) */
+    document.getElementById('submitBtn').addEventListener('click', async function() {
         if(this.disabled) return;
 
         const num = document.getElementById('studentNum').value.trim();
         const plan = document.getElementById('actionPlan').value.trim();
 
-        const action = parseInt(document.getElementById('score-action').innerText) || 0;
-        const rules = parseInt(document.getElementById('score-rules').innerText) || 0;
-        const explore = parseInt(document.getElementById('score-explore').innerText) || 0;
-        const ideal = parseInt(document.getElementById('score-ideal').innerText) || 0;
+        const btn = this;
+        btn.disabled = true;
+        btn.innerText = '중복 검사 중... ⏳';
 
-        const scores = [
-            { type: '행동형', score: action },
-            { type: '규범형', score: rules },
-            { type: '탐구형', score: explore },
-            { type: '이상형', score: ideal }
-        ];
-        scores.sort((a, b) => b.score - a.score);
+        try {
+            // 중복 제출 검사
+            const submissionsRef = ref(db, 'learning_activity_submissions');
+            const studentQuery = query(submissionsRef, orderByChild('studentInfo'), equalTo(num));
+            const snapshot = await get(studentQuery);
 
-        const topType = `${scores[0].type} (${scores[0].score}점)`;
+            if (snapshot.exists()) {
+                alert('이미 제출된 학번입니다! 수정이 필요하시면 선생님께 문의해주세요.');
+                btn.disabled = false;
+                btn.innerText = '활동지 제출하기';
+                return;
+            }
 
-        // 3단원 DB 경로: learning_activity_submissions
-        const newRef = push(ref(db, 'learning_activity_submissions'));
-        
-        set(newRef, {
-            unit: '3단원',
-            studentInfo: num,
-            learningType: topType,
-            strength: `행동:${action}, 규범:${rules}, 탐구:${explore}, 이상:${ideal}`,
-            improvement: plan,
-            timestamp: Date.now()
-        }).then(() => {
+            btn.innerText = '제출 중... 🚀';
+
+            const action = parseInt(document.getElementById('score-action').innerText) || 0;
+            const rules = parseInt(document.getElementById('score-rules').innerText) || 0;
+            const explore = parseInt(document.getElementById('score-explore').innerText) || 0;
+            const ideal = parseInt(document.getElementById('score-ideal').innerText) || 0;
+
+            const scores = [
+                { type: '행동형', score: action },
+                { type: '규범형', score: rules },
+                { type: '탐구형', score: explore },
+                { type: '이상형', score: ideal }
+            ];
+            scores.sort((a, b) => b.score - a.score);
+
+            const topType = `${scores[0].type} (${scores[0].score}점)`;
+
+            const newRef = push(submissionsRef);
+            await set(newRef, {
+                unit: '3단원',
+                studentInfo: num,
+                learningType: topType,
+                strength: `행동:${action}, 규범:${rules}, 탐구:${explore}, 이상:${ideal}`,
+                improvement: plan,
+                timestamp: Date.now()
+            });
+
             alert("제출이 성공적으로 완료되었습니다!");
             window.location.href = "../index.html";
-        }).catch((err) => {
-            alert("제출 실패: " + err.message);
-        });
+
+        } catch (err) {
+            alert("제출 오류: " + err.message);
+            btn.disabled = false;
+            btn.innerText = '활동지 제출하기';
+        }
     });
 </script>
 
