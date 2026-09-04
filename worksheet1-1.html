@@ -1,293 +1,197 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>실시간 제출 현황판</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #fdf2f4; color: #1e293b; margin: 0; padding: 25px; }
-    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-    
-    /* 상단 헤더 */
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .header h1 { font-size: 1.6rem; margin: 0; display: flex; align-items: center; gap: 8px; color: #0f172a; }
-    .header-btns { display: flex; gap: 10px; }
-    .btn { padding: 10px 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-    .btn-presentation { background: #a855f7; color: white; }
-    .btn-excel { background: #10b981; color: white; }
-    .btn-delete { background: #ef4444; color: white; }
-    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>진로 특성에 맞는 직업 찾기</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: #f4f7fb; color: #1e293b; padding: 20px; display: flex; justify-content: center; }
+        .container { max-width: 800px; width: 100%; background: #fff; padding: 28px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        
+        h1 { font-size: 1.5rem; margin-bottom: 20px; color: #1e3a8a; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+        
+        /* 학번 입력 영역 */
+        .student-info { margin-bottom: 24px; background: #e0f2fe; padding: 14px 18px; border-radius: 10px; display: flex; align-items: center; gap: 12px; }
+        .student-info label { font-weight: bold; color: #0369a1; }
+        .student-info input { padding: 8px 12px; font-size: 1rem; border: 1px solid #7dd3fc; border-radius: 6px; width: 140px; outline: none; }
 
-    /* 필터 바 (활동지 / 학급 선택) */
-    .filter-bar { background: #f1f5f9; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .filter-group { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 0.95rem; }
-    select { padding: 8px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; background: white; cursor: pointer; }
+        .question-title { font-weight: 700; font-size: 1.05rem; margin: 24px 0 12px; color: #0f172a; }
+        
+        /* 보기 카드는 터치형 */
+        .words-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 16px; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; min-height: 60px; }
+        .word-card { background: #fff; border: 1.5px solid #d97706; color: #b45309; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.9rem; user-select: none; transition: all 0.2s; }
+        .word-card.selected { background: #f59e0b; color: #fff; border-color: #d97706; }
 
-    /* 학급 제출 현황 그리드 */
-    .section-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .student-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; margin-bottom: 30px; }
-    .student-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 12px 5px; text-align: center; cursor: pointer; transition: 0.2s; }
-    .student-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-    .student-card .num { font-weight: bold; font-size: 0.95rem; color: #334155; }
-    .student-card .status { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
-    .student-card.submitted { background: #eff6ff; border-color: #bfdbfe; }
-    .student-card.submitted .num { color: #1d4ed8; }
-    .student-card.submitted .status { color: #2563eb; font-weight: bold; }
+        /* 홀랜드 그리드 */
+        .holland-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 30px; }
+        @media (max-width: 600px) { .holland-grid { grid-template-columns: 1fr; } }
+        .holland-card { border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; background: #fafafa; cursor: pointer; min-height: 110px; transition: border-color 0.2s; }
+        .holland-card:hover { border-color: #3b82f6; }
+        .type-header { font-weight: bold; color: #1d4ed8; margin-bottom: 8px; font-size: 0.95rem; }
+        .placed-words { display: flex; flex-wrap: wrap; gap: 6px; }
+        .placed-tag { background: #2563eb; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
 
-    /* 답변 내역 테이블 */
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border-bottom: 1px solid #e2e8f0; padding: 12px 15px; text-align: left; font-size: 0.9rem; }
-    th { background: #f8fafc; color: #475569; font-weight: bold; border-top: 1px solid #e2e8f0; }
-    .text-center { text-align: center; }
-    
-    .del-item-btn { background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-    .del-item-btn:hover { background: #fca5a5; }
-  </style>
+        /* 손글씨 변환 최적화 입력창 */
+        .text-input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; resize: vertical; outline: none; line-height: 1.5; }
+        .text-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        /* 제출 버튼 */
+        .submit-btn { width: 100%; padding: 16px; background: #2563eb; color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .submit-btn:hover { background: #1d4ed8; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- 헤더 -->
-  <div class="header">
-    <h1>📊 실시간 제출 현황판</h1>
-    <div class="header-btns">
-      <button class="btn btn-presentation" id="btnPresentation">🔮 전체 발표 모드</button>
-      <button class="btn btn-excel" id="btnExcel">🧪 Excel(CSV) 다운로드</button>
-      <button class="btn btn-delete" id="btnDeleteAll">🗑️ 데이터 전체 삭제</button>
-    </div>
-  </div>
+    <h1>진로 특성에 맞는 직업 찾기</h1>
 
-  <!-- 필터 선택 바 -->
-  <div class="filter-bar">
-    <div class="filter-group">
-      📘 활동지 선택:
-      <select id="activitySelect">
-        <option value="1단원">1단원 (나의 강점 찾기 및 활용 전략)</option>
-        <option value="2단원">2단원 (창업가 정신의 핵심 역량 찾기)</option>
-        <option value="3단원">3단원 (나의 학습 성격 유형 알아보기)</option>
-      </select>
+    <div class="student-info">
+        <label for="student-id">학번</label>
+        <input type="text" id="student-id" placeholder="예: 10101" maxlength="5" autocomplete="off">
     </div>
-    <div class="filter-group">
-      🏫 학급 선택:
-      <select id="classSelect">
-        <option value="1">1반</option>
-        <option value="2">2반</option>
-        <option value="3">3반</option>
-        <option value="4">4반</option>
-        <option value="5">5반</option>
-        <option value="6">6반</option>
-        <option value="7">7반</option>
-        <option value="8">8반</option>
-        <option value="9">9반</option>
-        <option value="10">10반</option>
-      </select>
+
+    <div class="question-title">1. 아래 보기를 터치한 후 해당되는 홀랜드 흥미 유형 칸을 터치해 봅시다.</div>
+    
+    <!-- 보기 영역 -->
+    <div class="words-box" id="words-box">
+        <div class="word-card" onclick="selectWord(this)">로봇 연구원</div>
+        <div class="word-card" onclick="selectWord(this)">운동 선수</div>
+        <div class="word-card" onclick="selectWord(this)">물리학자</div>
+        <div class="word-card" onclick="selectWord(this)">생물학자</div>
+        <div class="word-card" onclick="selectWord(this)">영화감독</div>
+        <div class="word-card" onclick="selectWord(this)">화가</div>
+        <div class="word-card" onclick="selectWord(this)">가수</div>
+        <div class="word-card" onclick="selectWord(this)">간호사</div>
+        <div class="word-card" onclick="selectWord(this)">교사</div>
+        <div class="word-card" onclick="selectWord(this)">상담가</div>
+        <div class="word-card" onclick="selectWord(this)">변호사</div>
+        <div class="word-card" onclick="selectWord(this)">쇼호스트</div>
+        <div class="word-card" onclick="selectWord(this)">사서</div>
+        <div class="word-card" onclick="selectWord(this)">세무사</div>
+        <div class="word-card" onclick="selectWord(this)">회계사</div>
     </div>
-  </div>
 
-  <!-- 학급 제출 현황 그리드 (1~40번) -->
-  <div class="section-title">
-    📌 학급 제출 현황 (1번 ~ 40번 클릭 시 개별 발표)
-    <span style="color: #2563eb;" id="submissionCounter">제출 인원: 0명 / 40명</span>
-  </div>
-  <div class="student-grid" id="studentGrid"></div>
+    <!-- 홀랜드 6가지 분류 칸 -->
+    <div class="holland-grid">
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">R (실재형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">I (탐구형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">A (예술형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">S (사회형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">E (기업형)</div>
+            <div class="placed-words"></div>
+        </div>
+        <div class="holland-card" onclick="placeWord(this)">
+            <div class="type-header">C (관습형)</div>
+            <div class="placed-words"></div>
+        </div>
+    </div>
 
-  <!-- 답변 내역 테이블 -->
-  <div class="section-title" id="tableTitle">
-    📝 [1단원] 나의 강점 찾기 및 활용 전략 답변 내역
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 12%;">학번</th>
-        <th style="width: 20%;">대표 강점 / 역량 / 유형</th>
-        <th>작성 내용 및 계획</th>
-        <th style="width: 18%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      </tr>
-    </thead>
-    <tbody id="submissionTable">
-      <tr><td colspan="5" class="text-center">데이터를 불러오는 중입니다... ⏳</td></tr>
-    </tbody>
-  </table>
+    <div class="question-title">2. 자신의 관심 직업과 필요한 진로 특성을 적어 봅시다. (펜 필기 가능)</div>
+    <input type="text" id="job-title" class="text-input" placeholder="나의 관심 직업 (예: 경찰관)" autocomplete="off">
+    <textarea id="job-desc" class="text-input" rows="4" placeholder="관심 직업에 요구되는 진로 특성을 적어주세요." autocomplete="off"></textarea>
+
+    <button class="submit-btn" id="submitBtn">제출하기</button>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
-    authDomain: "activity3-bcbca.firebaseapp.com",
-    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
-    projectId: "activity3-bcbca",
-    storageBucket: "activity3-bcbca.firebasestorage.app",
-    messagingSenderId: "698284558768",
-    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  let rawData = {};
-  let unsubscribeListener = null;
-
-  // 1~40번 그리드 생성
-  function renderGrid() {
-    const grid = document.getElementById('studentGrid');
-    grid.innerHTML = '';
-    for (let i = 1; i <= 40; i++) {
-      const card = document.createElement('div');
-      card.className = 'student-card';
-      card.id = `card-num-${i}`;
-      card.innerHTML = `
-        <div class="num">${i}번</div>
-        <div class="status" id="status-num-${i}">미제출</div>
-      `;
-      grid.appendChild(card);
-    }
-  }
-
-  // 학번 정보 수용 정교화 (10101, 1015, 1-1-5 등 지원)
-  function parseStudentInfo(infoStr) {
-    if (!infoStr) return { classNum: '', seatNum: 0 };
-    const cleanStr = infoStr.replace(/[^0-9]/g, '');
-    
-    if (cleanStr.length === 5) {
-      return {
-        classNum: parseInt(cleanStr.substring(1, 3), 10).toString(),
-        seatNum: parseInt(cleanStr.substring(3), 10)
-      };
-    } else if (cleanStr.length === 4) {
-      return {
-        classNum: cleanStr.substring(1, 2),
-        seatNum: parseInt(cleanStr.substring(2), 10)
-      };
-    }
-    return { classNum: '', seatNum: 0 };
-  }
-
-  // 선택한 단원별 실시간 Firebase DB 경로 매핑
-  function getPathByUnit(unit) {
-    if (unit === '1단원') return 'strengths_activity_submissions';
-    if (unit === '2단원') return 'yeep_activity_submissions';
-    if (unit === '3단원') return 'learning_activity_submissions';
-    return 'strengths_activity_submissions';
-  }
-
-  // 화면 현황 렌더링
-  function updateDashboard() {
-    renderGrid();
-    
-    const selectedUnit = document.getElementById('activitySelect').value;
-    const selectedClass = document.getElementById('classSelect').value;
-    
-    // 안내 헤더 자동 변환
-    const titles = {
-      '1단원': '📝 [1단원] 나의 강점 찾기 및 활용 전략 답변 내역',
-      '2단원': '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역',
-      '3단원': '📝 [3단원] 나의 학습 성격 유형 진단 답변 내역'
+    const firebaseConfig = {
+      apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+      authDomain: "activity3-bcbca.firebaseapp.com",
+      databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+      projectId: "activity3-bcbca",
+      storageBucket: "activity3-bcbca.firebasestorage.app",
+      messagingSenderId: "698284558768",
+      appId: "1:698284558768:web:8f8877735a2580af8a6e75"
     };
-    document.getElementById('tableTitle').innerText = titles[selectedUnit] || titles['1단원'];
 
-    const tableBody = document.getElementById('submissionTable');
-    tableBody.innerHTML = '';
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    if (!rawData || Object.keys(rawData).length === 0) {
-      document.getElementById('submissionCounter').innerText = '제출 인원: 0명 / 40명';
-      tableBody.innerHTML = '<tr><td colspan="5" class="text-center">제출된 데이터가 없습니다.</td></tr>';
-      return;
+    let selectedWordElem = null;
+
+    window.selectWord = function(elem) {
+        if(selectedWordElem) selectedWordElem.classList.remove('selected');
+        selectedWordElem = elem;
+        elem.classList.add('selected');
+    };
+
+    window.placeWord = function(cardElem) {
+        if(!selectedWordElem) return;
+        const placedContainer = cardElem.querySelector('.placed-words');
+        
+        const tag = document.createElement('span');
+        tag.className = 'placed-tag';
+        tag.innerText = selectedWordElem.innerText;
+        tag.onclick = function(e) {
+            e.stopPropagation();
+            returnToBox(this, selectedWordElem.innerText);
+        };
+        
+        placedContainer.appendChild(tag);
+        selectedWordElem.style.display = 'none';
+        selectedWordElem.classList.remove('selected');
+        selectedWordElem = null;
+    };
+
+    function returnToBox(tagElem, text) {
+        const words = document.querySelectorAll('.word-card');
+        words.forEach(w => {
+            if(w.innerText === text) w.style.display = 'inline-block';
+        });
+        tagElem.remove();
     }
 
-    let submittedCount = 0;
-    const items = Object.entries(rawData);
+    // Firebase 실시간 제출 연동 로직
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        const studentId = document.getElementById('student-id').value.trim();
+        const jobTitle = document.getElementById('job-title').value.trim();
+        const jobDesc = document.getElementById('job-desc').value.trim();
 
-    items.forEach(([key, item]) => {
-      const { classNum, seatNum } = parseStudentInfo(item.studentInfo);
-
-      if (classNum === selectedClass) {
-        submittedCount++;
-
-        // 제출 완료 표시 처리
-        if (seatNum >= 1 && seatNum <= 40) {
-          const card = document.getElementById(`card-num-${seatNum}`);
-          const status = document.getElementById(`status-num-${seatNum}`);
-          if (card && status) {
-            card.classList.add('submitted');
-            status.innerText = '제출완료';
-          }
+        if(!studentId || studentId.length !== 5) {
+            alert('학번 5자리를 정확히 입력해주세요. (예: 10101)');
+            return;
         }
 
-        // 유연한 데이터 키 매핑 (1, 2, 3단원의 서로 다른 데이터 구조 지원)
-        const typeOrStrength = item.learningType || item.strength || item.topStrength || '-';
-        const detailContent = item.improvement || item.entrepreneurName || item.content || '-';
-        const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-';
+        if(!jobTitle || !jobDesc) {
+            alert('2번 주관식 답란(관심 직업 및 진로 특성)을 작성해야 제출할 수 있습니다.');
+            return;
+        }
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${item.studentInfo}</strong></td>
-          <td><span style="color:#2563eb; font-weight:bold;">${typeOrStrength}</span></td>
-          <td><div>${detailContent}</div></td>
-          <td style="font-size:0.85rem; color:#64748b;">${timeStr}</td>
-          <td class="text-center">
-            <button class="del-item-btn" onclick="deleteData('${key}')">삭제</button>
-          </td>
-        `;
-        tableBody.appendChild(tr);
-      }
+        const submission = {
+            studentId: studentId,
+            jobTitle: jobTitle,
+            jobDesc: jobDesc,
+            submittedAt: new Date().toLocaleString('ko-KR')
+        };
+
+        const submissionsRef = ref(db, 'worksheet1_submissions');
+        
+        push(submissionsRef, submission)
+            .then(() => {
+                alert('성공적으로 제출되었습니다!');
+            })
+            .catch((error) => {
+                console.error("제출 오류:", error);
+                alert('제출 실패! 인터넷 연결을 확인해 주세요.');
+            });
     });
-
-    document.getElementById('submissionCounter').innerText = `제출 인원: ${submittedCount}명 / 40명`;
-
-    if (submittedCount === 0) {
-      tableBody.innerHTML = '<tr><td colspan="5" class="text-center">선택한 학급의 제출 내역이 없습니다.</td></tr>';
-    }
-  }
-
-  // 데이터베이스 실시간 연결
-  function attachRealtimeListener() {
-    const selectedUnit = document.getElementById('activitySelect').value;
-    const path = getPathByUnit(selectedUnit);
-
-    const submissionsRef = ref(db, path);
-    
-    onValue(submissionsRef, (snapshot) => {
-      rawData = snapshot.val() || {};
-      updateDashboard();
-    });
-  }
-
-  // 활동지 선택 시 데이터 다시 받기
-  document.getElementById('activitySelect').addEventListener('change', () => {
-    attachRealtimeListener();
-  });
-  
-  // 학급 변경 시 필터링 수행
-  document.getElementById('classSelect').addEventListener('change', updateDashboard);
-
-  // 개별 삭제 기능
-  window.deleteData = function(key) {
-    const selectedUnit = document.getElementById('activitySelect').value;
-    const path = getPathByUnit(selectedUnit);
-    
-    if (confirm("이 제출 내역을 삭제하시겠습니까?")) {
-      remove(ref(db, `${path}/${key}`));
-    }
-  };
-
-  // 전체 삭제 기능
-  document.getElementById('btnDeleteAll').addEventListener('click', () => {
-    const selectedUnit = document.getElementById('activitySelect').value;
-    const path = getPathByUnit(selectedUnit);
-    
-    if (confirm(`⚠️ 정말로 [${selectedUnit}]의 모든 제출 데이터를 삭제하시겠습니까?`)) {
-      remove(ref(db, path));
-    }
-  });
-
-  // 초기화 및 구동
-  renderGrid();
-  attachRealtimeListener();
 </script>
 
 </body>
