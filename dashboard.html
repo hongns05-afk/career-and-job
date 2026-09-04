@@ -3,280 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>실시간 제출 현황판</title>
+  <title>진로 활동 교사 대시보드</title>
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #fcefeee6;
+      font-family: '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f1f5f9;
       margin: 0;
-      padding: 25px;
-      color: #333;
+      padding: 20px;
+      color: #1e293b;
     }
-    .dashboard-card {
-      max-width: 1280px;
+    .dashboard-container {
+      max-width: 1200px;
       margin: 0 auto;
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.03);
     }
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .header {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       margin-bottom: 20px;
     }
-    .main-title {
+    .header h1 {
+      margin: 0 0 15px 0;
       font-size: 24px;
-      font-weight: 800;
-      color: #1e293b;
+      color: #0f172a;
+    }
+    .controls {
       display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
     }
-    .top-btn-group { display: flex; gap: 10px; }
-    .btn {
-      border: none;
-      border-radius: 8px;
-      padding: 10px 18px;
-      font-weight: bold;
-      font-size: 14px;
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-presentation { background-color: #a855f7; }
-    .btn-excel { background-color: #10b981; }
-    .btn-delete-all { background-color: #ef4444; }
-
-    /* 비밀번호 인증 구역 */
-    .auth-box {
-      text-align: center;
-      padding: 50px 20px;
-      background: #f8fafc;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      margin-top: 20px;
-    }
-    .auth-box h2 { font-size: 1.3rem; color: #1e293b; margin-bottom: 16px; }
-    .auth-box input {
-      padding: 12px 16px;
-      font-size: 1rem;
+    select, button {
+      padding: 10px 16px;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
-      width: 220px;
-      text-align: center;
-      outline: none;
-    }
-    .auth-box button {
-      padding: 12px 24px;
-      font-size: 1rem;
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-left: 8px;
-      font-weight: bold;
-    }
-
-    .dashboard-content { display: none; }
-
-    .filter-bg {
-      background-color: #f1f5f9;
-      border-radius: 12px;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
-    .filter-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: bold;
-      color: #334155;
       font-size: 15px;
+      outline: none;
     }
     select {
-      padding: 8px 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 14px;
+      background-color: #fff;
       font-weight: bold;
-      outline: none;
-      background: white;
+      color: #334155;
+      cursor: pointer;
     }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
+    .btn-refresh {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
     }
-    .section-title { font-size: 17px; font-weight: bold; color: #1e293b; }
-    .submission-info { font-size: 15px; font-weight: bold; color: #2563eb; }
+    .btn-refresh:hover { background-color: #1d4ed8; }
 
-    .grid-40 {
+    /* 학번 현황 그리드 */
+    .status-grid-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+    }
+    .status-grid-card h3 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      color: #334155;
+    }
+    .grid-container {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 10px;
-      margin-bottom: 35px;
+      gap: 8px;
     }
-    .num-card {
+    .student-tile {
       border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px 6px;
+      border-radius: 8px;
+      padding: 8px 4px;
       text-align: center;
-      background: #f8fafc;
-      color: #64748b;
-      min-height: 62px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
+      background-color: #f8fafc;
       transition: all 0.2s;
+      font-size: 12px;
     }
-    .num-card .num { font-weight: bold; font-size: 14px; }
-    .num-card .status { font-size: 11px; margin-top: 2px; }
-
-    .num-card.submitted {
-      background-color: #d1fae5;
-      border-color: #a7f3d0;
-      color: #065f46;
+    .student-tile .num {
+      font-weight: bold;
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 2px;
     }
-    .num-card.submitted .status { font-weight: bold; }
-    .num-card.submitted .result-text {
+    .student-tile .status {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .student-tile.submitted {
+      background-color: #dbeafe;
+      border-color: #93c5fd;
+    }
+    .student-tile.submitted .num { color: #1e40af; }
+    .student-tile.submitted .status { color: #2563eb; font-weight: bold; }
+    .student-tile .tag {
       font-size: 10px;
+      background: #bfdbfe;
+      color: #1e3a8a;
+      padding: 2px 4px;
+      border-radius: 4px;
+      margin-top: 4px;
+      display: inline-block;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 90px;
-      margin-top: 2px;
-      background: #10b981;
-      color: white;
-      padding: 1px 4px;
-      border-radius: 4px;
+      max-width: 100%;
     }
 
-    .table-container {
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      overflow: hidden;
+    /* 테이블 영역 */
+    .table-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow-x: auto;
     }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+      vertical-align: top;
+    }
     th {
       background-color: #f8fafc;
-      padding: 14px;
-      font-size: 14px;
+      color: #475569;
       font-weight: bold;
-      color: #334155;
-      border-bottom: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
+      white-space: nowrap;
     }
-    th:last-child { border-right: none; }
-    td {
-      padding: 16px 14px;
-      font-size: 13px;
-      color: #334155;
-      border-bottom: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
-      vertical-align: top;
-      line-height: 1.5;
+    tr:hover { background-color: #f8fafc; }
+    .empty-msg {
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
     }
-    td:last-child { border-right: none; }
 
-    .btn-delete {
-      background-color: #fee2e2;
-      color: #ef4444;
-      border: 1px solid #fca5a5;
-      padding: 5px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 12px;
-    }
-    .btn-delete:hover { background-color: #fecaca; }
-
-    @media (max-width: 1024px) {
-      .grid-40 { grid-template-columns: repeat(5, 1fr); }
+    @media (max-width: 768px) {
+      .grid-container { grid-template-columns: repeat(5, 1fr); }
     }
   </style>
 </head>
 <body>
 
-<div class="dashboard-card">
-  <!-- 헤더 -->
-  <div class="header-row">
-    <div class="main-title">📊 실시간 제출 현황판 (교사용)</div>
-    <div class="top-btn-group">
-      <button class="btn btn-presentation">🔮 전체 발표 모드</button>
-      <button class="btn btn-excel">📥 Excel(CSV) 다운로드</button>
-      <button class="btn btn-delete-all">🗑️ 데이터 전체 삭제</button>
+<div class="dashboard-container">
+  <div class="header">
+    <h1>📊 진로 활동 실시간 제출 현황판</h1>
+    <div class="controls">
+      <select id="unitSelect">
+        <option value="unit1">활동지 1-1 (나의 강점 찾기)</option>
+        <option value="unit2" selected>활동지 2-1 (창업가 정신 역량 진단)</option>
+        <option value="unit3">활동지 3-1 (학습 성격 유형)</option>
+      </select>
+
+      <select id="classSelect">
+        <option value="1">1반</option>
+        <option value="2">2반</option>
+        <option value="3" selected>3반</option>
+        <option value="4">4반</option>
+        <option value="5">5반</option>
+      </select>
+
+      <button class="btn-refresh" id="refreshBtn">🔄 새로고침</button>
     </div>
   </div>
 
-  <!-- 비밀번호 입력 영역 -->
-  <div id="auth-area" class="auth-box">
-    <h2>🔒 교사 인증이 필요합니다</h2>
-    <input type="password" id="access-code" placeholder="비밀번호 4자리" maxlength="4" onkeyup="if(window.event.keyCode==13){checkPassword()}">
-    <button onclick="checkPassword()">확인</button>
+  <!-- 1~40번 제출 현황 타일 -->
+  <div class="status-grid-card">
+    <h3 id="gridTitle">📌 학생별 제출 현황 (1~40번)</h3>
+    <div class="grid-container" id="studentGrid"></div>
   </div>
 
-  <!-- 대시보드 콘텐츠 구역 -->
-  <div id="dashboard-area" class="dashboard-content">
-    <!-- 조건 선택 드롭다운 -->
-    <div class="filter-bg">
-      <div class="filter-item">
-        📘 활동지 선택:
-        <select id="worksheetSelect" onchange="renderDashboard()">
-          <option value="unit1" selected>1단원 (진로 특성에 맞는 직업 찾기)</option>
-          <option value="unit2">2단원 (창업가 정신의 핵심 역량 찾기)</option>
-          <option value="unit3">3단원 (나의 학습 성격 유형 알아보기)</option>
-        </select>
-      </div>
-      <div class="filter-item">
-        🏫 학급 선택:
-        <select id="classSelect" onchange="renderDashboard()">
-          <option value="1">1반</option><option value="2">2반</option>
-          <option value="3">3반</option><option value="4">4반</option>
-          <option value="5">5반</option><option value="6">6반</option>
-          <option value="7">7반</option><option value="8">8반</option>
-          <option value="9">9반</option><option value="10">10반</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- 1~40번 현황판 -->
-    <div class="section-header">
-      <div class="section-title">📌 학급 제출 현황 (1번 ~ 40번 클릭 시 개별 발표)</div>
-      <div class="submission-info" id="submissionCounter">제출 인원: 0명 / 40명</div>
-    </div>
-    
-    <div class="grid-40" id="grid40"></div>
-
-    <!-- 동적 전환 테이블 영역 -->
-    <div class="section-title" id="tableTitle" style="margin-bottom: 12px;">📝 답변 내역</div>
-    
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr id="tableHeader"></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+  <!-- 상세 제출 내역 테이블 -->
+  <div class="table-card">
+    <h3>📋 상세 제출 내역</h3>
+    <table>
+      <thead>
+        <tr id="tableHeader">
+          <th style="width: 80px;">학번</th>
+          <th style="width: 140px;">핵심 결과/유형</th>
+          <th>세부 내용</th>
+          <th style="width: 150px;">제출 시간</th>
+        </tr>
+      </thead>
+      <tbody id="submissionTable">
+        <tr>
+          <td colspan="4" class="empty-msg">데이터를 불러오는 중입니다... ⏳</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -291,166 +220,187 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  let rawData = { unit1: [], unit2: [], unit3: [] };
-
+  // 활동지별 DB 경로
   const dbPaths = {
-    unit1: 'holland_activity_submissions',
+    unit1: 'strengths_activity_submissions',
     unit2: 'yeep_activity_submissions',
     unit3: 'learning_activity_submissions'
   };
 
-  const SECRET_PIN = "4321";
+  let rawData = {};
 
-  window.checkPassword = function() {
-    const inputPin = document.getElementById('access-code').value;
-    if (inputPin === SECRET_PIN) {
-      document.getElementById('auth-area').style.display = 'none';
-      document.getElementById('dashboard-area').style.display = 'block';
+  const unitSelect = document.getElementById('unitSelect');
+  const classSelect = document.getElementById('classSelect');
+  const refreshBtn = document.getElementById('refreshBtn');
+
+  // Firebase 실시간 바인딩 함수
+  function attachFirebaseListener() {
+    const selectedUnit = unitSelect.value;
+    const path = dbPaths[selectedUnit];
+    const dataRef = ref(db, path);
+
+    onValue(dataRef, (snapshot) => {
+      rawData = snapshot.val() || {};
       renderDashboard();
-    } else {
-      alert('비밀번호가 올바르지 않습니다.');
-      document.getElementById('access-code').value = '';
-      document.getElementById('access-code').focus();
+    }, (error) => {
+      console.error("Firebase 읽기 에러:", error);
+      document.getElementById('submissionTable').innerHTML = `<tr><td colspan="4" class="empty-msg">데이터 수신 중 오류가 발생했습니다.</td></tr>`;
+    });
+  }
+
+  // 학번 파싱 보조 함수 (예: 10305 -> 반: 3, 번호: 5)
+  function parseStudentInfo(infoStr) {
+    if (!infoStr) return null;
+    const digits = String(infoStr).replace(/[^0-9]/g, '');
+    
+    if (digits.length === 5) { // 5자리 (예: 10305)
+      return {
+        grade: parseInt(digits.substring(0, 1)),
+        classNum: parseInt(digits.substring(1, 3)),
+        studentNum: parseInt(digits.substring(3, 5))
+      };
+    } else if (digits.length === 4) { // 4자리 (예: 1305)
+      return {
+        grade: parseInt(digits.substring(0, 1)),
+        classNum: parseInt(digits.substring(1, 2)),
+        studentNum: parseInt(digits.substring(2, 4))
+      };
     }
-  };
+    return null;
+  }
 
-  // 실시간 수신 연동
-  Object.keys(dbPaths).forEach(unit => {
-    onValue(ref(db, dbPaths[unit]), (snapshot) => {
-      const list = [];
-      snapshot.forEach(child => { list.push({ key: child.key, ...child.val() }); });
-      rawData[unit] = list.reverse();
-      renderDashboard();
+  // 시간 포맷 변환 함수
+  function formatDate(timestamp) {
+    if (!timestamp) return '-';
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleString('ko-KR', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
     });
-  });
+  }
 
-  window.renderDashboard = function() {
-    if (document.getElementById('dashboard-area').style.display === 'none') return;
+  // 대시보드 화면 렌더링
+  function renderDashboard() {
+    const selectedClass = parseInt(classSelect.value);
+    const selectedUnit = unitSelect.value;
 
-    const unit = document.getElementById('worksheetSelect').value;
-    const selectedClass = document.getElementById('classSelect').value;
-    const grid = document.getElementById('grid40');
-    const thead = document.getElementById('tableHeader');
-    const tbody = document.getElementById('tableBody');
+    const studentMap = {}; // 번호별 저장 객체
+    const filteredList = [];
 
-    grid.innerHTML = '';
-    tbody.innerHTML = '';
+    // 1. 데이터 필터링 및 매핑
+    Object.keys(rawData).forEach(key => {
+      const item = rawData[key];
+      const infoText = item.studentInfo || item.studentId || '';
+      const parsed = parseStudentInfo(infoText);
 
-    if (unit === 'unit1') {
-      document.getElementById('tableTitle').innerText = '📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역';
-      thead.innerHTML = `
-        <th style="width: 10%;">학번</th>
-        <th style="width: 25%;">관심 직업</th>
-        <th style="width: 43%;">요구되는 진로 특성</th>
-        <th style="width: 14%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      `;
-    } else if (unit === 'unit2') {
-      document.getElementById('tableTitle').innerText = '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역';
-      thead.innerHTML = `
-        <th style="width: 10%;">학번</th>
-        <th style="width: 30%;">최고 역량군</th>
-        <th style="width: 38%;">핵심 역량 3가지 및 꿈과 노력 작성 내용</th>
-        <th style="width: 14%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      `;
-    } else if (unit === 'unit3') {
-      document.getElementById('tableTitle').innerText = '📝 [3단원] 나의 학습 성격 유형 알아보기 답변 내역';
-      thead.innerHTML = `
-        <th style="width: 10%;">학번</th>
-        <th style="width: 25%;">학습 성격 유형</th>
-        <th style="width: 43%;">나의 학습 강점 및 개선 노력 (주관식)</th>
-        <th style="width: 14%;">제출 시간</th>
-        <th style="width: 8%; text-align: center;">관리</th>
-      `;
-    }
-
-    const list = rawData[unit] || [];
-
-    // 반 필터링 (studentInfo 또는 studentId 대응)
-    const filtered = list.filter(item => {
-      const infoStr = item.studentInfo || item.studentId || '';
-      const digits = infoStr.replace(/[^0-9]/g, '');
-      let cls = '';
-      if (digits.length === 5) cls = parseInt(digits.substring(1, 3), 10).toString();
-      else if (digits.length === 4) cls = parseInt(digits.substring(1, 2), 10).toString();
-      return cls === selectedClass;
+      if (parsed && parsed.classNum === selectedClass) {
+        studentMap[parsed.studentNum] = item;
+        filteredList.push({ ...item, parsed, id: key });
+      }
     });
 
-    document.getElementById('submissionCounter').innerText = `제출 인원: ${filtered.length}명 / 40명`;
+    // 2. 상단 1~40번 타일 그리드 렌더링
+    const gridContainer = document.getElementById('studentGrid');
+    gridContainer.innerHTML = '';
 
-    // 학번 매핑
-    const studentMap = new Map();
-    filtered.forEach(item => {
-      const infoStr = item.studentInfo || item.studentId || '';
-      const digits = infoStr.replace(/[^0-9]/g, '');
-      let num = 0;
-      if (digits.length === 5) num = parseInt(digits.substring(3, 5), 10);
-      else if (digits.length === 4) num = parseInt(digits.substring(2, 4), 10);
-      if (num >= 1 && num <= 40) studentMap.set(num, item);
-    });
-
-    // 1~40번 현황판 렌더링
     for (let i = 1; i <= 40; i++) {
-      const card = document.createElement('div');
-      if (studentMap.has(i)) {
-        const item = studentMap.get(i);
-        card.className = 'num-card submitted';
-        
-        let tagText = '제출완료';
-        if (unit === 'unit1') tagText = item.jobTitle || item.hollandType || '제출완료';
-        else if (unit === 'unit2') tagText = item.topGroup || '핵심역량';
-        else if (unit === 'unit3') tagText = item.learningType || '학습유형';
+      const tile = document.createElement('div');
+      tile.className = 'student-tile';
 
-        card.innerHTML = `
+      const submission = studentMap[i];
+
+      if (submission) {
+        tile.classList.add('submitted');
+        
+        let tagText = '';
+        if (selectedUnit === 'unit1') tagText = submission.topStrength || '';
+        else if (selectedUnit === 'unit2') tagText = submission.topGroup || '';
+        else if (selectedUnit === 'unit3') tagText = submission.learningType || '';
+
+        tile.innerHTML = `
           <div class="num">${i}번</div>
           <div class="status">제출완료</div>
-          <div class="result-text">${tagText}</div>
+          ${tagText ? `<div class="tag">${tagText}</div>` : ''}
         `;
       } else {
-        card.className = 'num-card';
-        card.innerHTML = `<div class="num">${i}번</div><div class="status">미제출</div>`;
+        tile.innerHTML = `
+          <div class="num">${i}번</div>
+          <div class="status">미제출</div>
+        `;
       }
-      grid.appendChild(card);
+      gridContainer.appendChild(tile);
     }
 
-    // 데이터 행 생성
-    filtered.forEach(item => {
+    // 3. 하단 상세 내역 테이블 렌더링
+    const tbody = document.getElementById('submissionTable');
+    tbody.innerHTML = '';
+
+    // 번호순 정렬
+    filteredList.sort((a, b) => a.parsed.studentNum - b.parsed.studentNum);
+
+    if (filteredList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">${selectedClass}반의 제출된 데이터가 없습니다.</td></tr>`;
+      return;
+    }
+
+    filteredList.forEach(item => {
       const tr = document.createElement('tr');
-      const timeStr = item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-');
+      const studentIdDisplay = item.studentInfo || item.studentId || '-';
+      const timeDisplay = formatDate(item.timestamp);
 
-      let col2 = '';
-      let col3 = '';
+      let col2 = '-';
+      let col3 = '-';
 
-      if (unit === 'unit1') {
-        col2 = item.jobTitle || item.hollandType || '-';
-        col3 = item.jobDesc || `[관심 직업] ${item.targetJob || '-'}<br><br>[진로 다짐] ${item.resolution || '-'}`;
-      } else if (unit === 'unit2') {
+      // 활동지 유형별 데이터 세팅
+      if (selectedUnit === 'unit1') {
+        col2 = item.topStrength || '-';
+        col3 = `<strong>[강점 예시/이유]</strong> ${item.strengthReason || '-'}<br><strong>[미래 활용]</strong> ${item.futureApplication || '-'}`;
+      } else if (selectedUnit === 'unit2') {
         col2 = item.topGroup || '-';
-        col3 = `[핵심 역량 3가지] ${(item.topAbilities || []).join(', ')}<br><br>[꿈과 노력] ${item.futurePlan || '-'}`;
-      } else if (unit === 'unit3') {
+
+        // 최신 2-1 추천 창업가 문자열 조합 예외 처리
+        const entInfo = item.entrepreneurText || 
+          (item.entrepreneur && item.entrepreneur.name 
+            ? `${item.entrepreneur.name} (${item.entrepreneur.company || ''}) - "${item.entrepreneur.quote || ''}"` 
+            : '-');
+
+        col3 = `<strong>[상위 역량 3가지]</strong> ${(item.topAbilities || []).join(', ')}<br>` +
+               `<strong>[추천 창업가]</strong> ${entInfo}<br>` +
+               `<strong>[꿈과 노력]</strong> ${item.futurePlan || '-'}`;
+      } else if (selectedUnit === 'unit3') {
         col2 = item.learningType || '-';
-        col3 = `[학습 강점] ${item.strength || '-'}<br><br>[개선할 점] ${item.improvement || '-'}`;
+        col3 = `<strong>[학습 강점]</strong> ${item.strength || '-'}<br><strong>[개선할 점]</strong> ${item.improvement || '-'}`;
       }
 
       tr.innerHTML = `
-        <td style="font-weight:bold;">${item.studentId || item.studentInfo || '-'}</td>
-        <td>${col2}</td>
+        <td><strong>${studentIdDisplay}</strong></td>
+        <td><span style="color:#2563eb; font-weight:bold;">${col2}</span></td>
         <td>${col3}</td>
-        <td>${timeStr}</td>
-        <td style="text-align:center;">
-          <button class="btn-delete" onclick="deleteItem('${unit}', '${item.key}')">🗑️ 삭제</button>
-        </td>
+        <td style="color:#64748b; font-size:13px;">${timeDisplay}</td>
       `;
       tbody.appendChild(tr);
     });
-  };
+  }
 
-  window.deleteItem = function(unit, key) {
-    if (confirm('해당 제출 내역을 삭제하시겠습니까?')) {
-      remove(ref(db, `${dbPaths[unit]}/${key}`));
-    }
-  };
+  // 이벤트 리스너 등록
+  unitSelect.addEventListener('change', () => {
+    attachFirebaseListener();
+  });
+
+  classSelect.addEventListener('change', () => {
+    renderDashboard();
+  });
+
+  refreshBtn.addEventListener('click', () => {
+    attachFirebaseListener();
+  });
+
+  // 초기 실행
+  attachFirebaseListener();
 </script>
 
 </body>
