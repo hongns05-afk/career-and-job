@@ -43,6 +43,8 @@
     
     .del-item-btn { background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
     .del-item-btn:hover { background: #fca5a5; }
+    
+    .sub-text { font-size: 0.82rem; color: #64748b; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -99,10 +101,10 @@
   <table>
     <thead>
       <tr>
-        <th style="width: 12%;">학번</th>
-        <th style="width: 22%;">관심 직업 / 대표 항목</th>
-        <th>진로 특성 및 작성 내용</th>
-        <th style="width: 18%;">제출 시간</th>
+        <th style="width: 10%;">학번</th>
+        <th style="width: 22%;" id="thHeaderType">대표 선택/유형</th>
+        <th id="thHeaderContent">작성 내용</th>
+        <th style="width: 16%;">제출 시간</th>
         <th style="width: 8%; text-align: center;">관리</th>
       </tr>
     </thead>
@@ -181,13 +183,20 @@
     const selectedUnit = document.getElementById('activitySelect').value;
     const selectedClass = document.getElementById('classSelect').value;
     
-    // 단원별 제목
-    const titles = {
-      '1단원': '📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역',
-      '2단원': '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역',
-      '3단원': '📝 [3단원] 나의 학습 성격 유형 진단 답변 내역'
-    };
-    document.getElementById('tableTitle').innerText = titles[selectedUnit] || titles['1단원'];
+    // 단원별 헤더 및 필드 이름 세팅
+    if (selectedUnit === '1단원') {
+      document.getElementById('tableTitle').innerText = '📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역';
+      document.getElementById('thHeaderType').innerText = '관심 직업';
+      document.getElementById('thHeaderContent').innerText = '진로 특성 및 작성 내용';
+    } else if (selectedUnit === '2단원') {
+      document.getElementById('tableTitle').innerText = '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역';
+      document.getElementById('thHeaderType').innerText = '상위 역량군 / 역량';
+      document.getElementById('thHeaderContent').innerText = '추천 창업가 & 꿈을 이루기 위한 노력';
+    } else if (selectedUnit === '3단원') {
+      document.getElementById('tableTitle').innerText = '📝 [3단원] 나의 학습 성격 유형 진단 답변 내역';
+      document.getElementById('thHeaderType').innerText = '학습 유형 / 강점';
+      document.getElementById('thHeaderContent').innerText = '개선점 및 계획';
+    }
 
     const tableBody = document.getElementById('submissionTable');
     tableBody.innerHTML = '';
@@ -202,13 +211,14 @@
     const items = Object.entries(rawData);
 
     items.forEach(([key, item]) => {
-      // studentId 또는 studentInfo 필드 대응
+      // studentId (1단원) 또는 studentInfo (2단원) 수용
       const studentStr = item.studentId || item.studentInfo || '';
       const { classNum, seatNum } = parseStudentInfo(studentStr);
 
       if (classNum === selectedClass) {
         submittedCount++;
 
+        // 카드 제출 완료 처리
         if (seatNum >= 1 && seatNum <= 40) {
           const card = document.getElementById(`card-num-${seatNum}`);
           const status = document.getElementById(`status-num-${seatNum}`);
@@ -218,16 +228,34 @@
           }
         }
 
-        // 1단원의 jobTitle/jobDesc 및 2~3단원 필드 호환
-        const titleVal = item.jobTitle || item.learningType || item.strength || item.topStrength || '-';
-        const descVal = item.jobDesc || item.improvement || item.entrepreneurName || item.content || '-';
-        const timeVal = item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-');
+        // 단원별 데이터 필드 추출
+        let typeVal = '-';
+        let contentVal = '-';
+
+        if (selectedUnit === '1단원') {
+          typeVal = item.jobTitle || '-';
+          contentVal = item.jobDesc || '-';
+        } else if (selectedUnit === '2단원') {
+          typeVal = `<div><strong>${item.topGroup || '-'}</strong></div><div class="sub-text">1~3순위: ${item.topAbilitiesText || '-'}</div>`;
+          contentVal = `<div>👤 <strong>창업가:</strong> ${item.entrepreneurText || '-'}</div><div style="margin-top:4px;">🎯 <strong>다짐:</strong> ${item.futurePlan || '-'}</div>`;
+        } else {
+          typeVal = item.learningType || item.strength || '-';
+          contentVal = item.improvement || item.content || '-';
+        }
+
+        // 시간 데이터 추출
+        let timeVal = '-';
+        if (item.submittedAt) {
+          timeVal = item.submittedAt;
+        } else if (item.timestamp) {
+          timeVal = new Date(item.timestamp).toLocaleString('ko-KR');
+        }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${studentStr}</strong></td>
-          <td><span style="color:#2563eb; font-weight:bold;">${titleVal}</span></td>
-          <td><div>${descVal}</div></td>
+          <td><span style="color:#2563eb;">${typeVal}</span></td>
+          <td><div>${contentVal}</div></td>
           <td style="font-size:0.85rem; color:#64748b;">${timeVal}</td>
           <td class="text-center">
             <button class="del-item-btn" onclick="deleteData('${key}')">삭제</button>
