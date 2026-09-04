@@ -132,7 +132,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -165,36 +165,28 @@
 
     const typeDetails = {
         '행동형': {
-            sub: '"예측불허 럭비공"',
-            color: '#1d4ed8',
-            bg: '#eff6ff',
+            sub: '"예측불허 럭비공"', color: '#1d4ed8', bg: '#eff6ff',
             trait: ['자유, 자발성', '경쟁, 모험을 통해 성장', '미래를 위해 준비한다는 생각보다는 현재를 즐김', '변화와 자극적인 일을 선호함'],
             strategy: ['자신의 학습 수준을 정확히 알기', '시청각 자료를 활용하여 공부', '실생활과 연결시켜 공부', '짧은 시간 집중 학습'],
             management: ['목표를 가급적 크고 높게 스스로 설정', '목표를 달성했을 때 스스로 즐거움의 보상 주기', '스스로 정한 약속은 반드시 지키기', '재학 기간 중 반장 같은 리더 경험해 보기'],
             improvement: ['논리적이고 체계적으로 계획을 세우고 책임 있고 끈기 있게 노력하는 행동을 습관화함']
         },
         '규범형': {
-            sub: '"꼼꼼쟁이"',
-            color: '#a16207',
-            bg: '#fefce8',
+            sub: '"꼼꼼쟁이"', color: '#a16207', bg: '#fefce8',
             trait: ['책임, 성실', '성실하고 책임감이 강함', '모든 일을 계획적이고 조직적으로 처리', '질서와 규율을 강조, 만인에게 공평하게 적용'],
             strategy: ['기초에서 심화로 차근차근 문제 풀기', '반드시 요약 정리, 도표화 학습, 반복 학습', '학습 시 요점과 주변 요소 구분하여 공부', '장기 학습계획을 수립하여 공부'],
             management: ['목표 수립 시 과정과 절차에 대해 자세히 검토', '규칙적으로 생활하며 공부', '주변의 지나친 기대나 스스로 과도한 요구를 조절', '일정한 장소에서 일정한 분량을 학습'],
             improvement: ['다른 사람의 시선으로 바라보는 연습, 다양하고 새로운 변화와 시도를 해보는 노력이 필요함']
         },
         '탐구형': {
-            sub: '"호기심투성이"',
-            color: '#15803d',
-            bg: '#f0fdf4',
+            sub: '"호기심투성이"', color: '#15803d', bg: '#f0fdf4',
             trait: ['진리 탐구', '끊임없이 의문을 제시', '새로운 발견과 탐구에 몰입', '사교적인 기술이 부족함'],
             strategy: ['개념과 원리 위주로 공부', '다소 어려운 문제를 풀어가며 흥미 유지', '개념 이해 후 핵심을 체계적으로 정리'],
             management: ['자신의 능력을 충분히 인식한 후 목표를 설정', '공부 시간을 다소 길게 잡아도 무방', '일의 우선순위를 정한 후 집중해서 실행', '좋아하는 여가를 유지하며, 흥미와 호기심을 끌어올리기'],
             improvement: ['타인의 감정이나 노력에 관심을 갖구 현실의 중요성을 인정하는 태도를 기름']
         },
         '이상형': {
-            sub: '"상상력이 풍부한 이상형"',
-            color: '#be123c',
-            bg: '#fff1f2',
+            sub: '"상상력이 풍부한 이상형"', color: '#be123c', bg: '#fff1f2',
             trait: ['자아실현', '인간관계를 중시하고 자신에 대한 이해를 갈망', '타인의 감정에 대한 공감력이 뛰어남', '자기를 인정해 주고 용기와 격려를 해줄 때 능력 발휘'],
             strategy: ['선생님에 대한 좋은 감정 갖기', '개념과 공식보다 배경 지식 알아보기', '학습 내용 이해 후 반복적으로 문제 풀기', '쉬운 문제를 풀어가며 자신감을 유지하기'],
             management: ['단기간에 달성 가능성 높은 것 위주로 목표 세우기', '단기 목표도 단계를 작게 나누어서 수립하기', '시간 계획대로 실천하며 성공 경험을 통해 자신감 키우기', '롤모델 설정하기'],
@@ -307,7 +299,7 @@
         }
     }
 
-    /* 3단원 대시보드 실시간 연동 제출 스크립트 (인덱스 에러 방지 처리 완료) */
+    /* 단순 전송 로직 적용 (에러 우회 및 최적화) */
     document.getElementById('submitBtn').addEventListener('click', async function() {
         if(this.disabled) return;
 
@@ -316,43 +308,27 @@
 
         const btn = this;
         btn.disabled = true;
-        btn.innerText = '중복 검사 중... ⏳';
+        btn.innerText = '제출 처리 중... 🚀';
+
+        const action = parseInt(document.getElementById('score-action').innerText) || 0;
+        const rules = parseInt(document.getElementById('score-rules').innerText) || 0;
+        const explore = parseInt(document.getElementById('score-explore').innerText) || 0;
+        const ideal = parseInt(document.getElementById('score-ideal').innerText) || 0;
+
+        const scores = [
+            { type: '행동형', score: action },
+            { type: '규범형', score: rules },
+            { type: '탐구형', score: explore },
+            { type: '이상형', score: ideal }
+        ];
+        scores.sort((a, b) => b.score - a.score);
+
+        const topType = `${scores[0].type} (${scores[0].score}점)`;
 
         try {
-            // 인덱스 없이 전체 목록 받아와서 클라이언트에서 학번 중복 체크 (index not defined 오류 해결)
             const submissionsRef = ref(db, 'learning_activity_submissions');
-            const snapshot = await get(submissionsRef);
-
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const isDuplicate = Object.values(data).some(item => item.studentInfo === num);
-
-                if (isDuplicate) {
-                    alert('이미 제출된 학번입니다! 수정이 필요하시면 선생님께 문의해주세요.');
-                    btn.disabled = false;
-                    btn.innerText = '활동지 제출하기';
-                    return;
-                }
-            }
-
-            btn.innerText = '제출 중... 🚀';
-
-            const action = parseInt(document.getElementById('score-action').innerText) || 0;
-            const rules = parseInt(document.getElementById('score-rules').innerText) || 0;
-            const explore = parseInt(document.getElementById('score-explore').innerText) || 0;
-            const ideal = parseInt(document.getElementById('score-ideal').innerText) || 0;
-
-            const scores = [
-                { type: '행동형', score: action },
-                { type: '규범형', score: rules },
-                { type: '탐구형', score: explore },
-                { type: '이상형', score: ideal }
-            ];
-            scores.sort((a, b) => b.score - a.score);
-
-            const topType = `${scores[0].type} (${scores[0].score}점)`;
-
             const newRef = push(submissionsRef);
+
             await set(newRef, {
                 unit: '3단원',
                 studentInfo: num,
@@ -366,7 +342,8 @@
             window.location.href = "../index.html";
 
         } catch (err) {
-            alert("제출 오류: " + err.message);
+            console.error(err);
+            alert("제출에 실패했습니다: " + err.message + "\n\n파이어베이스 규칙(Rules)이 .write: true 로 설정되어 있는지 확인해 주세요.");
             btn.disabled = false;
             btn.innerText = '활동지 제출하기';
         }
