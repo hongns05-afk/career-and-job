@@ -173,7 +173,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, push, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, push, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -237,6 +237,7 @@
         document.getElementById('task4').value.trim()
       ].filter(t => t.length > 0);
 
+      // 제출 데이터 생성 (제출 시간 필드 제외)
       const submitData = {
         unit: '2단원-2',
         studentInfo: studentId,
@@ -247,10 +248,7 @@
         tasksText: tasks.join(' / '),
         contribution: document.getElementById('contribution').value.trim(),
         competencies: competencies,
-        competenciesText: competencies.join(', '),
-        oneLineReview: document.getElementById('oneLineReview').value.trim(),
-        submittedAt: new Date().toLocaleString('ko-KR'),
-        timestamp: serverTimestamp()
+        competenciesText: competencies.join(', ')
       };
 
       await push(ref(db, 'worksheet2_2_submissions'), submitData);
