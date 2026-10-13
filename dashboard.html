@@ -12,36 +12,25 @@
     
     /* 비밀번호 인증 레이어 */
     .auth-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(15, 23, 42, 0.92);
-      backdrop-filter: blur(10px);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 999999 !important;
-      padding: 20px;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center;
+      z-index: 999999 !important; padding: 20px;
     }
     .auth-card {
-      background: #ffffff;
-      padding: 30px 20px;
-      border-radius: 20px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      width: 100%; max-width: 360px;
-      text-align: center;
+      background: #ffffff; padding: 30px 20px; border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: 100%; max-width: 360px; text-align: center;
     }
     .auth-card h2 { margin: 0 0 10px 0; font-size: 1.3rem; color: #0f172a; }
     .auth-card p { font-size: 0.88rem; color: #64748b; margin-bottom: 20px; word-break: keep-all; }
     .auth-card input {
-      width: 100%; padding: 14px;
-      border: 2px solid #cbd5e1; border-radius: 12px;
-      font-size: 1.1rem; text-align: center; margin-bottom: 15px; outline: none;
-      -webkit-appearance: none;
+      width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 12px;
+      font-size: 1.1rem; text-align: center; margin-bottom: 15px; outline: none; -webkit-appearance: none;
     }
     .auth-card input:focus { border-color: #2563eb; }
     .auth-card button {
       width: 100%; padding: 14px; background: #2563eb; color: white;
-      border: none; border-radius: 12px; font-size: 1rem; font-weight: bold;
-      cursor: pointer; transition: 0.2s;
+      border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s;
     }
     .auth-card button:active { background: #1d4ed8; }
     .auth-error { color: #ef4444; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold; }
@@ -62,17 +51,13 @@
     /* 필터 바 */
     .filter-bar { background: #f1f5f9; padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     .filter-group { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; width: 100%; justify-content: space-between; }
-    @media (min-width: 640px) {
-      .filter-group { width: auto; justify-content: start; }
-    }
+    @media (min-width: 640px) { .filter-group { width: auto; justify-content: start; } }
     select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
 
     /* 학생 그리드 */
     .section-title { font-size: 1rem; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
     .student-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
-    @media (min-width: 640px) {
-      .student-grid { grid-template-columns: repeat(10, 1fr); }
-    }
+    @media (min-width: 640px) { .student-grid { grid-template-columns: repeat(10, 1fr); } }
     .student-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 2px; text-align: center; }
     .student-card .num { font-weight: bold; font-size: 0.85rem; color: #334155; }
     .student-card .status { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
@@ -146,6 +131,7 @@
       <select id="activitySelect">
         <option value="1단원">1단원 (진로 특성 직업)</option>
         <option value="2단원">2단원 (창업가 정신)</option>
+        <option value="2단원-2" selected>2단원-2 (SDGs 직업 카드)</option>
         <option value="3단원">3단원 (학습 성격 유형)</option>
       </select>
     </div>
@@ -175,7 +161,7 @@
 
   <!-- 답변 내역 테이블 -->
   <div class="section-title" id="tableTitle">
-    📝 [1단원] 진로 특성에 맞는 직업 찾기 답변 내역
+    📝 [2단원-2] SDGs 직업 카드 답변 내역
   </div>
   <div class="table-wrapper">
     <table>
@@ -240,12 +226,11 @@
   const db = getDatabase(app);
 
   let rawData = {};
-  let filteredItems = []; // 현재 학급 필터링된 데이터 배열
+  let filteredItems = [];
   let currentPresentIndex = 0;
 
   const ADMIN_PASSWORD = "1234";
 
-  // 인증 요소
   const authOverlay = document.getElementById('authOverlay');
   const mainContainer = document.getElementById('mainContainer');
   const passwordInput = document.getElementById('adminPasswordInput');
@@ -312,8 +297,9 @@
   function getPathByUnit(unit) {
     if (unit === '1단원') return 'worksheet1_submissions';
     if (unit === '2단원') return 'yeep_activity_submissions';
+    if (unit === '2단원-2') return 'worksheet2_2_submissions';
     if (unit === '3단원') return 'learning_activity_submissions';
-    return 'worksheet1_submissions';
+    return 'worksheet2_2_submissions';
   }
 
   function updateDashboard() {
@@ -330,6 +316,10 @@
       document.getElementById('tableTitle').innerText = '📝 [2단원] 창업가 정신 핵심 역량 진단 답변 내역';
       document.getElementById('thHeaderType').innerText = '상위 역량군 / 역량';
       document.getElementById('thHeaderContent').innerText = '추천 창업가 & 꿈을 이루기 위한 노력';
+    } else if (selectedUnit === '2단원-2') {
+      document.getElementById('tableTitle').innerText = '📝 [2단원-2] SDGs 직업 카드 답변 내역';
+      document.getElementById('thHeaderType').innerText = 'SDGs 목표 / 직업명';
+      document.getElementById('thHeaderContent').innerText = '기여점 및 한줄평';
     } else if (selectedUnit === '3단원') {
       document.getElementById('tableTitle').innerText = '📝 [3단원] 나의 학습 성격 유형 진단 답변 내역';
       document.getElementById('thHeaderType').innerText = '학습 유형 / 강점';
@@ -368,7 +358,6 @@
       }
     });
 
-    // 학번순 정렬
     filteredItems.sort((a, b) => a.seatNum - b.seatNum);
 
     filteredItems.forEach((item, index) => {
@@ -381,6 +370,9 @@
       } else if (selectedUnit === '2단원') {
         typeVal = `<div><strong>${item.topGroup || '-'}</strong></div><div class="sub-text">1~3순위: ${item.topAbilitiesText || '-'}</div>`;
         contentVal = `<div>👤 <strong>창업가:</strong> ${item.entrepreneurText || (item.entrepreneur?.name || '-')}</div><div style="margin-top:4px;">🎯 <strong>다짐:</strong> ${item.futurePlan || '-'}</div>`;
+      } else if (selectedUnit === '2단원-2') {
+        typeVal = `<div>🌍 <strong>목표:</strong> ${item.sdgsGoal || '-'}</div><div style="margin-top:2px; color:#16a34a;">💼 <strong>직업:</strong> ${item.jobTitle || '-'}</div>`;
+        contentVal = `<div>💡 <strong>기여점:</strong> ${item.contribution || '-'}</div><div class="sub-text" style="color:#2563eb;">💬 "미래에 (${item.oneLineReview || '-'}) 역할을 한다!"</div>`;
       } else {
         typeVal = item.learningType || item.strength || '-';
         contentVal = item.improvement || item.content || '-';
@@ -396,7 +388,7 @@
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><span class="student-clickable" onclick="openDetailModal(${index})">${item.studentStr}</span></td>
-        <td><span style="color:#2563eb;">${typeVal}</span></td>
+        <td>${typeVal}</td>
         <td><div>${contentVal}</div></td>
         <td style="font-size:0.8rem; color:#64748b;">${timeVal}</td>
         <td class="text-center">
@@ -447,9 +439,7 @@
     }
   });
 
-  // ==========================================
-  // 1. 주관식 상세 보기 모달 기능
-  // ==========================================
+  // 1. 주관식 상세 보기 모달
   window.openDetailModal = function(index) {
     const item = filteredItems[index];
     if (!item) return;
@@ -462,47 +452,29 @@
 
     if (selectedUnit === '1단원') {
       body.innerHTML = `
-        <div class="answer-block">
-          <div class="answer-label">🎯 관심 직업</div>
-          <div class="answer-content">${item.jobTitle || '미입력'}</div>
-        </div>
-        <div class="answer-block">
-          <div class="answer-label">📝 진로 특성 및 선택 이유</div>
-          <div class="answer-content">${item.jobDesc || item.content || '내용 없음'}</div>
-        </div>
+        <div class="answer-block"><div class="answer-label">🎯 관심 직업</div><div class="answer-content">${item.jobTitle || '미입력'}</div></div>
+        <div class="answer-block"><div class="answer-label">📝 진로 특성 및 선택 이유</div><div class="answer-content">${item.jobDesc || item.content || '내용 없음'}</div></div>
       `;
     } else if (selectedUnit === '2단원') {
       body.innerHTML = `
-        <div class="answer-block">
-          <div class="answer-label">📊 핵심 역량 점수</div>
-          <div class="answer-content">
-            가치창출: ${item.scores?.valueCreation || 0}점 | 도전: ${item.scores?.challenge || 0}점<br>
-            자기주도: ${item.scores?.selfDirected || 0}점 | 집단창의: ${item.scores?.collectiveCreativity || 0}점
-          </div>
-        </div>
-        <div class="answer-block">
-          <div class="answer-label">🏆 가장 높은 역량군 & 상위 역량</div>
-          <div class="answer-content">최고 역량군: <strong>${item.topGroup || '-'}</strong><br>1~3순위: ${item.topAbilitiesText || '-'}</div>
-        </div>
-        <div class="answer-block">
-          <div class="answer-label">💡 추천 창업가</div>
-          <div class="answer-content">${item.entrepreneurText || (item.entrepreneur ? `${item.entrepreneur.name} (${item.entrepreneur.company})` : '미입력')}</div>
-        </div>
-        <div class="answer-block">
-          <div class="answer-label">🚀 꿈을 이루기 위한 노력 (주관식)</div>
-          <div class="answer-content">${item.futurePlan || '작성 내용 없음'}</div>
-        </div>
+        <div class="answer-block"><div class="answer-label">🏆 가장 높은 역량군</div><div class="answer-content">${item.topGroup || '-'}</div></div>
+        <div class="answer-block"><div class="answer-label">💡 추천 창업가</div><div class="answer-content">${item.entrepreneurText || '-'}</div></div>
+        <div class="answer-block"><div class="answer-label">🚀 꿈을 이루기 위한 노력</div><div class="answer-content">${item.futurePlan || '작성 내용 없음'}</div></div>
+      `;
+    } else if (selectedUnit === '2단원-2') {
+      const tasksText = Array.isArray(item.tasks) ? item.tasks.map(t => `• ${t}`).join('<br>') : (item.tasksText || '-');
+      body.innerHTML = `
+        <div class="answer-block"><div class="answer-label">🌍 선택한 SDGs 목표</div><div class="answer-content">${item.sdgsGoal || '-'}</div></div>
+        <div class="answer-block"><div class="answer-label">💼 탐색한 직업 이름</div><div class="answer-content">${item.jobTitle || '-'}</div></div>
+        <div class="answer-block"><div class="answer-label">📋 주요 업무</div><div class="answer-content">${tasksText}</div></div>
+        <div class="answer-block"><div class="answer-label">💡 SDGs 기여점</div><div class="answer-content">${item.contribution || '-'}</div></div>
+        <div class="answer-block"><div class="answer-label">🎯 필요 역량</div><div class="answer-content">${item.competenciesText || item.competencies?.join(', ') || '-'}</div></div>
+        <div class="answer-block"><div class="answer-label">💬 한줄평</div><div class="answer-content">"이 직업은 우리 미래에 ( <strong>${item.oneLineReview || '-'}</strong> ) 역할을 한다!"</div></div>
       `;
     } else {
       body.innerHTML = `
-        <div class="answer-block">
-          <div class="answer-label">📘 학습 성격 유형 / 강점</div>
-          <div class="answer-content">${item.learningType || item.strength || '미입력'}</div>
-        </div>
-        <div class="answer-block">
-          <div class="answer-label">💡 개선점 및 학습 계획</div>
-          <div class="answer-content">${item.improvement || item.content || '작성 내용 없음'}</div>
-        </div>
+        <div class="answer-block"><div class="answer-label">📘 학습 성격 유형</div><div class="answer-content">${item.learningType || item.strength || '미입력'}</div></div>
+        <div class="answer-block"><div class="answer-label">💡 개선점 및 학습 계획</div><div class="answer-content">${item.improvement || item.content || '작성 내용 없음'}</div></div>
       `;
     }
 
@@ -513,9 +485,7 @@
     document.getElementById('detailModal').style.display = 'none';
   });
 
-  // ==========================================
-  // 2. 엑셀 다운로드 기능
-  // ==========================================
+  // 2. 엑셀 다운로드
   document.getElementById('btnExcel').addEventListener('click', () => {
     if (filteredItems.length === 0) {
       alert('다운로드할 데이터가 없습니다.');
@@ -531,17 +501,19 @@
         row['관심직업'] = item.jobTitle || '';
         row['진로특성 및 이유'] = item.jobDesc || item.content || '';
       } else if (selectedUnit === '2단원') {
-        row['가치창출점수'] = item.scores?.valueCreation || 0;
-        row['도전점수'] = item.scores?.challenge || 0;
-        row['자기주도점수'] = item.scores?.selfDirected || 0;
-        row['집단창의점수'] = item.scores?.collectiveCreativity || 0;
         row['최고역량군'] = item.topGroup || '';
-        row['상위역량3가지'] = item.topAbilitiesText || '';
-        row['추천창업가'] = item.entrepreneurText || item.entrepreneur?.name || '';
-        row['꿈을이루기위한노력(주관식)'] = item.futurePlan || '';
+        row['추천창업가'] = item.entrepreneurText || '';
+        row['꿈을이루기위한노력'] = item.futurePlan || '';
+      } else if (selectedUnit === '2단원-2') {
+        row['SDGs목표'] = item.sdgsGoal || '';
+        row['직업이름'] = item.jobTitle || '';
+        row['주요업무'] = item.tasksText || (Array.isArray(item.tasks) ? item.tasks.join(' / ') : '');
+        row['SDGs기여점'] = item.contribution || '';
+        row['필요역량'] = item.competenciesText || '';
+        row['한줄평'] = item.oneLineReview || '';
       } else {
-        row['학습유형'] = item.learningType || item.strength || '';
-        row['개선점 및 계획'] = item.improvement || item.content || '';
+        row['학습유형'] = item.learningType || '';
+        row['개선점 및 계획'] = item.improvement || '';
       }
       row['제출시간'] = item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '');
       return row;
@@ -554,9 +526,7 @@
     XLSX.writeFile(workbook, `${selectedClass}반_${selectedUnit}_수합결과.xlsx`);
   });
 
-  // ==========================================
-  // 3. 전체 발표 모드 기능
-  // ==========================================
+  // 3. 전체 발표 모드
   document.getElementById('btnPresentation').addEventListener('click', () => {
     if (filteredItems.length === 0) {
       alert('발표할 제출 데이터가 없습니다.');
@@ -579,43 +549,49 @@
 
     const contentBox = document.getElementById('presentContent');
 
-    if (selectedUnit === '1단원') {
+    if (selectedUnit === '2단원-2') {
+      const tasksText = Array.isArray(item.tasks) ? item.tasks.map(t => `• ${t}`).join('<br>') : (item.tasksText || '-');
+      contentBox.innerHTML = `
+        <div style="font-size:1.5rem; color:#60a5fa; margin-bottom:8px;">🌍 SDGs 목표: <strong>${item.sdgsGoal || '-'}</strong></div>
+        <div style="font-size:1.8rem; color:#4ade80; margin-bottom:15px;">💼 직업 이름: <strong>${item.jobTitle || '-'}</strong></div>
+        <hr style="border-color:#334155; margin-bottom:15px;">
+        <div style="font-size:1.1rem; color:#94a3b8; margin-bottom:6px;">📋 주요 업무:</div>
+        <div style="font-size:1.2rem; color:#f8fafc; background:#0f172a; padding:12px; border-radius:8px; margin-bottom:15px;">${tasksText}</div>
+        <div style="font-size:1.1rem; color:#94a3b8; margin-bottom:6px;">💡 SDGs 기여점:</div>
+        <div style="font-size:1.3rem; line-height:1.5; color:#f8fafc; background:#0f172a; padding:15px; border-radius:8px; margin-bottom:15px;">${item.contribution || '-'}</div>
+        <div style="font-size:1.4rem; color:#f59e0b; font-weight:bold; text-align:center;">💬 "이 직업은 우리 미래에 ( ${item.oneLineReview || '-'} ) 역할을 한다!"</div>
+      `;
+    } else if (selectedUnit === '1단원') {
       contentBox.innerHTML = `
         <div style="font-size:1.8rem; color:#60a5fa; margin-bottom:15px;">🎯 관심 직업: <strong>${item.jobTitle || '미입력'}</strong></div>
         <hr style="border-color:#334155; margin-bottom:20px;">
         <div style="font-size:1.2rem; color:#94a3b8; margin-bottom:10px;">📝 진로 특성 및 선택 이유:</div>
-        <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px; white-space:pre-wrap;">${item.jobDesc || item.content || '내용 없음'}</div>
+        <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px;">${item.jobDesc || item.content || '내용 없음'}</div>
       `;
     } else if (selectedUnit === '2단원') {
       contentBox.innerHTML = `
         <div style="font-size:1.6rem; color:#60a5fa; margin-bottom:10px;">🏆 가장 높은 역량군: <strong>${item.topGroup || '-'}</strong></div>
         <div style="font-size:1.3rem; color:#f59e0b; margin-bottom:20px;">💡 추천 창업가: <strong>${item.entrepreneurText || '-'}</strong></div>
         <hr style="border-color:#334155; margin-bottom:20px;">
-        <div style="font-size:1.2rem; color:#94a3b8; margin-bottom:10px;">🚀 꿈을 이루기 위한 노력 (주관식):</div>
-        <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px; white-space:pre-wrap;">${item.futurePlan || '작성 내용 없음'}</div>
+        <div style="font-size:1.2rem; color:#94a3b8; margin-bottom:10px;">🚀 꿈을 이루기 위한 노력:</div>
+        <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px;">${item.futurePlan || '작성 내용 없음'}</div>
       `;
     } else {
       contentBox.innerHTML = `
         <div style="font-size:1.8rem; color:#60a5fa; margin-bottom:20px;">📘 학습 유형: <strong>${item.learningType || item.strength || '미입력'}</strong></div>
         <hr style="border-color:#334155; margin-bottom:20px;">
         <div style="font-size:1.2rem; color:#94a3b8; margin-bottom:10px;">💡 개선점 및 학습 계획:</div>
-        <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px; white-space:pre-wrap;">${item.improvement || item.content || '작성 내용 없음'}</div>
+        <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px;">${item.improvement || item.content || '작성 내용 없음'}</div>
       `;
     }
   }
 
   document.getElementById('btnPrevPresent').addEventListener('click', () => {
-    if (currentPresentIndex > 0) {
-      currentPresentIndex--;
-      renderPresentSlide();
-    }
+    if (currentPresentIndex > 0) { currentPresentIndex--; renderPresentSlide(); }
   });
 
   document.getElementById('btnNextPresent').addEventListener('click', () => {
-    if (currentPresentIndex < filteredItems.length - 1) {
-      currentPresentIndex++;
-      renderPresentSlide();
-    }
+    if (currentPresentIndex < filteredItems.length - 1) { currentPresentIndex++; renderPresentSlide(); }
   });
 
   function closePresentation() {
@@ -624,18 +600,11 @@
 
   document.getElementById('btnClosePresent').addEventListener('click', closePresentation);
 
-  // 키보드 조작 (방향키, ESC)
   document.addEventListener('keydown', (e) => {
     if (document.getElementById('presentationOverlay').style.display === 'flex') {
-      if (e.key === 'ArrowLeft' && currentPresentIndex > 0) {
-        currentPresentIndex--;
-        renderPresentSlide();
-      } else if (e.key === 'ArrowRight' && currentPresentIndex < filteredItems.length - 1) {
-        currentPresentIndex++;
-        renderPresentSlide();
-      } else if (e.key === 'Escape') {
-        closePresentation();
-      }
+      if (e.key === 'ArrowLeft' && currentPresentIndex > 0) { currentPresentIndex--; renderPresentSlide(); }
+      else if (e.key === 'ArrowRight' && currentPresentIndex < filteredItems.length - 1) { currentPresentIndex++; renderPresentSlide(); }
+      else if (e.key === 'Escape') { closePresentation(); }
     }
   });
 
