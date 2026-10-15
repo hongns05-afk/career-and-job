@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>2-2. SDGs 직업 카드 작성하기 (개인용)</title>
+  
+  <!-- PDF & 이미지 저장을 위한 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 15px; }
@@ -72,196 +77,12 @@
     .one-line-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 1rem; font-weight: bold; color: #0f172a; }
     .one-line-box input { flex: 1; min-width: 180px; padding: 10px; border: 1.5px solid #0f172a; border-radius: 8px; font-size: 0.95rem; outline: none; text-align: center; font-weight: bold; }
 
-    /* 제출 버튼 */
-    .submit-btn { width: 100%; padding: 16px; background-color: #2563eb; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 25px; transition: 0.2s; }
+    /* 하단 버튼 그룹 */
+    .btn-group-bottom { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
+    @media (min-width: 600px) { .btn-group-bottom { flex-direction: row; } }
+
+    .submit-btn { flex: 2; padding: 16px; background-color: #2563eb; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .submit-btn:hover { background-color: #1d4ed8; }
     .submit-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
-  </style>
-</head>
-<body>
 
-<div class="container">
-  <form id="sdgsForm">
-    <!-- 상단 헤더 및 워크넷 카드뉴스 링크 버튼 -->
-    <div class="card-header">
-      <div class="header-text">
-        <h1 class="card-title">🌐 SDGs 직업 카드</h1>
-        <p class="card-subtitle">지속가능발전목표(SDGs) 문제 해결에 기여하는 나만의 미래 직업을 탐색해 봅시다.</p>
-      </div>
-      <a href="https://m.work.go.kr/consltJobCarpa/srch/cardNews/cardNewsList.do?wiseAreaCd=N_SMENU_G_03_05" target="_blank" class="btn-worknet" title="새 창으로 워크넷 미래직업 카드뉴스 이동">
-        🔍 워크넷 미래직업 카드뉴스 참고하기 ↗
-      </a>
-    </div>
-
-    <!-- 학번 전용 입력란 -->
-    <div class="student-info-box">
-      <label for="studentId">👤 학번 입력:</label>
-      <input type="text" id="studentId" placeholder="예: 10305 (5자리)" inputmode="numeric" required autocomplete="off">
-      <span style="font-size:0.82rem; color:#475569;">※ 반/번호 수합을 위해 학번 5자리를 입력하세요.</span>
-    </div>
-
-    <div class="card-grid">
-      <!-- 왼쪽 열: 목표 & 직업명 -->
-      <div class="left-col">
-        <div class="info-card">
-          <div class="info-label">🌍 내가 선택한 SDGs 목표</div>
-          <input type="text" id="sdgsGoal" class="info-input" placeholder="예: 13번 기후변화 대응" required autocomplete="off">
-        </div>
-
-        <div class="info-card">
-          <div class="info-label">💼 탐색할 직업 이름</div>
-          <input type="text" id="jobTitle" class="info-input" placeholder="예: 기후변화 데이터 분석가" required autocomplete="off">
-        </div>
-      </div>
-
-      <!-- 오른쪽 열: 주요 업무 / 기여점 / 역량 / 한줄평 -->
-      <div class="right-col">
-        <!-- 1. 주요 업무 -->
-        <div class="section-block">
-          <div class="block-header bg-green">주요 업무</div>
-          <div class="block-question">Q. 이 직업은 주로 어떤 일을 하나요?</div>
-          <div class="task-inputs">
-            <div class="task-item"><span>•</span> <input type="text" id="task1" placeholder="주요 업무 1" required></div>
-            <div class="task-item"><span>•</span> <input type="text" id="task2" placeholder="주요 업무 2"></div>
-            <div class="task-item"><span>•</span> <input type="text" id="task3" placeholder="주요 업무 3"></div>
-            <div class="task-item"><span>•</span> <input type="text" id="task4" placeholder="주요 업무 4"></div>
-          </div>
-        </div>
-
-        <!-- 2. SDGs 기여점 -->
-        <div class="section-block">
-          <div class="block-header bg-blue">SDGs 기여점</div>
-          <div class="block-question">Q. 이 직업은 내가 선택한 SDGs 문제를 어떻게 해결해 주나요?</div>
-          <textarea id="contribution" placeholder="지속가능발전목표 문제 해결에 기여하는 방식을 작성하세요." required></textarea>
-        </div>
-
-        <!-- 3. 필요 역량 -->
-        <div class="section-block">
-          <div class="block-header bg-amber">필요 역량</div>
-          <div class="block-question">Q. 이 직업을 가지려면 어떤 능력이나 태도가 필요할까요?</div>
-          <div class="competency-grid">
-            <label class="check-item"><input type="checkbox" name="competency" value="창의·융합 사고력"> 창의·융합 사고력</label>
-            <label class="check-item"><input type="checkbox" name="competency" value="의사소통·협력"> 의사소통·협력</label>
-            <label class="check-item"><input type="checkbox" name="competency" value="비판적 사고력"> 비판적 사고력</label>
-            <label class="check-item"><input type="checkbox" name="competency" value="디지털·IT 기술력"> 디지털·IT 기술력</label>
-            <label class="check-item"><input type="checkbox" name="competency" value="복합 문제해결력"> 복합 문제해결력</label>
-            <label class="check-item"><input type="checkbox" name="competency" value="도전정신·적응력"> 도전정신·적응력</label>
-            <label class="check-item"><input type="checkbox" name="competency" value="세계시민의식·공감"> 세계시민의식·공감</label>
-            <label class="check-item"><input type="checkbox" name="competency" value="리더십·기획력"> 리더십·기획력</label>
-          </div>
-          <div class="etc-wrap">
-            <span>기타:</span>
-            <input type="text" id="competencyEtc" placeholder="직접 입력할 역량">
-          </div>
-        </div>
-
-        <!-- 4. 한줄평 -->
-        <div class="section-block">
-          <div class="block-header bg-slate">한줄평</div>
-          <div class="one-line-box">
-            <span>"이 직업은 우리 미래에</span>
-            ( <input type="text" id="oneLineReview" placeholder="예: 지구를 구하는 열쇠" required> )
-            <span>역할을 한다!"</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <button type="submit" class="submit-btn" id="submitBtn">SDGs 직업 카드 제출하기 🚀</button>
-  </form>
-</div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, push, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
-    authDomain: "activity3-bcbca.firebaseapp.com",
-    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
-    projectId: "activity3-bcbca",
-    storageBucket: "activity3-bcbca.firebasestorage.app",
-    messagingSenderId: "698284558768",
-    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  document.getElementById('sdgsForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const submitBtn = document.getElementById('submitBtn');
-    const studentId = document.getElementById('studentId').value.trim();
-
-    if (!studentId) {
-      alert('학번을 입력해주세요.');
-      return;
-    }
-
-    // 역량 선택 수집
-    const checkedBoxes = document.querySelectorAll('input[name="competency"]:checked');
-    const competencies = Array.from(checkedBoxes).map(cb => cb.value);
-    const etcValue = document.getElementById('competencyEtc').value.trim();
-    if (etcValue) competencies.push(`기타: ${etcValue}`);
-
-    if (competencies.length === 0) {
-      alert('필요 역량을 최소 1개 이상 선택해 주세요.');
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.innerText = '중복 제출 확인 중... ⏳';
-
-    try {
-      const submissionsRef = ref(db, 'worksheet2_2_submissions');
-      const snapshot = await get(submissionsRef);
-
-      if (snapshot.exists()) {
-        const rawData = snapshot.val();
-        const isDuplicate = Object.values(rawData).some(item => item.studentId === studentId || item.studentInfo === studentId);
-        if (isDuplicate) {
-          alert('이미 해당 학번으로 제출된 데이터가 존재합니다!');
-          submitBtn.disabled = false;
-          submitBtn.innerText = 'SDGs 직업 카드 제출하기 🚀';
-          return;
-        }
-      }
-
-      submitBtn.innerText = '제출 중... 🚀';
-
-      const tasks = [
-        document.getElementById('task1').value.trim(),
-        document.getElementById('task2').value.trim(),
-        document.getElementById('task3').value.trim(),
-        document.getElementById('task4').value.trim()
-      ].filter(t => t.length > 0);
-
-      // 제출 데이터 생성 (제출 시간 필드 제외)
-      const submitData = {
-        unit: '2단원-2',
-        studentInfo: studentId,
-        studentId: studentId,
-        sdgsGoal: document.getElementById('sdgsGoal').value.trim(),
-        jobTitle: document.getElementById('jobTitle').value.trim(),
-        tasks: tasks,
-        tasksText: tasks.join(' / '),
-        contribution: document.getElementById('contribution').value.trim(),
-        competencies: competencies,
-        competenciesText: competencies.join(', ')
-      };
-
-      await push(ref(db, 'worksheet2_2_submissions'), submitData);
-      alert('🎉 성공적으로 제출되었습니다!');
-      location.href = 'index.html';
-
-    } catch (err) {
-      alert('제출 처리 중 오류 발생: ' + err.message);
-      submitBtn.disabled = false;
-      submitBtn.innerText = 'SDGs 직업 카드 제출하기 🚀';
-    }
-  });
-</script>
-
-</body>
-</html>
+    .save-btn { flex: 1; padding: 16px; background-color: #059669; color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
