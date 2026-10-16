@@ -1,1 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[선생님용] 실시간 제출 현황판</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f1f5f9; color: #0f172a; padding: 25px 15px; }
+    
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    .header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 20px; 
+      flex-wrap: wrap; 
+      gap: 15px; 
+      background: white; 
+      padding: 20px 25px; 
+      border-radius: 16px; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+    }
+    .header h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+    
+    .status-badge { 
+      background-color: #e0f2fe; 
+      color: #0369a1; 
+      padding: 8px 16px; 
+      border-radius: 20px; 
+      font-weight: bold; 
+      font-size: 0.95rem; 
+    }
 
+    .filter-group { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn { 
+      padding: 10px 18px; 
+      border-radius: 10px; 
+      border: 1px solid #cbd5e1; 
+      background: white; 
+      color: #475569; 
+      font-weight: bold; 
+      cursor: pointer; 
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .filter-btn.active { 
+      background: #2563eb; 
+      color: white; 
+      border-color: #2563eb; 
+    }
+
+    .grid-cards { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+      gap: 20px; 
+    }
+    
+    .card { 
+      background: white; 
+      border-radius: 16px; 
+      border: 1px solid #e2e8f0; 
+      padding: 20px; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+    }
+    
+    .card-top { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 2px solid #f1f5f9; 
+      padding-bottom: 10px; 
+    }
+    
+    .student-badge { 
+      background: #2563eb; 
+      color: white; 
+      padding: 4px 10px; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      font-size: 0.95rem; 
+    }
+    
+    .unit-badge { 
+      background: #0284c7; 
+      color: white; 
+      padding: 4px 10px; 
+      border-radius: 8px; 
+      font-size: 0.85rem; 
+      font-weight: bold; 
+    }
+    
+    .card-body { display: flex; flex-direction: column; gap: 8px; font-size: 0.92rem; }
+    .item-label { font-weight: bold; color: #475569; margin-right: 6px; }
+    .job-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+    .tasks-list { background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.5; }
+    .review-box { background: #fffbe3; border-left: 4px solid #d97706; padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 4px; }
+
+    .no-data { text-align: center; padding: 50px; color: #64748b; font-size: 1.1rem; grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>📊 [선생님용] 실시간 제출 현황판</h1>
+    <div class="status-badge">전체 수합 건수: <span id="totalSubmitCount">0</span>건</div>
+  </div>
+
+  <!-- 단원 필터 버튼 -->
+  <div class="filter-group">
+    <button class="filter-btn active" id="btn-all">전체 보기</button>
+    <button class="filter-btn" id="btn-yeep">1단원/YEEP</button>
+    <button class="filter-btn" id="btn-2-1">2-1단원</button>
+    <button class="filter-btn" id="btn-2-2">2-2 SDGs 직업카드</button>
+    <button class="filter-btn" id="btn-3-1">3-1 학습성격</button>
+  </div>
+
+  <div class="grid-cards" id="submissionsGrid">
+    <div class="no-data">제출 데이터를 실시간으로 수합 중입니다... ⏳</div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let allDataStore = [];
+  let currentFilter = 'all';
+
+  // 파이어베이스에서 조회할 모든 활동지 데이터 경로
+  const paths = [
+    { key: 'yeep_activity_submissions', name: '1단원' },
+    { key: 'worksheet1_1_submissions', name: '1-1단원' },
+    { key: 'worksheet2_1_submissions', name: '2-1단원' },
+    { key: 'worksheet2_2_submissions', name: '2-2단원' },
+    { key: 'worksheet3_1_submissions', name: '3-1단원' }
+  ];
+
+  function renderGrid() {
+    const grid = document.getElementById('submissionsGrid');
+    const totalCount = document.getElementById('totalSubmitCount');
+
+    let filtered = allDataStore;
+    if (currentFilter === 'yeep') {
+      filtered = allDataStore.filter(item => item.unitKey === 'yeep_activity_submissions' || item.unitKey === 'worksheet1_1_submissions');
+    } else if (currentFilter === '2-1') {
+      filtered = allDataStore.filter(item => item.unitKey === 'worksheet2_1_submissions');
+    } else if (currentFilter === '2-2') {
+      filtered = allDataStore.filter(item => item.unitKey === 'worksheet2_2_submissions');
+    } else if (currentFilter === '3-1') {
+      filtered = allDataStore.filter(item => item.unitKey === 'worksheet3_1_submissions');
+    }
+
+    totalCount.innerText = allDataStore.length;
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-data">선택한 항목에 대한 제출 데이터가 없습니다.</div>';
+      return;
+    }
+
+    // 학번순 정렬
+    filtered.sort((a, b) => {
+      const idA = String(a.studentId || a.studentInfo || a.name || '');
+      const idB = String(b.studentId || b.studentInfo || b.name || '');
+      return idA.localeCompare(idB);
+    });
+
+    grid.innerHTML = '';
+
+    filtered.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const studentId = item.studentId || item.studentInfo || item.name || '미입력';
+      const unitLabel = item.sdgsGoal || item.unit || item.activityType || '활동지';
+
+      // 2-2 단원 (SDGs 직업 카드)
+      if (item.unitKey === 'worksheet2_2_submissions' || item.unit === '2단원-2') {
+        const tasksText = Array.isArray(item.tasks) ? item.tasks.join(', ') : (item.tasksText || '-');
+        const compText = Array.isArray(item.competencies) ? item.competencies.join(', ') : (item.competenciesText || '-');
+
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="student-badge">👤 학번: ${studentId}</span>
+            <span class="unit-badge">🌐 ${unitLabel}</span>
+          </div>
+          <div class="card-body">
+            <div class="job-title">💼 ${item.jobTitle || '직업명 없음'}</div>
+            <div><span class="item-label">📌 주요 업무:</span></div>
+            <div class="tasks-list">${tasksText}</div>
+            <div><span class="item-label">💡 기여점:</span> ${item.contribution || '-'}</div>
+            <div><span class="item-label">🔑 필요 역량:</span> ${compText}</div>
+            ${item.oneLineReview ? `<div class="review-box">💬 "${item.oneLineReview}"</div>` : ''}
+          </div>
+        `;
+      } 
+      // 기타 단원 (1-1, 2-1, 3-1 등)
+      else {
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="student-badge">👤 ${studentId}</span>
+            <span class="unit-badge">📋 ${unitLabel}</span>
+          </div>
+          <div class="card-body">
+            ${item.resultType ? `<div class="job-title">🧠 결과: ${item.resultType}</div>` : ''}
+            ${item.answers ? `<div><span class="item-label">📝 작성 내용:</span> ${typeof item.answers === 'object' ? JSON.stringify(item.answers) : item.answers}</div>` : ''}
+            ${item.content ? `<div><span class="item-label">📝 내용:</span> ${item.content}</div>` : ''}
+          </div>
+        `;
+      }
+
+      grid.appendChild(card);
+    });
+  }
+
+  // 실시간 수집 로직
+  paths.forEach(pathObj => {
+    const dataRef = ref(db, pathObj.key);
+    onValue(dataRef, (snapshot) => {
+      allDataStore = allDataStore.filter(item => item.unitKey !== pathObj.key);
+
+      if (snapshot.exists()) {
+        const rawData = snapshot.val();
+        Object.values(rawData).forEach(val => {
+          allDataStore.push({
+            ...val,
+            unitKey: pathObj.key
+          });
+        });
+      }
+      renderGrid();
+    });
+  });
+
+  // 필터 버튼 이벤트 바인딩
+  const filterButtons = [
+    { id: 'btn-all', key: 'all' },
+    { id: 'btn-yeep', key: 'yeep' },
+    { id: 'btn-2-1', key: '2-1' },
+    { id: 'btn-2-2', key: '2-2' },
+    { id: 'btn-3-1', key: '3-1' }
+  ];
+
+  filterButtons.forEach(btnInfo => {
+    const btnElem = document.getElementById(btnInfo.id);
+    if (btnElem) {
+      btnElem.addEventListener('click', () => {
+        currentFilter = btnInfo.key;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btnElem.classList.add('active');
+        renderGrid();
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
