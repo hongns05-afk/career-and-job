@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>2-2. SDGs 직업 카드 작성하기 (개인용)</title>
   
+  <!-- 이미지(PNG) 저장을 위한 외부 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -197,7 +200,7 @@
 
     <div class="btn-group-bottom">
       <button type="submit" class="submit-btn" id="submitBtn">SDGs 직업 카드 제출하기 🚀</button>
-      <button type="button" class="save-btn" id="savePdfBtn">📄 내 기기에 화면 출력/저장</button>
+      <button type="button" class="save-btn" id="saveImgBtn">🖼️ 이미지 파일(PNG)로 저장</button>
     </div>
   </form>
 </div>
@@ -219,9 +222,38 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // 브라우저 기본 인쇄(PDF 저장) 기능
-  document.getElementById('savePdfBtn').addEventListener('click', function() {
-    window.print();
+  // 이미지 저장 기능
+  document.getElementById('saveImgBtn').addEventListener('click', function() {
+    const studentId = document.getElementById('studentId').value.trim() || '소장용';
+    const jobTitle = document.getElementById('jobTitle').value.trim() || 'SDGs_직업카드';
+    const element = document.getElementById('printableArea');
+    const btnGroup = document.querySelector('.btn-group-bottom');
+    const worknetBtn = document.querySelector('.btn-worknet');
+
+    // 이미지 생성 시 하단 버튼/상단 링크 잠시 숨김
+    btnGroup.style.display = 'none';
+    if (worknetBtn) worknetBtn.style.display = 'none';
+
+    if (typeof html2canvas !== 'undefined') {
+      html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `SDGs_직업카드_${studentId}_${jobTitle}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        btnGroup.style.display = 'flex';
+        if (worknetBtn) worknetBtn.style.display = 'inline-flex';
+      }).catch(err => {
+        alert('이미지 저장 중 오류가 발생했습니다. 브라우저 인쇄/화면 캡처 기능을 이용해 주세요.');
+        btnGroup.style.display = 'flex';
+        if (worknetBtn) worknetBtn.style.display = 'inline-flex';
+      });
+    } else {
+      // 라이브러리 로드 실패 시 브라우저 기본 인쇄창으로 대체
+      window.print();
+      btnGroup.style.display = 'flex';
+      if (worknetBtn) worknetBtn.style.display = 'inline-flex';
+    }
   });
 
   // 제출 처리
