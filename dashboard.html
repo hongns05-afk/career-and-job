@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>[선생님용] 전체 실시간 제출 현황판</title>
+  <title>[선생님용] 실시간 제출 현황판</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #f1f5f9; color: #0f172a; padding: 25px 15px; }
@@ -33,6 +33,25 @@
       border-radius: 20px; 
       font-weight: bold; 
       font-size: 0.9rem; 
+    }
+
+    /* 탭 필터 버튼 */
+    .filter-group { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-btn { 
+      padding: 10px 18px; 
+      border-radius: 10px; 
+      border: 1px solid #cbd5e1; 
+      background: white; 
+      color: #475569; 
+      font-weight: bold; 
+      cursor: pointer; 
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .filter-btn.active { 
+      background: #2563eb; 
+      color: white; 
+      border-color: #2563eb; 
     }
 
     /* 카드 그리드 레이아웃 */
@@ -95,8 +114,16 @@
   <div class="header">
     <h1>📊 [선생님용] 실시간 제출 현황판</h1>
     <div class="status-group">
-      <div class="status-badge">🌐 SDGs 직업카드(2-2): <span id="submitCount2_2">0</span>명</div>
+      <div class="status-badge">전체 제출: <span id="totalSubmitCount">0</span>건</div>
     </div>
+  </div>
+
+  <!-- 단원별 필터 탭 -->
+  <div class="filter-group">
+    <button class="filter-btn active" onclick="filterUnit('all')">전체 보기</button>
+    <button class="filter-btn" onclick="filterUnit('yeep')">1단원 / YEEP</button>
+    <button class="filter-btn" onclick="filterUnit('2-2')">2-2 SDGs 직업카드</button>
+    <button class="filter-btn" onclick="filterUnit('3-1')">3-1 학습성격</button>
   </div>
 
   <div class="grid-cards" id="submissionsGrid">
@@ -121,53 +148,116 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // worksheet2_2_submissions 데이터 수신
-  const sub2_2Ref = ref(db, 'worksheet2_2_submissions');
+  let allDataStore = [];
+  let currentFilter = 'all';
 
-  onValue(sub2_2Ref, (snapshot) => {
+  // 1. 기존 경로 데이터 (yeep_activity_submissions / submissions / worksheet3_1_submissions 등)
+  const paths = [
+    { key: 'yeep_activity_submissions', defaultUnit: '기존활동' },
+    { key: 'worksheet2_2_submissions', defaultUnit: '2단원-2' },
+    { key: 'worksheet3_1_submissions', defaultUnit: '3단원-1' }
+  ];
+
+  function renderGrid() {
     const grid = document.getElementById('submissionsGrid');
-    const countSpan = document.getElementById('submitCount2_2');
+    const totalCount = document.getElementById('totalSubmitCount');
 
-    if (!snapshot.exists()) {
-      grid.innerHTML = '<div class="no-data">아직 제출된 활동지가 없습니다.</div>';
-      countSpan.innerText = '0';
+    let filtered = allDataStore;
+    if (currentFilter === 'yeep') {
+      filtered = allDataStore.filter(item => item.unitKey === 'yeep_activity_submissions' || item.unit === '1단원' || item.unit === '기존활동');
+    } else if (currentFilter === '2-2') {
+      filtered = allDataStore.filter(item => item.unitKey === 'worksheet2_2_submissions' || item.unit === '2단원-2');
+    } else if (currentFilter === '3-1') {
+      filtered = allDataStore.filter(item => item.unitKey === 'worksheet3_1_submissions' || item.unit === '3단원-1');
+    }
+
+    totalCount.innerText = allDataStore.length;
+
+    if (filtered.length === 0) {
+      grid.innerHTML = '<div class="no-data">해당 항목에 제출된 데이터가 없습니다.</div>';
       return;
     }
 
-    const data = snapshot.val();
-    const itemList = Object.values(data);
-    
-    // 학번 순 정렬
-    itemList.sort((a, b) => (a.studentId || '').localeCompare(b.studentId || ''));
+    // 학번 정렬
+    filtered.sort((a, b) => (a.studentId || a.studentInfo || '').localeCompare(b.studentId || b.studentInfo || ''));
 
-    countSpan.innerText = itemList.length;
     grid.innerHTML = '';
 
-    itemList.forEach(item => {
+    filtered.forEach(item => {
       const card = document.createElement('div');
       card.className = 'card';
 
-      const tasksText = Array.isArray(item.tasks) ? item.tasks.join(', ') : (item.tasksText || '-');
-      const compText = Array.isArray(item.competencies) ? item.competencies.join(', ') : (item.competenciesText || '-');
+      const studentId = item.studentId || item.studentInfo || item.name || '미입력';
+      const unitLabel = item.sdgsGoal || item.unit || item.activityType || '활동';
 
-      card.innerHTML = `
-        <div class="card-top">
-          <span class="student-badge">👤 학번: ${item.studentId || item.studentInfo || '미입력'}</span>
-          <span class="unit-badge">🌐 ${item.sdgsGoal || 'SDGs'}</span>
-        </div>
-        <div class="card-body">
-          <div class="job-title">💼 ${item.jobTitle || '직업명 없음'}</div>
-          <div><span class="item-label">📌 주요 업무:</span></div>
-          <div class="tasks-list">${tasksText}</div>
-          <div><span class="item-label">💡 기여점:</span> ${item.contribution || '-'}</div>
-          <div><span class="item-label">🔑 필요 역량:</span> ${compText}</div>
-          ${item.oneLineReview ? `<div class="review-box">💬 "${item.oneLineReview}"</div>` : ''}
-        </div>
-      `;
+      // 2-2 단원인 경우
+      if (item.unitKey === 'worksheet2_2_submissions' || item.unit === '2단원-2') {
+        const tasksText = Array.isArray(item.tasks) ? item.tasks.join(', ') : (item.tasksText || '-');
+        const compText = Array.isArray(item.competencies) ? item.competencies.join(', ') : (item.competenciesText || '-');
+
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="student-badge">👤 학번: ${studentId}</span>
+            <span class="unit-badge">🌐 ${unitLabel}</span>
+          </div>
+          <div class="card-body">
+            <div class="job-title">💼 ${item.jobTitle || '직업명 없음'}</div>
+            <div><span class="item-label">📌 주요 업무:</span></div>
+            <div class="tasks-list">${tasksText}</div>
+            <div><span class="item-label">💡 기여점:</span> ${item.contribution || '-'}</div>
+            <div><span class="item-label">🔑 필요 역량:</span> ${compText}</div>
+            ${item.oneLineReview ? `<div class="review-box">💬 "${item.oneLineReview}"</div>` : ''}
+          </div>
+        `;
+      } 
+      // 기존 3-1단원 및 기타 활동지 데이터 표시
+      else {
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="student-badge">👤 ${studentId}</span>
+            <span class="unit-badge">📋 ${unitLabel}</span>
+          </div>
+          <div class="card-body">
+            ${item.resultType ? `<div class="job-title">🧠 결과: ${item.resultType}</div>` : ''}
+            ${item.answers ? `<div><span class="item-label">📝 작성내용:</span> ${typeof item.answers === 'object' ? JSON.stringify(item.answers) : item.answers}</div>` : ''}
+            ${item.content ? `<div><span class="item-label">📝 내용:</span> ${item.content}</div>` : ''}
+          </div>
+        `;
+      }
 
       grid.appendChild(card);
     });
+  }
+
+  // 실시간 수신 연결 (모든 경로 개별 수합)
+  paths.forEach(pathObj => {
+    const dataRef = ref(db, pathObj.key);
+    onValue(dataRef, (snapshot) => {
+      // 기존 저장소에서 해당 경로 데이터 삭제 후 재수합
+      allDataStore = allDataStore.filter(item => item.unitKey !== pathObj.key);
+
+      if (snapshot.exists()) {
+        const rawData = snapshot.val();
+        Object.values(rawData).forEach(val => {
+          allDataStore.push({
+            ...val,
+            unitKey: pathObj.key,
+            unit: val.unit || pathObj.defaultUnit
+          });
+        });
+      }
+
+      renderGrid();
+    });
   });
+
+  // 필터 함수 전역 바인딩
+  window.filterUnit = function(unitKey) {
+    currentFilter = unitKey;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    renderGrid();
+  };
 </script>
 
 </body>
