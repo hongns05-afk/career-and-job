@@ -86,3 +86,90 @@
     .submit-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
 
     .save-btn { flex: 1; padding: 16px; background-color: #059669; color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .save-btn:hover { background-color: #047857; }
+
+    .save-btn-img { background-color: #4f46e5; }
+    .save-btn-img:hover { background-color: #4338ca; }
+
+    /* 프린트/저장 시 스타일 조정 */
+    @media print {
+      .btn-worknet, .btn-group-bottom { display: none !important; }
+      body { background: white; padding: 0; }
+      .container { border: none; box-shadow: none; width: 100%; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="printableArea">
+  <form id="sdgsForm">
+    <!-- 상단 헤더 및 워크넷 카드뉴스 링크 버튼 -->
+    <div class="card-header">
+      <div class="header-text">
+        <h1 class="card-title">🌐 SDGs 직업 카드</h1>
+        <p class="card-subtitle">지속가능발전목표(SDGs) 문제 해결에 기여하는 나만의 미래 직업을 탐색해 봅시다.</p>
+      </div>
+      <a href="https://www.wagework.go.kr/pt/b/b/retrieveCardNewsList.do?topPageId=PT06000000&pageId=PT06030200" target="_blank" class="btn-worknet" title="새 창으로 워크넷 미래직업 카드뉴스 이동">
+        🔍 워크넷 미래직업 카드뉴스 참고하기 ↗
+      </a>
+    </div>
+
+    <!-- 학번 전용 입력란 -->
+    <div class="student-info-box">
+      <label for="studentId">👤 학번 입력:</label>
+      <input type="text" id="studentId" placeholder="예: 10305 (5자리)" inputmode="numeric" required autocomplete="off">
+      <span style="font-size:0.82rem; color:#475569;">※ 반/번호 수합을 위해 학번 5자리를 입력하세요.</span>
+    </div>
+
+    <div class="card-grid">
+      <!-- 왼쪽 열: 목표 & 직업명 -->
+      <div class="left-col">
+        <div class="info-card">
+          <div class="info-label">🌍 내가 선택한 SDGs 목표</div>
+          <input type="text" id="sdgsGoal" class="info-input" placeholder="예: 13번 기후변화 대응" required autocomplete="off">
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">💼 탐색할 직업 이름</div>
+          <input type="text" id="jobTitle" class="info-input" placeholder="예: 기후변화 데이터 분석가" required autocomplete="off">
+        </div>
+      </div>
+
+      <!-- 오른쪽 열: 주요 업무 / 기여점 / 역량 / 한줄평 -->
+      <div class="right-col">
+        <!-- 1. 주요 업무 -->
+        <div class="section-block">
+          <div class="block-header bg-green">주요 업무</div>
+          <div class="block-question">Q. 이 직업은 주로 어떤 일을 하나요?</div>
+          <div class="task-inputs">
+            <div class="task-item"><span>•</span> <input type="text" id="task1" placeholder="주요 업무 1" required></div>
+            <div class="task-item"><span>•</span> <input type="text" id="task2" placeholder="주요 업무 2"></div>
+            <div class="task-item"><span>•</span> <input type="text" id="task3" placeholder="주요 업무 3"></div>
+            <div class="task-item"><span>•</span> <input type="text" id="task4" placeholder="주요 업무 4"></div>
+          </div>
+        </div>
+
+        <!-- 2. SDGs 기여점 -->
+        <div class="section-block">
+          <div class="block-header bg-blue">SDGs 기여점</div>
+          <div class="block-question">Q. 이 직업은 내가 선택한 SDGs 문제를 어떻게 해결해 주나요?</div>
+          <textarea id="contribution" placeholder="지속가능발전목표 문제 해결에 기여하는 방식을 작성하세요." required></textarea>
+        </div>
+
+        <!-- 3. 필요 역량 -->
+        <div class="section-block">
+          <div class="block-header bg-amber">필요 역량</div>
+          <div class="block-question">Q. 이 직업을 가지려면 어떤 능력이나 태도가 필요할까요?</div>
+          <div class="competency-grid">
+            <label class="check-item"><input type="checkbox" name="competency" value="창의·융합 사고력"> 창의·융합 사고력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="의사소통·협력"> 의사소통·협력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="비판적 사고력"> 비판적 사고력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="디지털·IT 기술력"> 디지털·IT 기술력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="복합 문제해결력"> 복합 문제해결력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="도전정신·적응력"> 도전정신·적응력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="세계시민의식·공감"> 세계시민의식·공감</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="리더십·기획력"> 리더십·기획력</label>
+          </div>
+          <div class="etc-wrap">
+            <span>기타:</span>
+            <input type="text"
