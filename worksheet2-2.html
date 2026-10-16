@@ -5,22 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>2-2. SDGs 직업 카드 작성하기 (개인용)</title>
   
-  <!-- PDF & 이미지 저장을 위한 라이브러리 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
-    /* 레이아웃 짤림 방지 및 스크롤 수정 */
     body { 
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
       background: #f8fafc; 
       color: #1e293b; 
-      margin: 0; 
       padding: 20px 15px 60px 15px; 
-      display: block; 
-      min-height: 100vh;
     }
     
     .container { 
@@ -33,7 +25,6 @@
       border: 1px solid #e2e8f0; 
     }
     
-    /* 상단 헤더 */
     .card-header { 
       border-bottom: 3px solid #0f172a; 
       padding-bottom: 12px; 
@@ -44,11 +35,9 @@
       flex-wrap: wrap; 
       gap: 12px; 
     }
-    .header-text { flex: 1; min-width: 280px; }
-    .card-title { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 5px 0; display: flex; align-items: center; gap: 8px; }
-    .card-subtitle { font-size: 0.9rem; color: #64748b; margin: 0; }
+    .card-title { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 5px; }
+    .card-subtitle { font-size: 0.9rem; color: #64748b; }
 
-    /* 워크넷 미래직업 카드뉴스 외부 링크 버튼 */
     .btn-worknet { 
       display: inline-flex; 
       align-items: center; 
@@ -60,12 +49,8 @@
       border-radius: 10px; 
       font-weight: bold; 
       font-size: 0.9rem; 
-      transition: background 0.2s, transform 0.1s; 
-      box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.2); 
     }
-    .btn-worknet:hover { background-color: #0369a1; transform: translateY(-1px); }
 
-    /* 학번 입력란 */
     .student-info-box { 
       background: #eff6ff; 
       border-left: 4px solid #2563eb; 
@@ -77,26 +62,21 @@
       gap: 12px; 
       flex-wrap: wrap; 
     }
-    .student-info-box label { font-weight: bold; color: #1e40af; font-size: 0.95rem; white-space: nowrap; }
-    .student-info-box input { flex: 1; max-width: 250px; padding: 10px 14px; border: 1px solid #93c5fd; border-radius: 8px; outline: none; font-weight: bold; font-size: 1rem; background: white; }
-    .student-info-box input:focus { border-color: #2563eb; }
+    .student-info-box label { font-weight: bold; color: #1e40af; font-size: 0.95rem; }
+    .student-info-box input { flex: 1; max-width: 250px; padding: 10px; border: 1px solid #93c5fd; border-radius: 8px; font-weight: bold; font-size: 1rem; }
 
-    /* 메인 카드 레이아웃 (좌우 2열) */
     .card-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
     @media (min-width: 768px) { .card-grid { grid-template-columns: 260px 1fr; } }
 
-    /* 왼쪽 영역: 목표 / 직업명 */
     .left-col { display: flex; flex-direction: column; gap: 15px; }
     .info-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; }
-    .info-label { font-size: 0.9rem; font-weight: bold; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .info-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; background: white; }
-    .info-input:focus { border-color: #2563eb; }
+    .info-label { font-size: 0.9rem; font-weight: bold; color: #334155; margin-bottom: 8px; }
+    .info-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; }
 
-    /* 오른쪽 영역: 세부 내용 */
     .right-col { display: flex; flex-direction: column; gap: 18px; }
-    
     .section-block { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
-    .block-header { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-weight: bold; color: white; font-size: 0.9rem; margin-bottom: 12px; }
+    .block-header { display: inline-flex; padding: 6px 12px; border-radius: 8px; font-weight: bold; color: white; font-size: 0.9rem; margin-bottom: 12px; }
+    
     .bg-green { background-color: #16a34a; }
     .bg-blue { background-color: #0284c7; }
     .bg-amber { background-color: #d97706; }
@@ -104,78 +84,219 @@
 
     .block-question { font-size: 0.95rem; font-weight: bold; color: #0f172a; margin-bottom: 10px; }
 
-    /* 주요 업무 4개 작성란 */
     .task-inputs { display: grid; grid-template-columns: 1fr; gap: 8px; }
     @media (min-width: 500px) { .task-inputs { grid-template-columns: 1fr 1fr; } }
     .task-item { display: flex; align-items: center; gap: 6px; }
-    .task-item span { font-weight: bold; color: #64748b; }
-    .task-item input { flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; outline: none; }
+    .task-item input { flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; }
 
-    textarea { width: 100%; height: 85px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; resize: none; font-family: inherit; }
-    textarea:focus { border-color: #2563eb; }
+    textarea { width: 100%; height: 85px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; resize: none; }
 
-    /* 체크박스 영역 */
-    .competency-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9rem; font-weight: 500; }
+    .competency-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9rem; }
     @media (min-width: 500px) { .competency-grid { grid-template-columns: repeat(3, 1fr); } }
-    .check-item { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
-    .check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #d97706; cursor: pointer; }
+    .check-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 
     .etc-wrap { margin-top: 10px; display: flex; align-items: center; gap: 6px; font-size: 0.9rem; }
-    .etc-wrap input { flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+    .etc-wrap input { flex: 1; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
 
-    /* 한줄평 연출 */
-    .one-line-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 1rem; font-weight: bold; color: #0f172a; }
-    .one-line-box input { flex: 1; min-width: 180px; padding: 10px; border: 1.5px solid #0f172a; border-radius: 8px; font-size: 0.95rem; outline: none; text-align: center; font-weight: bold; }
+    .one-line-box { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 1rem; font-weight: bold; }
+    .one-line-box input { flex: 1; min-width: 180px; padding: 10px; border: 1.5px solid #0f172a; border-radius: 8px; text-align: center; }
 
-    /* 하단 버튼 그룹 스타일 명확화 */
-    .btn-group-bottom { 
-      display: flex !important; 
-      flex-direction: column; 
-      gap: 12px; 
-      margin-top: 30px; 
-      padding-top: 15px;
-      border-top: 2px dashed #e2e8f0;
-    }
-    @media (min-width: 600px) { 
-      .btn-group-bottom { flex-direction: row; } 
-    }
+    .btn-group-bottom { display: flex; flex-direction: column; gap: 12px; margin-top: 30px; }
+    @media (min-width: 600px) { .btn-group-bottom { flex-direction: row; } }
 
-    .submit-btn { 
-      flex: 2; 
-      padding: 16px; 
-      background-color: #2563eb; 
-      color: white; 
-      border: none; 
-      border-radius: 12px; 
-      font-size: 1.1rem; 
-      font-weight: bold; 
-      cursor: pointer; 
-      transition: 0.2s; 
-    }
-    .submit-btn:hover { background-color: #1d4ed8; }
-    .submit-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+    .submit-btn { flex: 2; padding: 16px; background-color: #2563eb; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+    .save-btn { flex: 1; padding: 16px; background-color: #059669; color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; }
 
-    .save-btn { 
-      flex: 1; 
-      padding: 16px; 
-      background-color: #059669; 
-      color: white; 
-      border: none; 
-      border-radius: 12px; 
-      font-size: 0.95rem; 
-      font-weight: bold; 
-      cursor: pointer; 
-      transition: 0.2s; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      gap: 6px; 
-    }
-    .save-btn:hover { background-color: #047857; }
-
-    .save-btn-img { background-color: #4f46e5; }
-    .save-btn-img:hover { background-color: #4338ca; }
-
-    /* 프린트/저장 시 스타일 조정 */
     @media print {
-      .
+      .btn-worknet, .btn-group-bottom { display: none !important; }
+      body { background: white; padding: 0; }
+      .container { border: none; box-shadow: none; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="printableArea">
+  <form id="sdgsForm">
+    <div class="card-header">
+      <div>
+        <h1 class="card-title">🌐 SDGs 직업 카드</h1>
+        <p class="card-subtitle">지속가능발전목표(SDGs) 문제 해결에 기여하는 나만의 미래 직업을 탐색해 봅시다.</p>
+      </div>
+      <a href="https://www.wagework.go.kr/pt/b/b/retrieveCardNewsList.do?topPageId=PT06000000&pageId=PT06030200" target="_blank" class="btn-worknet">
+        🔍 워크넷 미래직업 카드뉴스 참고하기 ↗
+      </a>
+    </div>
+
+    <div class="student-info-box">
+      <label for="studentId">👤 학번 입력:</label>
+      <input type="text" id="studentId" placeholder="예: 10305 (5자리)" required autocomplete="off">
+      <span style="font-size:0.82rem; color:#475569;">※ 반/번호 수합을 위해 학번 5자리를 입력하세요.</span>
+    </div>
+
+    <div class="card-grid">
+      <div class="left-col">
+        <div class="info-card">
+          <div class="info-label">🌍 내가 선택한 SDGs 목표</div>
+          <input type="text" id="sdgsGoal" class="info-input" placeholder="예: 13번 기후변화 대응" required autocomplete="off">
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">💼 탐색할 직업 이름</div>
+          <input type="text" id="jobTitle" class="info-input" placeholder="예: 기후변화 데이터 분석가" required autocomplete="off">
+        </div>
+      </div>
+
+      <div class="right-col">
+        <div class="section-block">
+          <div class="block-header bg-green">주요 업무</div>
+          <div class="block-question">Q. 이 직업은 주로 어떤 일을 하나요?</div>
+          <div class="task-inputs">
+            <div class="task-item">• <input type="text" id="task1" placeholder="주요 업무 1" required></div>
+            <div class="task-item">• <input type="text" id="task2" placeholder="주요 업무 2"></div>
+            <div class="task-item">• <input type="text" id="task3" placeholder="주요 업무 3"></div>
+            <div class="task-item">• <input type="text" id="task4" placeholder="주요 업무 4"></div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="block-header bg-blue">SDGs 기여점</div>
+          <div class="block-question">Q. 이 직업은 내가 선택한 SDGs 문제를 어떻게 해결해 주나요?</div>
+          <textarea id="contribution" placeholder="지속가능발전목표 문제 해결에 기여하는 방식을 작성하세요." required></textarea>
+        </div>
+
+        <div class="section-block">
+          <div class="block-header bg-amber">필요 역량</div>
+          <div class="block-question">Q. 이 직업을 가지려면 어떤 능력이나 태도가 필요할까요?</div>
+          <div class="competency-grid">
+            <label class="check-item"><input type="checkbox" name="competency" value="창의·융합 사고력"> 창의·융합 사고력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="의사소통·협력"> 의사소통·협력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="비판적 사고력"> 비판적 사고력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="디지털·IT 기술력"> 디지털·IT 기술력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="복합 문제해결력"> 복합 문제해결력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="도전정신·적응력"> 도전정신·적응력</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="세계시민의식·공감"> 세계시민의식·공감</label>
+            <label class="check-item"><input type="checkbox" name="competency" value="리더십·기획력"> 리더십·기획력</label>
+          </div>
+          <div class="etc-wrap">
+            <span>기타:</span>
+            <input type="text" id="competencyEtc" placeholder="직접 입력할 역량">
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="block-header bg-slate">한줄평</div>
+          <div class="one-line-box">
+            <span>"이 직업은 우리 미래에</span>
+            ( <input type="text" id="oneLineReview" placeholder="예: 지구를 구하는 열쇠" required> )
+            <span>역할을 한다!"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-group-bottom">
+      <button type="submit" class="submit-btn" id="submitBtn">SDGs 직업 카드 제출하기 🚀</button>
+      <button type="button" class="save-btn" id="savePdfBtn">📄 내 기기에 화면 출력/저장</button>
+    </div>
+  </form>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, push, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // 브라우저 기본 인쇄(PDF 저장) 기능
+  document.getElementById('savePdfBtn').addEventListener('click', function() {
+    window.print();
+  });
+
+  // 제출 처리
+  document.getElementById('sdgsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitBtn');
+    const studentId = document.getElementById('studentId').value.trim();
+
+    if (!studentId) {
+      alert('학번을 입력해주세요.');
+      return;
+    }
+
+    const checkedBoxes = document.querySelectorAll('input[name="competency"]:checked');
+    const competencies = Array.from(checkedBoxes).map(cb => cb.value);
+    const etcValue = document.getElementById('competencyEtc').value.trim();
+    if (etcValue) competencies.push(`기타: ${etcValue}`);
+
+    if (competencies.length === 0) {
+      alert('필요 역량을 최소 1개 이상 선택해 주세요.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = '제출 중... 🚀';
+
+    try {
+      const submissionsRef = ref(db, 'worksheet2_2_submissions');
+      const snapshot = await get(submissionsRef);
+
+      if (snapshot.exists()) {
+        const rawData = snapshot.val();
+        const isDuplicate = Object.values(rawData).some(item => item.studentId === studentId || item.studentInfo === studentId);
+        if (isDuplicate) {
+          alert('이미 해당 학번으로 제출된 데이터가 존재합니다!');
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'SDGs 직업 카드 제출하기 🚀';
+          return;
+        }
+      }
+
+      const tasks = [
+        document.getElementById('task1').value.trim(),
+        document.getElementById('task2').value.trim(),
+        document.getElementById('task3').value.trim(),
+        document.getElementById('task4').value.trim()
+      ].filter(t => t.length > 0);
+
+      const submitData = {
+        unit: '2단원-2',
+        studentInfo: studentId,
+        studentId: studentId,
+        sdgsGoal: document.getElementById('sdgsGoal').value.trim(),
+        jobTitle: document.getElementById('jobTitle').value.trim(),
+        tasks: tasks,
+        tasksText: tasks.join(' / '),
+        contribution: document.getElementById('contribution').value.trim(),
+        competencies: competencies,
+        competenciesText: competencies.join(', '),
+        oneLineReview: document.getElementById('oneLineReview').value.trim()
+      };
+
+      await push(ref(db, 'worksheet2_2_submissions'), submitData);
+      
+      alert('🎉 성공적으로 제출되었습니다!');
+      location.href = 'index.html';
+
+    } catch (err) {
+      alert('제출 처리 중 오류 발생: ' + err.message);
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'SDGs 직업 카드 제출하기 🚀';
+    }
+  });
+</script>
+
+</body>
+</html>
