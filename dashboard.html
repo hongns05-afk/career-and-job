@@ -169,6 +169,43 @@
   </div>
 </div>
 
+<script>
+  // Global password authentication logic
+  const ADMIN_PASSWORD = "405208";
+
+  function checkPassword() {
+    const passwordInput = document.getElementById('adminPasswordInput');
+    const authOverlay = document.getElementById('authOverlay');
+    const mainContainer = document.getElementById('mainContainer');
+    const authError = document.getElementById('authError');
+
+    if (passwordInput.value.trim() === ADMIN_PASSWORD) {
+      authOverlay.style.display = 'none';
+      mainContainer.style.display = 'block';
+      authError.style.display = 'none';
+      passwordInput.value = '';
+      if (window.initFirebaseDashboard) {
+        window.initFirebaseDashboard();
+      }
+    } else {
+      authError.style.display = 'block';
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('authBtn').addEventListener('click', checkPassword);
+    document.getElementById('adminPasswordInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkPassword();
+    });
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      document.getElementById('mainContainer').style.display = 'none';
+      document.getElementById('authOverlay').style.display = 'flex';
+    });
+  });
+</script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -190,28 +227,9 @@
   let filteredItems = [];
   let currentPresentIndex = 0;
 
-  const ADMIN_PASSWORD = "405208";
-
-  const authOverlay = document.getElementById('authOverlay');
-  const mainContainer = document.getElementById('mainContainer');
-  const passwordInput = document.getElementById('adminPasswordInput');
-
-  document.getElementById('authBtn').addEventListener('click', checkPassword);
-  passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPassword(); });
-  document.getElementById('btnLogout').addEventListener('click', () => { mainContainer.style.display = 'none'; authOverlay.style.display = 'flex'; });
-
-  function checkPassword() {
-    if (passwordInput.value.trim() === ADMIN_PASSWORD) {
-      authOverlay.style.display = 'none';
-      mainContainer.style.display = 'block';
-      document.getElementById('authError').style.display = 'none';
-      passwordInput.value = '';
-      attachRealtimeListener();
-    } else {
-      document.getElementById('authError').style.display = 'block';
-      passwordInput.value = '';
-    }
-  }
+  window.initFirebaseDashboard = function() {
+    attachRealtimeListener();
+  };
 
   function renderGrid() {
     const grid = document.getElementById('studentGrid');
