@@ -305,3 +305,98 @@
         contentVal = `<div>👤 <strong>창업가:</strong> ${item.entrepreneurText || (item.entrepreneur?.name || '-')}</div><div style="margin-top:4px;">🎯 <strong>다짐:</strong> ${item.futurePlan || '-'}</div>`;
       } else if (selectedUnit === '2단원-2') {
         typeVal = `<div>🌍 <strong>목표:</strong> ${item.sdgsGoal || '-'}</div><div style="margin-top:2px; color:#16a34a;">💼 <strong>직업:</strong> ${item.jobTitle || '-'}</div>`;
+        contentVal = `<div>💡 <strong>기여점:</strong> ${item.contribution || '-'}</div><div class="sub-text" style="color:#2563eb;">💬 "${item.oneLineReview || '-'}"</div>`;
+      } else {
+        typeVal = item.learningType || item.strength || '-'; contentVal = item.improvement || item.content || '-';
+      }
+
+      let timeVal = item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-');
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="student-clickable" onclick="openDetailModal(${index})">${item.studentStr}</span></td>
+        <td>${typeVal}</td>
+        <td><div>${contentVal}</div></td>
+        <td style="font-size:0.8rem; color:#64748b;">${timeVal}</td>
+        <td class="text-center">
+          <button class="view-item-btn" onclick="openDetailModal(${index})">보기</button>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+
+    document.getElementById('submissionCounter').innerText = `총 제출 건수: ${submittedCount}건`;
+    if (submittedCount === 0) tableBody.innerHTML = '<tr><td colspan="5" class="text-center">조건에 맞는 데이터가 없습니다.</td></tr>';
+  }
+
+  function attachRealtimeListener() {
+    onValue(ref(db, getPathByUnit(document.getElementById('activitySelect').value)), (snapshot) => {
+      rawData = snapshot.val() || {}; updateDashboard();
+    });
+  }
+
+  document.getElementById('activitySelect').addEventListener('change', attachRealtimeListener);
+  document.getElementById('classSelect').addEventListener('change', updateDashboard);
+
+  window.openDetailModal = function(index) {
+    const item = filteredItems[index];
+    if (!item) return;
+    const selectedUnit = document.getElementById('activitySelect').value;
+    document.getElementById('modalStudentTitle').innerText = `👤 [${item.studentStr}] 상세 답변`;
+    const body = document.getElementById('modalAnswersBody');
+    
+    if (selectedUnit === '1단원') {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">🎯 관심 직업</div><div class="answer-content">${item.jobTitle || '-'}</div></div><div class="answer-block"><div class="answer-label">📝 내용</div><div class="answer-content">${item.jobDesc || item.content || '-'}</div></div>`;
+    } else if (selectedUnit === '2단원') {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">🏆 역량군</div><div class="answer-content">${item.topGroup || '-'}</div></div><div class="answer-block"><div class="answer-label">💡 추천 창업가</div><div class="answer-content">${item.entrepreneurText || '-'}</div></div><div class="answer-block"><div class="answer-label">🚀 노력</div><div class="answer-content">${item.futurePlan || '-'}</div></div>`;
+    } else if (selectedUnit === '2단원-2') {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">🌍 SDGs 목표</div><div class="answer-content">${item.sdgsGoal || '-'}</div></div><div class="answer-block"><div class="answer-label">💼 직업 이름</div><div class="answer-content">${item.jobTitle || '-'}</div></div><div class="answer-block"><div class="answer-label">📋 주요 업무</div><div class="answer-content">${Array.isArray(item.tasks) ? item.tasks.join(', ') : (item.tasksText || '-')}</div></div><div class="answer-block"><div class="answer-label">💡 기여점</div><div class="answer-content">${item.contribution || '-'}</div></div><div class="answer-block"><div class="answer-label">💬 한줄평</div><div class="answer-content">"${item.oneLineReview || '-'}"</div></div>`;
+    } else {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">📘 학습 유형</div><div class="answer-content">${item.learningType || item.strength || '-'}</div></div><div class="answer-block"><div class="answer-label">💡 개선점 및 계획</div><div class="answer-content">${item.improvement || item.content || '-'}</div></div>`;
+    }
+    document.getElementById('detailModal').style.display = 'flex';
+  };
+
+  document.getElementById('btnModalClose').addEventListener('click', () => { document.getElementById('detailModal').style.display = 'none'; });
+
+  document.getElementById('btnExcel').addEventListener('click', () => {
+    if (filteredItems.length === 0) return alert('다운로드할 데이터가 없습니다.');
+    const selectedUnit = document.getElementById('activitySelect').value;
+    const excelData = filteredItems.map(item => {
+      let row = { '입력된 학번': item.studentStr };
+      if (selectedUnit === '1단원') { row['직업'] = item.jobTitle || ''; row['내용'] = item.jobDesc || item.content || ''; }
+      else if (selectedUnit === '2단원-2') { row['목표'] = item.sdgsGoal || ''; row['직업'] = item.jobTitle || ''; row['기여점'] = item.contribution || ''; }
+      row['제출시간'] = item.submittedAt || '';
+      return row;
+    });
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, selectedUnit);
+    XLSX.writeFile(workbook, `${selectedUnit}_전체결과.xlsx`);
+  });
+
+  document.getElementById('btnPresentation').addEventListener('click', () => {
+    if (filteredItems.length === 0) return alert('데이터가 없습니다.');
+    currentPresentIndex = 0; renderPresentSlide(); document.getElementById('presentationOverlay').style.display = 'flex';
+  });
+
+  function renderPresentSlide() {
+    const item = filteredItems[currentPresentIndex];
+    document.getElementById('presentStudentTitle').innerText = `👤 학번: ${item.studentStr}`;
+    document.getElementById('presentIndexText').innerText = `${currentPresentIndex + 1} / ${filteredItems.length}`;
+    document.getElementById('btnPrevPresent').disabled = (currentPresentIndex === 0);
+    document.getElementById('btnNextPresent').disabled = (currentPresentIndex === filteredItems.length - 1);
+    
+    document.getElementById('presentContent').innerHTML = `
+      <div style="font-size:1.8rem; color:#4ade80; margin-bottom:15px;">입력 학번: <strong>${item.studentStr}</strong></div>
+      <div style="font-size:1.3rem; line-height:1.5; color:#f8fafc; background:#0f172a; padding:15px; border-radius:8px;">${item.jobTitle || item.sdgsGoal || item.topGroup || '-'}</div>
+      <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px; margin-top: 15px;">${item.contribution || item.content || item.futurePlan || '-'}</div>
+    `;
+  }
+  document.getElementById('btnPrevPresent').addEventListener('click', () => { if (currentPresentIndex > 0) { currentPresentIndex--; renderPresentSlide(); } });
+  document.getElementById('btnNextPresent').addEventListener('click', () => { if (currentPresentIndex < filteredItems.length - 1) { currentPresentIndex++; renderPresentSlide(); } });
+  document.getElementById('btnClosePresent').addEventListener('click', () => { document.getElementById('presentationOverlay').style.display = 'none'; });
+</script>
+
+</body>
+</html>
