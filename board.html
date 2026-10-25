@@ -13,11 +13,12 @@
     .auth-card { background: #ffffff; padding: 30px 20px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: 100%; max-width: 360px; text-align: center; }
     .auth-card h2 { margin: 0 0 10px 0; font-size: 1.3rem; color: #0f172a; }
     .auth-card p { font-size: 0.88rem; color: #64748b; margin-bottom: 20px; word-break: keep-all; }
-    .auth-card input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 1.1rem; text-align: center; margin-bottom: 15px; outline: none; -webkit-appearance: none; }
+    .auth-card input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 1.05rem; text-align: center; margin-bottom: 12px; outline: none; -webkit-appearance: none; }
     .auth-card input:focus { border-color: #2563eb; }
     .auth-card button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .auth-card button:active { background: #1d4ed8; }
-    .auth-error { color: #ef4444; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold; }
+    .auth-card button:disabled { background: #94a3b8; cursor: not-allowed; }
+    .auth-error { color: #ef4444; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold; word-break: keep-all; }
 
     .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
@@ -44,13 +45,14 @@
     .student-card.submitted .status { color: #2563eb; font-weight: bold; }
 
     .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 600px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 640px; }
     th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; font-size: 0.85rem; }
     th { background: #f8fafc; color: #475569; font-weight: bold; }
     .text-center { text-align: center; }
     .student-clickable { color: #2563eb; font-weight: bold; cursor: pointer; text-decoration: underline; }
     .student-clickable:hover { color: #1d4ed8; }
     .view-item-btn { background: #e0f2fe; color: #0284c7; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+    .del-item-btn { background: #fee2e2; color: #dc2626; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; margin-left: 4px; }
     .sub-text { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
 
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 99999; padding: 20px; }
@@ -75,11 +77,12 @@
 
 <div class="auth-overlay" id="authOverlay">
   <div class="auth-card">
-    <h2>🔒 교사용 대시보드 인증</h2>
-    <p>선생님 관리용 비밀번호를 입력해 주세요.</p>
-    <input type="password" id="adminPasswordInput" placeholder="비밀번호 입력" inputmode="numeric">
-    <button id="authBtn">확인 및 접속</button>
-    <div class="auth-error" id="authError">⚠️ 비밀번호가 불일치합니다.</div>
+    <h2>🔒 교사용 현황판 로그인</h2>
+    <p>선생님 계정(이메일, 비밀번호)으로 로그인해 주세요.</p>
+    <input type="email" id="loginEmail" placeholder="이메일" autocomplete="username">
+    <input type="password" id="loginPassword" placeholder="비밀번호" autocomplete="current-password">
+    <button id="authBtn">로그인</button>
+    <div class="auth-error" id="authError">⚠️ 로그인에 실패했습니다.</div>
   </div>
 </div>
 
@@ -89,7 +92,7 @@
     <div class="header-btns">
       <button class="btn btn-presentation" id="btnPresentation">🔮 발표</button>
       <button class="btn btn-excel" id="btnExcel">🧪 엑셀</button>
-      <button class="btn btn-logout" id="btnLogout">🔒 잠금</button>
+      <button class="btn btn-logout" id="btnLogout">🔒 로그아웃</button>
     </div>
   </div>
 
@@ -133,10 +136,10 @@
       <thead>
         <tr>
           <th style="width: 12%;">입력된 학번</th>
-          <th style="width: 25%;" id="thHeaderType">대표 선택/유형</th>
+          <th style="width: 24%;" id="thHeaderType">대표 선택/유형</th>
           <th id="thHeaderContent">작성 내용</th>
-          <th style="width: 18%;">제출 시간</th>
-          <th style="width: 10%; text-align: center;">상세</th>
+          <th style="width: 16%;">제출 시간</th>
+          <th style="width: 14%; text-align: center;">상세 / 삭제</th>
         </tr>
       </thead>
       <tbody id="submissionTable">
@@ -169,45 +172,10 @@
   </div>
 </div>
 
-<script>
-  const ADMIN_PASSWORD = "405208";
-
-  function checkPassword() {
-    const passwordInput = document.getElementById('adminPasswordInput');
-    const authOverlay = document.getElementById('authOverlay');
-    const mainContainer = document.getElementById('mainContainer');
-    const authError = document.getElementById('authError');
-
-    if (passwordInput.value.trim() === ADMIN_PASSWORD) {
-      authOverlay.style.display = 'none';
-      mainContainer.style.display = 'block';
-      authError.style.display = 'none';
-      passwordInput.value = '';
-      if (window.initFirebaseDashboard) {
-        window.initFirebaseDashboard();
-      }
-    } else {
-      authError.style.display = 'block';
-      passwordInput.value = '';
-      passwordInput.focus();
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('authBtn').addEventListener('click', checkPassword);
-    document.getElementById('adminPasswordInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') checkPassword();
-    });
-    document.getElementById('btnLogout').addEventListener('click', () => {
-      document.getElementById('mainContainer').style.display = 'none';
-      document.getElementById('authOverlay').style.display = 'flex';
-    });
-  });
-</script>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -221,6 +189,7 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  const auth = getAuth(app);
 
   let rawData = {};
   let filteredItems = [];
@@ -233,10 +202,57 @@
     return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  window.initFirebaseDashboard = function() {
-    attachRealtimeListener();
-  };
+  // ---------- 로그인 / 로그아웃 ----------
+  const authOverlay = document.getElementById('authOverlay');
+  const mainContainer = document.getElementById('mainContainer');
+  const authBtn = document.getElementById('authBtn');
+  const authError = document.getElementById('authError');
+  const emailInput = document.getElementById('loginEmail');
+  const passInput = document.getElementById('loginPassword');
 
+  async function doLogin() {
+    const email = emailInput.value.trim();
+    const pass = passInput.value;
+    if (!email || !pass) {
+      authError.innerText = '⚠️ 이메일과 비밀번호를 모두 입력해 주세요.';
+      authError.style.display = 'block';
+      return;
+    }
+    authBtn.disabled = true;
+    authBtn.innerText = '로그인 중...';
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      authError.style.display = 'none';
+      passInput.value = '';
+    } catch (err) {
+      authError.innerText = '⚠️ 이메일 또는 비밀번호가 맞지 않습니다.';
+      authError.style.display = 'block';
+      passInput.value = '';
+    } finally {
+      authBtn.disabled = false;
+      authBtn.innerText = '로그인';
+    }
+  }
+
+  authBtn.addEventListener('click', doLogin);
+  passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doLogin(); });
+  emailInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passInput.focus(); });
+  document.getElementById('btnLogout').addEventListener('click', () => { signOut(auth); });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      authOverlay.style.display = 'none';
+      mainContainer.style.display = 'block';
+      attachRealtimeListener();
+    } else {
+      if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+      rawData = {};
+      mainContainer.style.display = 'none';
+      authOverlay.style.display = 'flex';
+    }
+  });
+
+  // ---------- 화면 그리기 ----------
   function renderGrid() {
     const grid = document.getElementById('studentGrid');
     grid.innerHTML = '';
@@ -344,6 +360,7 @@
         <td style="font-size:0.8rem; color:#64748b;">${timeVal}</td>
         <td class="text-center">
           <button class="view-item-btn" onclick="openDetailModal(${index})">보기</button>
+          <button class="del-item-btn" onclick="deleteSubmission(${index})">삭제</button>
         </td>
       `;
       tableBody.appendChild(tr);
@@ -367,6 +384,20 @@
 
   document.getElementById('activitySelect').addEventListener('change', attachRealtimeListener);
   document.getElementById('classSelect').addEventListener('change', updateDashboard);
+
+  // ---------- 개별 삭제 (선생님 로그인 상태에서만 가능) ----------
+  window.deleteSubmission = async function(index) {
+    const item = filteredItems[index];
+    if (!item) return;
+    const unit = document.getElementById('activitySelect').value;
+    const ok = confirm(`[${unit}] 학번 ${item.studentStr}의 제출 1건을 삭제할까요?\n삭제하면 되돌릴 수 없고, 학생은 다시 제출할 수 있게 됩니다.`);
+    if (!ok) return;
+    try {
+      await remove(ref(db, getPathByUnit(unit) + '/' + item.key));
+    } catch (err) {
+      alert('삭제하지 못했습니다: ' + err.message);
+    }
+  };
 
   window.openDetailModal = function(index) {
     const item = filteredItems[index];
