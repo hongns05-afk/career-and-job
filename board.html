@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>실시간 제출 현황판</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Pretendard', 'Noto Sans KR', sans-serif; background: #fdf2f4; color: #1e293b; margin: 0; padding: 15px; }
+
+    .auth-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 999999 !important; padding: 20px; }
+    .auth-card { background: #ffffff; padding: 30px 20px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); width: 100%; max-width: 360px; text-align: center; }
+    .auth-card h2 { margin: 0 0 10px 0; font-size: 1.3rem; color: #0f172a; }
+    .auth-card p { font-size: 0.88rem; color: #64748b; margin-bottom: 20px; word-break: keep-all; }
+    .auth-card input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 12px; font-size: 1.1rem; text-align: center; margin-bottom: 15px; outline: none; -webkit-appearance: none; }
+    .auth-card input:focus { border-color: #2563eb; }
+    .auth-card button { width: 100%; padding: 14px; background: #2563eb; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .auth-card button:active { background: #1d4ed8; }
+    .auth-error { color: #ef4444; font-size: 0.85rem; margin-top: 12px; display: none; font-weight: bold; }
+
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: none; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .header h1 { font-size: 1.4rem; margin: 0; display: flex; align-items: center; gap: 8px; color: #0f172a; }
+    .header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { padding: 8px 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
+    .btn-presentation { background: #a855f7; color: white; }
+    .btn-excel { background: #10b981; color: white; }
+    .btn-logout { background: #64748b; color: white; }
+
+    .filter-bar { background: #f1f5f9; padding: 12px 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .filter-group { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; width: 100%; justify-content: space-between; }
+    @media (min-width: 640px) { .filter-group { width: auto; justify-content: start; } }
+    select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; background: white; }
+
+    .section-title { font-size: 1rem; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .student-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
+    @media (min-width: 640px) { .student-grid { grid-template-columns: repeat(10, 1fr); } }
+    .student-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; padding: 10px 2px; text-align: center; }
+    .student-card .num { font-weight: bold; font-size: 0.85rem; color: #334155; }
+    .student-card .status { font-size: 0.7rem; color: #94a3b8; margin-top: 2px; }
+    .student-card.submitted { background: #eff6ff; border-color: #bfdbfe; }
+    .student-card.submitted .num { color: #1d4ed8; }
+    .student-card.submitted .status { color: #2563eb; font-weight: bold; }
+
+    .table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 600px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; font-size: 0.85rem; }
+    th { background: #f8fafc; color: #475569; font-weight: bold; }
+    .text-center { text-align: center; }
+    .student-clickable { color: #2563eb; font-weight: bold; cursor: pointer; text-decoration: underline; }
+    .student-clickable:hover { color: #1d4ed8; }
+    .view-item-btn { background: #e0f2fe; color: #0284c7; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
+    .sub-text { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 99999; padding: 20px; }
+    .modal-card { background: white; width: 100%; max-width: 550px; border-radius: 16px; padding: 20px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 15px; }
+    .modal-title { font-weight: bold; font-size: 1.1rem; color: #0f172a; }
+    .modal-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b; }
+    .answer-block { background: #f8fafc; border-left: 4px solid #2563eb; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
+    .answer-label { font-size: 0.8rem; font-weight: bold; color: #64748b; margin-bottom: 4px; }
+    .answer-content { font-size: 0.95rem; color: #0f172a; white-space: pre-wrap; line-height: 1.5; }
+
+    .presentation-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; color: white; z-index: 900000; padding: 30px; flex-direction: column; justify-content: space-between; }
+    .present-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+    .present-student-title { font-size: 1.6rem; font-weight: bold; color: #60a5fa; }
+    .present-body { flex: 1; background: #1e293b; margin: 25px 0; border-radius: 16px; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; }
+    .present-nav { display: flex; justify-content: center; align-items: center; gap: 20px; }
+    .present-nav-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
+    .present-nav-btn:disabled { background: #475569; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <h2>🔒 교사용 대시보드 인증</h2>
+    <p>선생님 관리용 비밀번호를 입력해 주세요.</p>
+    <input type="password" id="adminPasswordInput" placeholder="비밀번호 입력" inputmode="numeric">
+    <button id="authBtn">확인 및 접속</button>
+    <div class="auth-error" id="authError">⚠️ 비밀번호가 불일치합니다.</div>
+  </div>
+</div>
+
+<div class="container" id="mainContainer">
+  <div class="header">
+    <h1>📊 실시간 제출 현황판</h1>
+    <div class="header-btns">
+      <button class="btn btn-presentation" id="btnPresentation">🔮 발표</button>
+      <button class="btn btn-excel" id="btnExcel">🧪 엑셀</button>
+      <button class="btn btn-logout" id="btnLogout">🔒 잠금</button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <span>📘 활동지:</span>
+      <select id="activitySelect">
+        <option value="1단원">1단원 (진로 특성 직업)</option>
+        <option value="2단원">2단원 (창업가 정신)</option>
+        <option value="2단원-2" selected>2단원-2 (SDGs 직업 카드)</option>
+        <option value="3단원">3단원 (학습 성격 유형)</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span>🏫 학급:</span>
+      <select id="classSelect">
+        <option value="all">전체 보기 (모든 학생)</option>
+        <option value="1">1반</option>
+        <option value="2">2반</option>
+        <option value="3">3반</option>
+        <option value="4">4반</option>
+        <option value="5">5반</option>
+        <option value="6">6반</option>
+        <option value="7">7반</option>
+        <option value="8">8반</option>
+        <option value="9">9반</option>
+        <option value="10">10반</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <span>📌 제출 현황 <span style="font-size:0.8rem; color:#64748b;">(전체 보기일 때는 그리드가 비활성화됩니다)</span></span>
+    <span style="color: #2563eb;" id="submissionCounter">제출 건수: 0건</span>
+  </div>
+  <div class="student-grid" id="studentGrid"></div>
+
+  <div class="section-title" id="tableTitle">📝 답변 내역</div>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 12%;">입력된 학번</th>
+          <th style="width: 25%;" id="thHeaderType">대표 선택/유형</th>
+          <th id="thHeaderContent">작성 내용</th>
+          <th style="width: 18%;">제출 시간</th>
+          <th style="width: 10%; text-align: center;">상세</th>
+        </tr>
+      </thead>
+      <tbody id="submissionTable">
+        <tr><td colspan="5" class="text-center">데이터를 불러오는 중입니다... ⏳</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="modalStudentTitle">👤 학생 상세 답변</div>
+      <button class="modal-close" id="btnModalClose">✕</button>
+    </div>
+    <div id="modalAnswersBody"></div>
+  </div>
+</div>
+
+<div class="presentation-overlay" id="presentationOverlay">
+  <div class="present-header">
+    <div class="present-student-title" id="presentStudentTitle">👤 학번: -</div>
+    <button class="btn btn-logout" id="btnClosePresent">✕ 발표 종료 (ESC)</button>
+  </div>
+  <div class="present-body" id="presentContent"></div>
+  <div class="present-nav">
+    <button class="present-nav-btn" id="btnPrevPresent">◀ 이전</button>
+    <span id="presentIndexText" style="font-size: 1.1rem; font-weight: bold;">0 / 0</span>
+    <button class="present-nav-btn" id="btnNextPresent">다음 ▶</button>
+  </div>
+</div>
+
+<script>
+  const ADMIN_PASSWORD = "405208";
+
+  function checkPassword() {
+    const passwordInput = document.getElementById('adminPasswordInput');
+    const authOverlay = document.getElementById('authOverlay');
+    const mainContainer = document.getElementById('mainContainer');
+    const authError = document.getElementById('authError');
+
+    if (passwordInput.value.trim() === ADMIN_PASSWORD) {
+      authOverlay.style.display = 'none';
+      mainContainer.style.display = 'block';
+      authError.style.display = 'none';
+      passwordInput.value = '';
+      if (window.initFirebaseDashboard) {
+        window.initFirebaseDashboard();
+      }
+    } else {
+      authError.style.display = 'block';
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('authBtn').addEventListener('click', checkPassword);
+    document.getElementById('adminPasswordInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkPassword();
+    });
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      document.getElementById('mainContainer').style.display = 'none';
+      document.getElementById('authOverlay').style.display = 'flex';
+    });
+  });
+</script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let rawData = {};
+  let filteredItems = [];
+  let currentPresentIndex = 0;
+  let unsubscribe = null;
+
+  // 학생이 입력한 글이 화면에서 코드로 실행되지 않도록 바꿔 주는 함수
+  function esc(v) {
+    if (v === undefined || v === null) return '';
+    return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  window.initFirebaseDashboard = function() {
+    attachRealtimeListener();
+  };
+
+  function renderGrid() {
+    const grid = document.getElementById('studentGrid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= 40; i++) {
+      const card = document.createElement('div');
+      card.className = 'student-card';
+      card.id = `card-num-${i}`;
+      card.innerHTML = `<div class="num">${i}번</div><div class="status" id="status-num-${i}">미제출</div>`;
+      grid.appendChild(card);
+    }
+  }
+
+  function parseStudentInfo(infoStr) {
+    if (!infoStr) return { classNum: '', seatNum: 0 };
+    const cleanStr = String(infoStr).replace(/[^0-9]/g, '');
+    if (cleanStr.length === 5) return { classNum: parseInt(cleanStr.substring(1, 3), 10).toString(), seatNum: parseInt(cleanStr.substring(3), 10) };
+    if (cleanStr.length === 4) return { classNum: cleanStr.substring(1, 2), seatNum: parseInt(cleanStr.substring(2), 10) };
+    return { classNum: '', seatNum: 0 };
+  }
+
+  function getPathByUnit(unit) {
+    if (unit === '1단원') return 'worksheet1_submissions';
+    if (unit === '2단원') return 'yeep_activity_submissions';
+    if (unit === '2단원-2') return 'worksheet2_2_submissions';
+    return 'learning_activity_submissions';
+  }
+
+  function updateDashboard() {
+    renderGrid();
+    const selectedUnit = document.getElementById('activitySelect').value;
+    const selectedClass = document.getElementById('classSelect').value;
+
+    if (selectedUnit === '1단원') {
+      document.getElementById('tableTitle').innerText = '📝 [1단원] 진로 특성에 맞는 직업 찾기';
+      document.getElementById('thHeaderType').innerText = '관심 직업';
+      document.getElementById('thHeaderContent').innerText = '진로 특성 및 작성 내용';
+    } else if (selectedUnit === '2단원') {
+      document.getElementById('tableTitle').innerText = '📝 [2단원] 창업가 정신 핵심 역량 진단';
+      document.getElementById('thHeaderType').innerText = '상위 역량군 / 역량';
+      document.getElementById('thHeaderContent').innerText = '추천 창업가 & 꿈을 이루기 위한 노력';
+    } else if (selectedUnit === '2단원-2') {
+      document.getElementById('tableTitle').innerText = '📝 [2단원-2] SDGs 직업 카드';
+      document.getElementById('thHeaderType').innerText = 'SDGs 목표 / 직업명';
+      document.getElementById('thHeaderContent').innerText = '기여점 및 한줄평';
+    } else {
+      document.getElementById('tableTitle').innerText = '📝 [3단원] 나의 학습 성격 유형 진단';
+      document.getElementById('thHeaderType').innerText = '학습 유형 / 강점';
+      document.getElementById('thHeaderContent').innerText = '개선점 및 계획';
+    }
+
+    const tableBody = document.getElementById('submissionTable');
+    tableBody.innerHTML = '';
+    filteredItems = [];
+
+    if (!rawData || Object.keys(rawData).length === 0) {
+      document.getElementById('submissionCounter').innerText = '제출 건수: 0건';
+      tableBody.innerHTML = '<tr><td colspan="5" class="text-center">제출된 데이터가 없습니다.</td></tr>';
+      return;
+    }
+
+    let submittedCount = 0;
+    Object.entries(rawData).forEach(([key, item]) => {
+      const studentStr = item.studentId || item.studentInfo || '미상';
+      const { classNum, seatNum } = parseStudentInfo(studentStr);
+
+      if (selectedClass === 'all' || classNum === selectedClass) {
+        submittedCount++;
+        filteredItems.push({ key, ...item, studentStr, classNum, seatNum });
+
+        if (selectedClass !== 'all' && seatNum >= 1 && seatNum <= 40) {
+          const card = document.getElementById(`card-num-${seatNum}`);
+          const status = document.getElementById(`status-num-${seatNum}`);
+          if (card && status) { card.classList.add('submitted'); status.innerText = '제출완료'; }
+        }
+      }
+    });
+
+    if (selectedClass !== 'all') {
+      filteredItems.sort((a, b) => a.seatNum - b.seatNum);
+    } else {
+      filteredItems.reverse();
+    }
+
+    filteredItems.forEach((item, index) => {
+      let typeVal = '-', contentVal = '-';
+      if (selectedUnit === '1단원') {
+        typeVal = esc(item.jobTitle) || '-'; contentVal = esc(item.jobDesc || item.content) || '-';
+      } else if (selectedUnit === '2단원') {
+        typeVal = `<div><strong>${esc(item.topGroup) || '-'}</strong></div><div class="sub-text">1~3순위: ${esc(item.topAbilitiesText) || '-'}</div>`;
+        contentVal = `<div>👤 <strong>창업가:</strong> ${esc(item.entrepreneurText || (item.entrepreneur && item.entrepreneur.name)) || '-'}</div><div style="margin-top:4px;">🎯 <strong>다짐:</strong> ${esc(item.futurePlan) || '-'}</div>`;
+      } else if (selectedUnit === '2단원-2') {
+        typeVal = `<div>🌍 <strong>목표:</strong> ${esc(item.sdgsGoal) || '-'}</div><div style="margin-top:2px; color:#16a34a;">💼 <strong>직업:</strong> ${esc(item.jobTitle) || '-'}</div>`;
+        contentVal = `<div>💡 <strong>기여점:</strong> ${esc(item.contribution) || '-'}</div><div class="sub-text" style="color:#2563eb;">💬 "${esc(item.oneLineReview) || '-'}"</div>`;
+      } else {
+        typeVal = esc(item.learningType || item.strength) || '-'; contentVal = esc(item.improvement || item.content) || '-';
+      }
+
+      let timeVal = esc(item.submittedAt || (item.timestamp ? new Date(item.timestamp).toLocaleString('ko-KR') : '-'));
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><span class="student-clickable" onclick="openDetailModal(${index})">${esc(item.studentStr)}</span></td>
+        <td>${typeVal}</td>
+        <td><div>${contentVal}</div></td>
+        <td style="font-size:0.8rem; color:#64748b;">${timeVal}</td>
+        <td class="text-center">
+          <button class="view-item-btn" onclick="openDetailModal(${index})">보기</button>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+
+    document.getElementById('submissionCounter').innerText = `총 제출 건수: ${submittedCount}건`;
+    if (submittedCount === 0) tableBody.innerHTML = '<tr><td colspan="5" class="text-center">조건에 맞는 데이터가 없습니다.</td></tr>';
+  }
+
+  // 활동지를 바꿀 때 이전 감시를 먼저 끄고 새로 연결합니다.
+  function attachRealtimeListener() {
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    const path = getPathByUnit(document.getElementById('activitySelect').value);
+    unsubscribe = onValue(ref(db, path), (snapshot) => {
+      rawData = snapshot.val() || {};
+      updateDashboard();
+    }, (error) => {
+      document.getElementById('submissionTable').innerHTML = '<tr><td colspan="5" class="text-center">데이터를 불러오지 못했습니다: ' + esc(error.message) + '</td></tr>';
+    });
+  }
+
+  document.getElementById('activitySelect').addEventListener('change', attachRealtimeListener);
+  document.getElementById('classSelect').addEventListener('change', updateDashboard);
+
+  window.openDetailModal = function(index) {
+    const item = filteredItems[index];
+    if (!item) return;
+    const selectedUnit = document.getElementById('activitySelect').value;
+    document.getElementById('modalStudentTitle').innerText = `👤 [${item.studentStr}] 상세 답변`;
+    const body = document.getElementById('modalAnswersBody');
+
+    if (selectedUnit === '1단원') {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">🎯 관심 직업</div><div class="answer-content">${esc(item.jobTitle) || '-'}</div></div><div class="answer-block"><div class="answer-label">📝 내용</div><div class="answer-content">${esc(item.jobDesc || item.content) || '-'}</div></div>`;
+    } else if (selectedUnit === '2단원') {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">🏆 역량군</div><div class="answer-content">${esc(item.topGroup) || '-'}</div></div><div class="answer-block"><div class="answer-label">💡 추천 창업가</div><div class="answer-content">${esc(item.entrepreneurText) || '-'}</div></div><div class="answer-block"><div class="answer-label">🚀 노력</div><div class="answer-content">${esc(item.futurePlan) || '-'}</div></div>`;
+    } else if (selectedUnit === '2단원-2') {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">🌍 SDGs 목표</div><div class="answer-content">${esc(item.sdgsGoal) || '-'}</div></div><div class="answer-block"><div class="answer-label">💼 직업 이름</div><div class="answer-content">${esc(item.jobTitle) || '-'}</div></div><div class="answer-block"><div class="answer-label">📋 주요 업무</div><div class="answer-content">${esc(Array.isArray(item.tasks) ? item.tasks.join(', ') : (item.tasksText || '-'))}</div></div><div class="answer-block"><div class="answer-label">💡 기여점</div><div class="answer-content">${esc(item.contribution) || '-'}</div></div><div class="answer-block"><div class="answer-label">💬 한줄평</div><div class="answer-content">"${esc(item.oneLineReview) || '-'}"</div></div>`;
+    } else {
+      body.innerHTML = `<div class="answer-block"><div class="answer-label">📘 학습 유형</div><div class="answer-content">${esc(item.learningType || item.strength) || '-'}</div></div><div class="answer-block"><div class="answer-label">💡 개선점 및 계획</div><div class="answer-content">${esc(item.improvement || item.content) || '-'}</div></div>`;
+    }
+    document.getElementById('detailModal').style.display = 'flex';
+  };
+
+  document.getElementById('btnModalClose').addEventListener('click', () => { document.getElementById('detailModal').style.display = 'none'; });
+
+  document.getElementById('btnExcel').addEventListener('click', () => {
+    if (filteredItems.length === 0) return alert('다운로드할 데이터가 없습니다.');
+    const selectedUnit = document.getElementById('activitySelect').value;
+    const excelData = filteredItems.map(item => {
+      let row = { '입력된 학번': item.studentStr };
+      if (selectedUnit === '1단원') { row['직업'] = item.jobTitle || ''; row['내용'] = item.jobDesc || item.content || ''; }
+      else if (selectedUnit === '2단원-2') { row['목표'] = item.sdgsGoal || ''; row['직업'] = item.jobTitle || ''; row['기여점'] = item.contribution || ''; row['한줄평'] = item.oneLineReview || ''; }
+      else if (selectedUnit === '2단원') { row['역량군'] = item.topGroup || ''; row['추천 창업가'] = item.entrepreneurText || ''; row['다짐'] = item.futurePlan || ''; }
+      else { row['학습 유형'] = item.learningType || item.strength || ''; row['개선점 및 계획'] = item.improvement || item.content || ''; }
+      row['제출시간'] = item.submittedAt || '';
+      return row;
+    });
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, selectedUnit);
+    XLSX.writeFile(workbook, `${selectedUnit}_전체결과.xlsx`);
+  });
+
+  document.getElementById('btnPresentation').addEventListener('click', () => {
+    if (filteredItems.length === 0) return alert('데이터가 없습니다.');
+    currentPresentIndex = 0; renderPresentSlide(); document.getElementById('presentationOverlay').style.display = 'flex';
+  });
+
+  function renderPresentSlide() {
+    const item = filteredItems[currentPresentIndex];
+    document.getElementById('presentStudentTitle').innerText = `👤 학번: ${item.studentStr}`;
+    document.getElementById('presentIndexText').innerText = `${currentPresentIndex + 1} / ${filteredItems.length}`;
+    document.getElementById('btnPrevPresent').disabled = (currentPresentIndex === 0);
+    document.getElementById('btnNextPresent').disabled = (currentPresentIndex === filteredItems.length - 1);
+
+    document.getElementById('presentContent').innerHTML = `
+      <div style="font-size:1.8rem; color:#4ade80; margin-bottom:15px;">입력 학번: <strong>${esc(item.studentStr)}</strong></div>
+      <div style="font-size:1.3rem; line-height:1.5; color:#f8fafc; background:#0f172a; padding:15px; border-radius:8px;">${esc(item.jobTitle || item.sdgsGoal || item.topGroup) || '-'}</div>
+      <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px; margin-top: 15px;">${esc(item.contribution || item.content || item.futurePlan) || '-'}</div>
+    `;
+  }
+  document.getElementById('btnPrevPresent').addEventListener('click', () => { if (currentPresentIndex > 0) { currentPresentIndex--; renderPresentSlide(); } });
+  document.getElementById('btnNextPresent').addEventListener('click', () => { if (currentPresentIndex < filteredItems.length - 1) { currentPresentIndex++; renderPresentSlide(); } });
+  document.getElementById('btnClosePresent').addEventListener('click', () => { document.getElementById('presentationOverlay').style.display = 'none'; });
+</script>
+
+</body>
+</html>
