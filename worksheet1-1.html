@@ -56,6 +56,7 @@
         <label for="student-id">학번</label>
         <input type="text" id="student-id" placeholder="예: 10101" maxlength="5" autocomplete="off" inputmode="numeric">
     </div>
+    <div id="rejectBanner" style="display:none; background:#fff7ed; border:2px solid #fb923c; color:#9a3412; padding:12px 15px; border-radius:12px; margin-bottom:20px; font-weight:bold; font-size:0.92rem; line-height:1.5;"></div>
 
     <div class="question-title">1. 아래 보기를 터치한 후 해당되는 홀랜드 흥미 유형 칸을 터치해 봅시다.</div>
     
@@ -107,8 +108,8 @@
     </div>
 
     <div class="question-title">2. 자신의 관심 직업과 필요한 진로 특성을 적어 봅시다. (펜 필기 가능)</div>
-    <input type="text" id="job-title" class="text-input" placeholder="나의 관심 직업 (예: 경찰관)" autocomplete="off">
-    <textarea id="job-desc" class="text-input" rows="4" placeholder="관심 직업에 요구되는 진로 특성을 적어주세요." autocomplete="off"></textarea>
+    <input type="text" id="job-title" class="text-input" placeholder="나의 관심 직업 (예: 경찰관)" autocomplete="off" maxlength="50">
+    <textarea id="job-desc" class="text-input" rows="4" maxlength="500" placeholder="관심 직업에 요구되는 진로 특성을 적어주세요." autocomplete="off"></textarea>
 
     <!-- 안내 메시지 및 제출 버튼 -->
     <div class="status-msg" id="statusMsg">⚠️ 학번과 모든 문항을 작성해 주세요.</div>
@@ -117,7 +118,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, query, orderByChild, equalTo, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -155,10 +156,10 @@
         tag.className = 'placed-tag';
         tag.innerText = selectedWordElem.innerText;
         
-        // 배치된 단어 클릭 시 다시 원위치로 복구
+        // 배치된 단어 클릭 시 다시 원위치로 복구 (그 단어 자신을 되돌립니다)
         tag.onclick = function(e) {
             e.stopPropagation(); // 카드 전체 클릭 이벤트 방지
-            returnToBox(this, selectedWordElem ? selectedWordElem.innerText : tag.innerText);
+            returnToBox(this, this.innerText);
         };
         
         placedContainer.appendChild(tag);
@@ -191,7 +192,7 @@
         const submitBtn = document.getElementById('submitBtn');
         const statusMsg = document.getElementById('statusMsg');
 
-        const isStudentIdOk = studentId.length === 5;
+        const isStudentIdOk = /^[0-9]{5}$/.test(studentId);
         const isAllWordsPlaced = (totalWordsCount === placedWordsCount);
         const isJobTitleOk = jobTitle.length > 0;
         const isJobDescOk = jobDesc.length > 0;
@@ -207,7 +208,7 @@
             statusMsg.className = "status-msg";
 
             if (!isStudentIdOk) {
-                statusMsg.innerText = "⚠️ 학번 5자리를 정확히 입력해 주세요. (예: 10101)";
+                statusMsg.innerText = "⚠️ 학번 숫자 5자리를 정확히 입력해 주세요. (예: 10101)";
             } else if (!isAllWordsPlaced) {
                 statusMsg.innerText = `⚠️ [1번] 모든 직업 보기를 분류해 주세요. (남은 보기: ${totalWordsCount - placedWordsCount}개)`;
             } else if (!isJobTitleOk) {
@@ -218,18 +219,82 @@
         }
     }
 
-    // 실시간 입력 이벤트 바인딩
-    document.getElementById('student-id').addEventListener('input', validateForm);
+    // 선생님이 반려한 제출이 있으면 학번 입력 시 사유를 보여 줍니다.
+    let rejectCheckToken = 0;
+    async function checkRejected(id) {
+        const banner = document.getElementById('rejectBanner');
+        const token = ++rejectCheckToken;
+        banner.style.display = 'none';
+        if (!/^[0-9]{5}$/.test(id)) return;
+        try {
+            const q = query(ref(db, 'worksheet1_submissions'), orderByChild('studentId'), equalTo(id));
+            const snap = await get(q);
+            if (token !== rejectCheckToken || !snap.exists()) return;
+            const mine = Object.values(snap.val());
+            const hasActive = mine.some(it => it.status !== 'rejected');
+            const rejected = mine.filter(it => it.status === 'rejected').sort((a, b) => (b.rejectedAt || 0) - (a.rejectedAt || 0))[0];
+            if (!hasActive && rejected) {
+                banner.textContent = '↩️ 선생님이 제출을 반려했어요. ' + (rejected.rejectReason ? '사유: ' + rejected.rejectReason + ' — ' : '') + '내용을 고쳐서 다시 제출해 주세요.';
+                banner.appendChild(document.createElement('br'));
+                const loadBtn = document.createElement('button');
+                loadBtn.type = 'button';
+                loadBtn.textContent = '📝 이전에 쓴 내용 불러오기';
+                loadBtn.style.cssText = 'margin-top:8px; padding:8px 14px; border:none; border-radius:8px; background:#ea580c; color:white; font-weight:bold; cursor:pointer;';
+                loadBtn.addEventListener('click', () => fillFromRejected(rejected));
+                banner.appendChild(loadBtn);
+                banner.style.display = 'block';
+            }
+        } catch (e) { /* 확인에 실패해도 제출에는 영향 없음 */ }
+    }
+
+    // 반려된 제출의 내용을 다시 채워 줍니다. (학번은 그대로 둡니다)
+    function fillFromRejected(r) {
+        // 지금까지 분류해 둔 것을 모두 되돌려 놓고 시작합니다.
+        document.querySelectorAll('.placed-tag').forEach(t => t.remove());
+        document.querySelectorAll('.word-card').forEach(w => { w.style.display = 'inline-block'; w.classList.remove('selected'); });
+        selectedWordElem = null;
+
+        const classification = r.hollandClassification || {};
+        document.querySelectorAll('.holland-card').forEach(card => {
+            const typeName = card.querySelector('.type-header').innerText;
+            const words = Array.isArray(classification[typeName]) ? classification[typeName] : [];
+            words.forEach(word => {
+                const wordCard = Array.from(document.querySelectorAll('.word-card')).find(w => w.innerText === word && w.style.display !== 'none');
+                if (wordCard) {
+                    selectedWordElem = wordCard;
+                    window.placeWord(card);
+                }
+            });
+        });
+
+        document.getElementById('job-title').value = r.jobTitle || '';
+        document.getElementById('job-desc').value = r.jobDesc || '';
+        document.getElementById('rejectBanner').style.display = 'none';
+        validateForm();
+    }
+
+    // 실시간 입력 이벤트 바인딩 (학번은 숫자만, 최대 5자리)
+    document.getElementById('student-id').addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
+        validateForm();
+        checkRejected(this.value);
+    });
     document.getElementById('job-title').addEventListener('input', validateForm);
     document.getElementById('job-desc').addEventListener('input', validateForm);
 
     // Firebase 실시간 제출 연동
-    document.getElementById('submitBtn').addEventListener('click', function() {
+    document.getElementById('submitBtn').addEventListener('click', async function() {
         if(this.disabled) return;
+        const btn = this;
 
         const studentId = document.getElementById('student-id').value.trim();
         const jobTitle = document.getElementById('job-title').value.trim();
         const jobDesc = document.getElementById('job-desc').value.trim();
+
+        if (!/^[0-9]{5}$/.test(studentId)) {
+            alert('학번은 숫자 5자리로 입력해 주세요. (예: 10101)');
+            return;
+        }
 
         // 선택한 홀랜드 영역 배치 결과 수집
         const hollandResults = {};
@@ -244,25 +309,35 @@
             hollandClassification: hollandResults,
             jobTitle: jobTitle,
             jobDesc: jobDesc,
-            submittedAt: new Date().toLocaleString('ko-KR')
+            submittedAt: new Date().toLocaleString('ko-KR'),
+            timestamp: Date.now()
         };
 
         const submissionsRef = ref(db, 'worksheet1_submissions');
         
-        this.disabled = true;
-        this.innerText = "제출 중...";
+        btn.disabled = true;
+        btn.innerText = "제출 확인 중...";
 
-        push(submissionsRef, submission)
-            .then(() => {
-                alert('🎉 성공적으로 제출되었습니다!');
-                location.reload();
-            })
-            .catch((error) => {
-                console.error("제출 오류:", error);
-                alert('제출 실패! 인터넷 연결 상태를 확인해 주세요.');
-                this.disabled = false;
-                this.innerText = "제출하기";
-            });
+        try {
+            // 같은 학번의 제출이 이미 있으면 막습니다. (반려된 제출은 제외)
+            const snap = await get(query(submissionsRef, orderByChild('studentId'), equalTo(studentId)));
+            if (snap.exists() && Object.values(snap.val()).some(it => it.status !== 'rejected')) {
+                alert('이미 해당 학번으로 제출된 데이터가 존재합니다!\n내용을 고쳐야 한다면 선생님께 반려를 요청해 주세요.');
+                btn.disabled = false;
+                btn.innerText = "제출하기";
+                return;
+            }
+
+            btn.innerText = "제출 중...";
+            await push(submissionsRef, submission);
+            alert('🎉 성공적으로 제출되었습니다!');
+            location.reload();
+        } catch (error) {
+            console.error("제출 오류:", error);
+            alert('제출 실패! 인터넷 연결 상태를 확인해 주세요.');
+            btn.disabled = false;
+            btn.innerText = "제출하기";
+        }
     });
 </script>
 
