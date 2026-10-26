@@ -133,20 +133,21 @@
 
     <div class="student-info-box">
       <label for="studentId">👤 학번 입력:</label>
-      <input type="text" id="studentId" placeholder="예: 10305 (5자리)" required autocomplete="off">
-      <span style="font-size:0.82rem; color:#475569;">※ 반/번호 수합을 위해 학번 5자리를 입력하세요.</span>
+      <input type="text" id="studentId" placeholder="예: 10305 (5자리)" required autocomplete="off" inputmode="numeric" maxlength="5" pattern="[0-9]{5}">
+      <span style="font-size:0.82rem; color:#475569;">※ 반/번호 수합을 위해 학번 5자리(숫자)를 입력하세요.</span>
     </div>
+    <div id="rejectBanner" style="display:none; background:#fff7ed; border:2px solid #fb923c; color:#9a3412; padding:12px 15px; border-radius:12px; margin-bottom:20px; font-weight:bold; font-size:0.92rem; line-height:1.5;"></div>
 
     <div class="card-grid">
       <div class="left-col">
         <div class="info-card">
           <div class="info-label">🌍 내가 선택한 SDGs 목표</div>
-          <input type="text" id="sdgsGoal" class="info-input" placeholder="예: 13번 기후변화 대응" required autocomplete="off">
+          <input type="text" id="sdgsGoal" class="info-input" placeholder="예: 13번 기후변화 대응" required autocomplete="off" maxlength="50">
         </div>
 
         <div class="info-card">
           <div class="info-label">💼 탐색할 직업 이름</div>
-          <input type="text" id="jobTitle" class="info-input" placeholder="예: 기후변화 데이터 분석가" required autocomplete="off">
+          <input type="text" id="jobTitle" class="info-input" placeholder="예: 기후변화 데이터 분석가" required autocomplete="off" maxlength="50">
         </div>
       </div>
 
@@ -155,17 +156,17 @@
           <div class="block-header bg-green">주요 업무</div>
           <div class="block-question">Q. 이 직업은 주로 어떤 일을 하나요?</div>
           <div class="task-inputs">
-            <div class="task-item">• <input type="text" id="task1" placeholder="주요 업무 1" required></div>
-            <div class="task-item">• <input type="text" id="task2" placeholder="주요 업무 2"></div>
-            <div class="task-item">• <input type="text" id="task3" placeholder="주요 업무 3"></div>
-            <div class="task-item">• <input type="text" id="task4" placeholder="주요 업무 4"></div>
+            <div class="task-item">• <input type="text" id="task1" placeholder="주요 업무 1" required maxlength="100"></div>
+            <div class="task-item">• <input type="text" id="task2" placeholder="주요 업무 2" maxlength="100"></div>
+            <div class="task-item">• <input type="text" id="task3" placeholder="주요 업무 3" maxlength="100"></div>
+            <div class="task-item">• <input type="text" id="task4" placeholder="주요 업무 4" maxlength="100"></div>
           </div>
         </div>
 
         <div class="section-block">
           <div class="block-header bg-blue">SDGs 기여점</div>
           <div class="block-question">Q. 이 직업은 내가 선택한 SDGs 문제를 어떻게 해결해 주나요?</div>
-          <textarea id="contribution" placeholder="지속가능발전목표 문제 해결에 기여하는 방식을 작성하세요." required></textarea>
+          <textarea id="contribution" placeholder="지속가능발전목표 문제 해결에 기여하는 방식을 작성하세요." required maxlength="500"></textarea>
         </div>
 
         <div class="section-block">
@@ -183,7 +184,7 @@
           </div>
           <div class="etc-wrap">
             <span>기타:</span>
-            <input type="text" id="competencyEtc" placeholder="직접 입력할 역량">
+            <input type="text" id="competencyEtc" placeholder="직접 입력할 역량" maxlength="50">
           </div>
         </div>
 
@@ -191,7 +192,7 @@
           <div class="block-header bg-slate">한줄평</div>
           <div class="one-line-box">
             <span>"이 직업은 우리 미래에</span>
-            ( <input type="text" id="oneLineReview" placeholder="예: 지구를 구하는 열쇠" required> )
+            ( <input type="text" id="oneLineReview" placeholder="예: 지구를 구하는 열쇠" required maxlength="50"> )
             <span>역할을 한다!"</span>
           </div>
         </div>
@@ -221,6 +222,56 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+
+  // 학번 칸에는 숫자만, 최대 5자리까지만 입력되게 합니다.
+  document.getElementById('studentId').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
+    checkRejected(this.value);
+  });
+
+  // 선생님이 반려한 제출이 있으면 학번 입력 시 사유를 보여 줍니다.
+  let rejectCheckToken = 0;
+  async function checkRejected(id) {
+    const banner = document.getElementById('rejectBanner');
+    const token = ++rejectCheckToken;
+    banner.style.display = 'none';
+    if (!/^[0-9]{5}$/.test(id)) return;
+    try {
+      const snap = await get(ref(db, 'worksheet2_2_submissions'));
+      if (token !== rejectCheckToken || !snap.exists()) return;
+      const mine = Object.values(snap.val()).filter(it => it.studentId === id || it.studentInfo === id);
+      const hasActive = mine.some(it => it.status !== 'rejected');
+      const rejected = mine.filter(it => it.status === 'rejected').sort((a, b) => (b.rejectedAt || 0) - (a.rejectedAt || 0))[0];
+      if (!hasActive && rejected) {
+        banner.textContent = '↩️ 선생님이 제출을 반려했어요. ' + (rejected.rejectReason ? '사유: ' + rejected.rejectReason + ' — ' : '') + '내용을 고쳐서 다시 제출해 주세요.';
+        banner.appendChild(document.createElement('br'));
+        const loadBtn = document.createElement('button');
+        loadBtn.type = 'button';
+        loadBtn.textContent = '📝 이전에 쓴 내용 불러오기';
+        loadBtn.style.cssText = 'margin-top:8px; padding:8px 14px; border:none; border-radius:8px; background:#ea580c; color:white; font-weight:bold; cursor:pointer;';
+        loadBtn.addEventListener('click', () => fillFromRejected(rejected));
+        banner.appendChild(loadBtn);
+        banner.style.display = 'block';
+      }
+    } catch (e) { /* 확인에 실패해도 제출에는 영향 없음 */ }
+  }
+
+  // 반려된 제출의 내용을 입력 칸에 다시 채워 줍니다. (학번은 그대로 둡니다)
+  function fillFromRejected(r) {
+    document.getElementById('sdgsGoal').value = r.sdgsGoal || '';
+    document.getElementById('jobTitle').value = r.jobTitle || '';
+    document.getElementById('contribution').value = r.contribution || '';
+    document.getElementById('oneLineReview').value = r.oneLineReview || '';
+    const tasks = Array.isArray(r.tasks) ? r.tasks : [];
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('task' + i).value = tasks[i - 1] || '';
+    }
+    const comps = Array.isArray(r.competencies) ? r.competencies : [];
+    document.querySelectorAll('input[name="competency"]').forEach(cb => { cb.checked = comps.includes(cb.value); });
+    const etc = comps.find(c => typeof c === 'string' && c.startsWith('기타: '));
+    document.getElementById('competencyEtc').value = etc ? etc.slice(4) : '';
+    document.getElementById('rejectBanner').style.display = 'none';
+  }
 
   // 이미지 저장 기능
   document.getElementById('saveImgBtn').addEventListener('click', function() {
@@ -268,6 +319,13 @@
       return;
     }
 
+    // 학번은 반드시 숫자 5자리여야 합니다. (예: 10305)
+    if (!/^[0-9]{5}$/.test(studentId)) {
+      alert('학번은 숫자 5자리로 입력해 주세요. (예: 10305)');
+      document.getElementById('studentId').focus();
+      return;
+    }
+
     const checkedBoxes = document.querySelectorAll('input[name="competency"]:checked');
     const competencies = Array.from(checkedBoxes).map(cb => cb.value);
     const etcValue = document.getElementById('competencyEtc').value.trim();
@@ -287,9 +345,10 @@
 
       if (snapshot.exists()) {
         const rawData = snapshot.val();
-        const isDuplicate = Object.values(rawData).some(item => item.studentId === studentId || item.studentInfo === studentId);
+        // 반려된 제출은 중복으로 보지 않아서, 반려된 학생은 다시 제출할 수 있습니다.
+        const isDuplicate = Object.values(rawData).some(item => (item.studentId === studentId || item.studentInfo === studentId) && item.status !== 'rejected');
         if (isDuplicate) {
-          alert('이미 해당 학번으로 제출된 데이터가 존재합니다!');
+          alert('이미 해당 학번으로 제출된 데이터가 존재합니다!\n내용을 고쳐야 한다면 선생님께 반려를 요청해 주세요.');
           submitBtn.disabled = false;
           submitBtn.innerText = 'SDGs 직업 카드 제출하기 🚀';
           return;
@@ -314,7 +373,9 @@
         contribution: document.getElementById('contribution').value.trim(),
         competencies: competencies,
         competenciesText: competencies.join(', '),
-        oneLineReview: document.getElementById('oneLineReview').value.trim()
+        oneLineReview: document.getElementById('oneLineReview').value.trim(),
+        submittedAt: new Date().toLocaleString('ko-KR'),
+        timestamp: Date.now()
       };
 
       await push(ref(db, 'worksheet2_2_submissions'), submitData);
