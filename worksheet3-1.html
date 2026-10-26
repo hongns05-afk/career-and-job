@@ -58,8 +58,9 @@
 
     <!-- 학번 입력 -->
     <div class="student-info">
-        <input type="text" id="studentNum" placeholder="학번 (예: 10101)" maxlength="5">
+        <input type="text" id="studentNum" placeholder="학번 5자리 (예: 10101)" maxlength="5" inputmode="numeric" autocomplete="off">
     </div>
+    <div id="rejectBanner" style="display:none; background:#fff7ed; border:2px solid #fb923c; color:#9a3412; padding:12px 15px; border-radius:12px; margin-bottom:20px; font-weight:bold; font-size:0.92rem; line-height:1.5;"></div>
 
     <!-- 1번 문항 -->
     <div class="section-title">1. 다음에 제시된 항목을 읽고 나의 생각과 같거나 비슷하면 O, 다르거나 차이가 있으면 X를 표시해 보자.</div>
@@ -124,7 +125,7 @@
 
     <!-- 3번 주관식 -->
     <div class="section-title">3. 나의 학습 성격 유형에 알맞은 효과적인 학습 행동 목표를 적어 보자. (교과서 134쪽 참고)</div>
-    <textarea id="actionPlan" placeholder="위의 성격 유형 특징 및 학습 전략을 참고하여 학습 행동 목표를 작성하세요."></textarea>
+    <textarea id="actionPlan" maxlength="500" placeholder="위의 성격 유형 특징 및 학습 전략을 참고하여 학습 행동 목표를 작성하세요."></textarea>
 
     <!-- 제출 버튼 -->
     <button id="submitBtn" class="submit-btn" disabled>모든 항목을 입력해야 제출할 수 있습니다</button>
@@ -132,7 +133,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, push, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
@@ -213,7 +214,53 @@
         document.getElementById(`btn-x-${idx}`).addEventListener('click', () => selectOX(idx, 'X'));
     });
 
-    document.getElementById('studentNum').addEventListener('input', checkFormCompletion);
+    // 학번 칸에는 숫자만, 최대 5자리까지만 입력되게 합니다.
+    document.getElementById('studentNum').addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
+        checkFormCompletion();
+        checkRejected(this.value);
+    });
+
+    // 선생님이 반려한 제출이 있으면 학번 입력 시 사유를 보여 줍니다.
+    let rejectCheckToken = 0;
+    async function checkRejected(id) {
+        const banner = document.getElementById('rejectBanner');
+        const token = ++rejectCheckToken;
+        banner.style.display = 'none';
+        if (!/^[0-9]{5}$/.test(id)) return;
+        try {
+            const snap = await get(ref(db, 'learning_activity_submissions'));
+            if (token !== rejectCheckToken || !snap.exists()) return;
+            const mine = Object.values(snap.val()).filter(it => it.studentId === id || it.studentInfo === id);
+            const hasActive = mine.some(it => it.status !== 'rejected');
+            const rejected = mine.filter(it => it.status === 'rejected').sort((a, b) => (b.rejectedAt || 0) - (a.rejectedAt || 0))[0];
+            if (!hasActive && rejected) {
+                banner.textContent = '↩️ 선생님이 제출을 반려했어요. ' + (rejected.rejectReason ? '사유: ' + rejected.rejectReason + ' — ' : '') + '내용을 고쳐서 다시 제출해 주세요.';
+                banner.appendChild(document.createElement('br'));
+                const loadBtn = document.createElement('button');
+                loadBtn.type = 'button';
+                loadBtn.textContent = '📝 이전에 쓴 내용 불러오기';
+                loadBtn.style.cssText = 'margin-top:8px; padding:8px 14px; border:none; border-radius:8px; background:#ea580c; color:white; font-weight:bold; cursor:pointer;';
+                loadBtn.addEventListener('click', () => fillFromRejected(rejected));
+                banner.appendChild(loadBtn);
+                banner.style.display = 'block';
+            }
+        } catch (e) { /* 확인에 실패해도 제출에는 영향 없음 */ }
+    }
+
+    // 반려된 제출의 내용을 다시 채워 줍니다. (학번은 그대로 둡니다)
+    function fillFromRejected(r) {
+        document.getElementById('actionPlan').value = r.improvement || '';
+        if (typeof r.answers === 'string' && r.answers.length === 52) {
+            r.answers.split('').forEach((ch, i) => {
+                if (ch === 'O' || ch === 'X') selectOX(i, ch);
+            });
+        } else {
+            alert('이 제출에는 O/X 선택 내용이 저장되어 있지 않아서, 학습 행동 목표만 불러왔어요. O/X 52개는 다시 선택해 주세요.');
+        }
+        checkFormCompletion();
+        document.getElementById('rejectBanner').style.display = 'none';
+    }
     document.getElementById('actionPlan').addEventListener('input', checkFormCompletion);
 
     function selectOX(idx, value) {
@@ -286,16 +333,17 @@
         const num = document.getElementById('studentNum').value.trim();
         const plan = document.getElementById('actionPlan').value.trim();
         const allAnswered = userAnswers.every(ans => ans !== null);
+        const numOk = /^[0-9]{5}$/.test(num);
 
         const btn = document.getElementById('submitBtn');
-        if (num && plan && allAnswered) {
+        if (numOk && plan && allAnswered) {
             btn.disabled = false;
             btn.className = 'submit-btn active';
             btn.innerText = '활동지 제출하기';
         } else {
             btn.disabled = true;
             btn.className = 'submit-btn';
-            btn.innerText = '모든 항목(학번 + O/X 52개 + 주관식)을 입력해야 제출할 수 있습니다';
+            btn.innerText = '모든 항목(학번 5자리 + O/X 52개 + 주관식)을 입력해야 제출할 수 있습니다';
         }
     }
 
@@ -304,6 +352,12 @@
 
         const num = document.getElementById('studentNum').value.trim();
         const plan = document.getElementById('actionPlan').value.trim();
+
+        // 학번은 반드시 숫자 5자리여야 합니다. (예: 10305)
+        if (!/^[0-9]{5}$/.test(num)) {
+            alert('학번은 숫자 5자리로 입력해 주세요. (예: 10305)');
+            return;
+        }
 
         const btn = this;
         btn.disabled = true;
@@ -326,19 +380,35 @@
 
         try {
             const submissionsRef = ref(db, 'learning_activity_submissions');
+
+            // 같은 학번의 제출이 이미 있으면 막습니다. (반려된 제출은 제외)
+            const snapshot = await get(submissionsRef);
+            if (snapshot.exists()) {
+                const isDuplicate = Object.values(snapshot.val()).some(item => (item.studentId === num || item.studentInfo === num) && item.status !== 'rejected');
+                if (isDuplicate) {
+                    alert('이미 해당 학번으로 제출된 데이터가 존재합니다!\n내용을 고쳐야 한다면 선생님께 반려를 요청해 주세요.');
+                    btn.disabled = false;
+                    btn.innerText = '활동지 제출하기';
+                    return;
+                }
+            }
+
             const newRef = push(submissionsRef);
 
             await set(newRef, {
                 unit: '3단원',
                 studentInfo: num,
+                studentId: num,
                 learningType: topType,
                 strength: `행동:${action}개 | 규범:${rules}개 | 탐구:${explore}개 | 이상:${ideal}개`,
                 improvement: plan,
+                answers: userAnswers.join(''),
+                submittedAt: new Date().toLocaleString('ko-KR'),
                 timestamp: Date.now()
             });
 
             alert("제출이 성공적으로 완료되었습니다!");
-            window.location.href = "../index.html";
+            window.location.href = "index.html";
 
         } catch (err) {
             console.error(err);
