@@ -89,7 +89,7 @@
 
 <div class="container">
   <h2>🚨 선착순 정답 부저</h2>
-  <input type="text" id="studentInfo" placeholder="학번을 입력하세요 (예: 10305)" inputmode="numeric">
+  <input type="text" id="studentInfo" placeholder="학번 5자리를 입력하세요 (예: 10305)" inputmode="numeric" maxlength="5" autocomplete="off">
   
   <div class="buzzer-wrapper" id="buzzerWrapper">
     <button class="buzzer-btn-img" onclick="pressBuzzer()">
@@ -129,12 +129,21 @@
   const db = getDatabase(app);
   let isSubmitting = false;
 
+  // 학번 칸에는 숫자만, 최대 5자리까지만 입력되게 합니다.
+  document.getElementById('studentInfo').addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
+  });
+
   window.pressBuzzer = function() {
     if (isSubmitting) return;
 
     const info = document.getElementById('studentInfo').value.trim();
     if (!info) {
       alert("학번을 먼저 입력해주세요!");
+      return;
+    }
+    if (!/^[0-9]{5}$/.test(info)) {
+      alert("학번은 숫자 5자리로 입력해 주세요! (예: 10305)");
       return;
     }
 
