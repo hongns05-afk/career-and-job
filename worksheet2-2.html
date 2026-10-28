@@ -199,9 +199,8 @@
       </div>
     </div>
 
-    <div class="btn-group-bottom">
-      <button type="submit" class="submit-btn" id="submitBtn">SDGs 직업 카드 제출하기 🚀</button>
-      <button type="button" class="save-btn" id="saveImgBtn">🖼️ 이미지 파일(PNG)로 저장</button>
+    <div class="btn-group-bottom" data-nocapture>
+      <button type="submit" class="submit-btn" id="submitBtn" data-nocapture>SDGs 직업 카드 제출하기 🚀</button>
     </div>
   </form>
 </div>
@@ -222,6 +221,27 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+
+  // 제출 완료 화면 도우미 (done-kit.js가 없어도 활동지는 그대로 작동합니다)
+  let DK = null;
+  try { DK = await import('./done-kit.js'); } catch (e) { console.warn('done-kit.js 불러오기 실패', e); }
+  const growAll = () => { if (DK) DK.growAll(); };
+
+  let kit = null;
+  if (DK) {
+    DK.initAutoGrow();
+    kit = DK.createDoneKit({
+      db, path: 'worksheet2_2_submissions',
+      root: document.getElementById('printableArea'),
+      lockEls: () => [document.getElementById('sdgsForm')],
+      getFileName: () => 'SDGs직업카드_' + (document.getElementById('studentId').value.trim() || '학번'),
+      onReopen: () => {
+        const b = document.getElementById('submitBtn');
+        b.disabled = false;
+        b.innerText = 'SDGs 직업 카드 제출하기 🚀';
+      }
+    });
+  }
 
   // 학번 칸에는 숫자만, 최대 5자리까지만 입력되게 합니다.
   document.getElementById('studentId').addEventListener('input', function() {
@@ -271,41 +291,8 @@
     const etc = comps.find(c => typeof c === 'string' && c.startsWith('기타: '));
     document.getElementById('competencyEtc').value = etc ? etc.slice(4) : '';
     document.getElementById('rejectBanner').style.display = 'none';
+    growAll();
   }
-
-  // 이미지 저장 기능
-  document.getElementById('saveImgBtn').addEventListener('click', function() {
-    const studentId = document.getElementById('studentId').value.trim() || '소장용';
-    const jobTitle = document.getElementById('jobTitle').value.trim() || 'SDGs_직업카드';
-    const element = document.getElementById('printableArea');
-    const btnGroup = document.querySelector('.btn-group-bottom');
-    const worknetBtn = document.querySelector('.btn-worknet');
-
-    // 이미지 생성 시 하단 버튼/상단 링크 잠시 숨김
-    btnGroup.style.display = 'none';
-    if (worknetBtn) worknetBtn.style.display = 'none';
-
-    if (typeof html2canvas !== 'undefined') {
-      html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `SDGs_직업카드_${studentId}_${jobTitle}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-
-        btnGroup.style.display = 'flex';
-        if (worknetBtn) worknetBtn.style.display = 'inline-flex';
-      }).catch(err => {
-        alert('이미지 저장 중 오류가 발생했습니다. 브라우저 인쇄/화면 캡처 기능을 이용해 주세요.');
-        btnGroup.style.display = 'flex';
-        if (worknetBtn) worknetBtn.style.display = 'inline-flex';
-      });
-    } else {
-      // 라이브러리 로드 실패 시 브라우저 기본 인쇄창으로 대체
-      window.print();
-      btnGroup.style.display = 'flex';
-      if (worknetBtn) worknetBtn.style.display = 'inline-flex';
-    }
-  });
 
   // 제출 처리
   document.getElementById('sdgsForm').addEventListener('submit', async function(e) {
@@ -378,10 +365,15 @@
         timestamp: Date.now()
       };
 
-      await push(ref(db, 'worksheet2_2_submissions'), submitData);
-      
-      alert('🎉 성공적으로 제출되었습니다!');
-      location.href = 'index.html';
+      const newRef = await push(ref(db, 'worksheet2_2_submissions'), submitData);
+
+      if (kit) {
+        submitBtn.innerText = '제출 완료 ✅';
+        kit.show(newRef.key);
+      } else {
+        alert('🎉 성공적으로 제출되었습니다!');
+        location.href = 'index.html';
+      }
 
     } catch (err) {
       alert('제출 처리 중 오류 발생: ' + err.message);
