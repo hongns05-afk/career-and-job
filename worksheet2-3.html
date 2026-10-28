@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>2-3. 나와 주변인에게 필요한 직업 카드 만들기</title>
+
+  <!-- 이미지(PNG) 저장을 위한 외부 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      padding: 20px 15px 60px 15px;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+    }
+    @media (max-width: 500px) { .container { padding: 16px; } body { padding: 12px 10px 50px 10px; } }
+
+    .card-header { border-bottom: 3px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
+    .card-title { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 5px; word-break: keep-all; }
+    .card-subtitle { font-size: 0.9rem; color: #64748b; word-break: keep-all; line-height: 1.5; }
+
+    .student-info-box {
+      background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 12px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .student-info-box label { font-weight: bold; color: #1e40af; font-size: 0.95rem; }
+    .student-info-box input { flex: 1; max-width: 250px; padding: 10px; border: 1px solid #93c5fd; border-radius: 8px; font-weight: bold; font-size: 1rem; }
+
+    .steps { display: flex; flex-direction: column; gap: 16px; }
+    .section-block { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+    .block-header { display: inline-flex; padding: 6px 12px; border-radius: 8px; font-weight: bold; color: white; font-size: 0.9rem; margin-bottom: 10px; }
+    .bg-rose { background-color: #e11d48; }
+    .bg-violet { background-color: #7c3aed; }
+    .bg-green { background-color: #16a34a; }
+    .bg-blue { background-color: #0284c7; }
+    .bg-amber { background-color: #d97706; }
+    .bg-slate { background-color: #475569; }
+    .bg-pink { background-color: #db2777; }
+
+    .block-question { font-size: 0.95rem; font-weight: bold; color: #0f172a; margin-bottom: 10px; word-break: keep-all; }
+    .hint { font-size: 0.82rem; color: #64748b; margin: -4px 0 10px 0; word-break: keep-all; }
+
+    .text-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; }
+    .job-name-input { font-size: 1.15rem; font-weight: bold; text-align: center; border: 1.5px solid #0f172a; }
+    textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; resize: none; font-family: inherit; }
+
+    .salary-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: bold; }
+    .salary-row input { flex: 1; min-width: 160px; }
+
+    /* ---------- 그림판 ---------- */
+    .draw-wrap { display: flex; flex-direction: column; gap: 10px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #f1f5f9; padding: 6px; border-radius: 12px; }
+    .tool-group { display: flex; flex-wrap: nowrap; gap: 4px; align-items: center; }
+    .tool-sep { width: 1px; align-self: stretch; background: #cbd5e1; margin: 2px 2px; }
+    .tool-btn {
+      border: 2px solid transparent; background: #ffffff; border-radius: 8px; padding: 6px 9px;
+      font-size: 0.88rem; font-weight: bold; color: #334155; cursor: pointer; min-height: 38px; min-width: 38px; white-space: nowrap;
+    }
+    .colors-row { flex: 1 1 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 3px 2px; }
+    @media (max-width: 560px) {
+      .tool-btn .lbl { display: none; }
+      .tool-btn { font-size: 1.05rem; padding: 4px 5px; min-width: 40px; }
+      .tool-sep { display: none; }
+    }
+    .tool-btn.active { border-color: #2563eb; background: #dbeafe; color: #1e40af; }
+    .tool-btn:disabled { opacity: .45; cursor: default; }
+    .swatch {
+      flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; border: 3px solid #ffffff; cursor: pointer;
+      box-shadow: 0 0 0 1px #cbd5e1; padding: 0;
+    }
+    .swatch.active { box-shadow: 0 0 0 3px #2563eb; }
+    .size-dot { display: inline-block; background: #334155; border-radius: 50%; vertical-align: middle; }
+    .color-pick { flex: 0 0 auto; width: 32px; height: 32px; border: none; background: none; padding: 0; cursor: pointer; }
+
+    .canvas-box { position: relative; width: 100%; border: 2px dashed #cbd5e1; border-radius: 12px; overflow: hidden; background: #ffffff; }
+    #drawCanvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; touch-action: none; cursor: crosshair; background: #ffffff; }
+    .canvas-empty {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;
+      color: #94a3b8; font-size: 1rem; font-weight: bold; text-align: center; padding: 20px; word-break: keep-all;
+    }
+
+    /* 이어 쓰기 안내 */
+    .note-banner { border-radius: 12px; padding: 12px 15px; margin-bottom: 20px; font-weight: bold; font-size: 0.92rem; line-height: 1.5; word-break: keep-all; }
+    .note-blue { background: #eff6ff; border: 2px solid #60a5fa; color: #1e3a8a; }
+    .note-green { background: #ecfdf5; border: 2px solid #34d399; color: #065f46; }
+    .note-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .note-btns button { padding: 8px 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #fff; }
+    .note-blue .note-btns button { background: #2563eb; }
+    .note-green .note-btns button { background: #059669; }
+    .note-btns button.plain { background: #64748b !important; }
+    .save-mid-btn { padding: 14px; background: #ffffff; color: #0f766e; border: 2px solid #0f766e; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    .save-mid-btn:disabled { opacity: .6; cursor: wait; }
+
+    /* AI 그림 안내 */
+    .ai-box { background: #f5f3ff; border: 1.5px solid #c4b5fd; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+    .ai-title { font-weight: bold; color: #5b21b6; margin-bottom: 6px; }
+    .ai-steps { padding-left: 1.3em; font-size: 0.88rem; color: #4c1d95; line-height: 1.6; word-break: keep-all; margin-bottom: 10px; }
+    .ai-prompt { background: #ffffff; border: 1px dashed #a78bfa; border-radius: 8px; padding: 10px 12px; font-size: 0.95rem; line-height: 1.6; color: #1e293b; word-break: keep-all; user-select: text; -webkit-user-select: text; }
+    .ai-prompt.waiting { color: #94a3b8; }
+    .ai-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+    .ai-copy { padding: 9px 14px; border: none; border-radius: 8px; background: #7c3aed; color: #fff; font-weight: bold; font-size: 0.92rem; cursor: pointer; }
+    .ai-copy:disabled { background: #c4b5fd; cursor: default; }
+    .ai-link { font-size: 0.88rem; font-weight: bold; color: #6d28d9; text-decoration: none; padding: 9px 4px; }
+    .upload-btn { width: 100%; padding: 14px; border: 2px solid #db2777; background: #fdf2f8; color: #9d174d; border-radius: 12px; font-size: 1.02rem; font-weight: bold; cursor: pointer; margin-bottom: 14px; }
+    .upload-btn span { font-weight: normal; font-size: 0.85rem; }
+    .draw-label { font-weight: bold; color: #334155; font-size: 0.95rem; }
+    .draw-label span { font-weight: normal; color: #64748b; font-size: 0.82rem; }
+
+    .btn-group-bottom { display: flex; flex-direction: column; gap: 12px; margin-top: 26px; }
+    .submit-btn { padding: 16px; background-color: #2563eb; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+    .submit-btn:disabled { opacity: .7; cursor: wait; }
+    .draft-note { font-size: 0.8rem; color: #64748b; text-align: center; }
+
+    @media print {
+      .btn-group-bottom, .toolbar, .hint { display: none !important; }
+      body { background: white; padding: 0; }
+      .container { border: none; box-shadow: none; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="printableArea">
+  <form id="jobCardForm" autocomplete="off">
+    <div class="card-header">
+      <h1 class="card-title">💡 나와 주변인에게 필요한 직업 카드</h1>
+      <p class="card-subtitle">나와 주변 사람들의 불편함이나 문제를 해결해 주는, 세상에 없던 새로운 직업을 만들어 봅시다.</p>
+    </div>
+
+    <div id="localBanner" class="note-banner note-blue" style="display:none;" data-nocapture></div>
+
+    <div class="student-info-box">
+      <label for="studentId">👤 학번 입력:</label>
+      <input type="text" id="studentId" placeholder="예: 10305 (5자리)" required autocomplete="off" inputmode="numeric" maxlength="5" pattern="[0-9]{5}">
+      <span style="font-size:0.82rem; color:#475569;">※ 반/번호 수합을 위해 학번 5자리(숫자)를 입력하세요.</span>
+    </div>
+    <div id="rejectBanner" style="display:none; background:#fff7ed; border:2px solid #fb923c; color:#9a3412; padding:12px 15px; border-radius:12px; margin-bottom:20px; font-weight:bold; font-size:0.92rem; line-height:1.5;"></div>
+    <div id="draftBanner" class="note-banner note-green" style="display:none;" data-nocapture></div>
+
+    <div class="steps">
+      <div class="section-block">
+        <div class="block-header bg-rose">① 직업을 만든 이유</div>
+        <div class="block-question">Q. 나와 주변(가족, 친구, 이웃)을 돌아보면 어떤 불편함이나 문제가 있나요? 그래서 어떤 직업이 필요할까요?</div>
+        <textarea id="reason" placeholder="예: 아침에 늦게 일어나서 아침밥을 못 먹고 오는 친구들이 많다. 그래서 아침밥을 배달해 주는 사람이 있으면 좋겠다." required maxlength="400"></textarea>
+      </div>
+
+      <div class="section-block">
+        <div class="block-header bg-violet">② 직업명</div>
+        <div class="block-question">Q. 하는 일을 가장 잘 설명할 수 있는 직업 이름을 지어 보세요.</div>
+        <input type="text" id="jobTitle" class="text-input job-name-input" placeholder="예: 아침 도시락 배달부" required maxlength="40">
+      </div>
+
+      <div class="section-block">
+        <div class="block-header bg-green">③ 하는 일</div>
+        <div class="block-question">Q. 이 직업을 가진 사람은 구체적으로 어떤 일을 하나요?</div>
+        <textarea id="whatTheyDo" placeholder="예: 간단한 도시락을 정해진 시간에 학생들의 집 앞까지 배달해 준다." required maxlength="400"></textarea>
+      </div>
+
+      <div class="section-block">
+        <div class="block-header bg-blue">④ 필요한 능력</div>
+        <div class="block-question">Q. 이 일을 잘하려면 어떤 능력이나 성격이 필요할까요?</div>
+        <input type="text" id="abilities" class="text-input" placeholder="예: 성실함, 시간 약속을 잘 지키는 습관, 친절함" required maxlength="150">
+      </div>
+
+      <div class="section-block">
+        <div class="block-header bg-amber">⑤ 되는 방법</div>
+        <div class="block-question">Q. 이 직업을 가지려면 어떤 공부나 준비가 필요할까요?</div>
+        <textarea id="howTo" placeholder="예: 학력은 필요 없음. 오토바이 면허가 있어야 하고, 위생 교육을 받는다." required maxlength="300"></textarea>
+      </div>
+
+      <div class="section-block">
+        <div class="block-header bg-slate">⑥ 보수</div>
+        <div class="block-question">Q. 이 일에 알맞은 보수는 얼마일까요?</div>
+        <p class="hint">시급, 주급, 월급, 연봉, 1회당 얼마 등 이 일에 어울리는 방식으로 적어요.</p>
+        <input type="text" id="salary" class="text-input" placeholder="예: 1회 방문당 3만 원 / 시급 1만 5천 원 / 연봉 2,700만 원" required maxlength="40">
+      </div>
+
+      <div class="section-block">
+        <div class="block-header bg-pink">⑦ 직업 카드 그림</div>
+        <div class="block-question">Q. 내가 만든 직업을 한눈에 알 수 있는 그림을 넣어 보세요.</div>
+        <p class="hint">AI 그림 도구로 만든 그림을 올려도 되고, 아래 그림판에 직접 그려도 돼요.</p>
+
+        <div class="ai-box" data-nocapture>
+          <div class="ai-title">🤖 AI로 그림 만들기</div>
+          <ol class="ai-steps">
+            <li>아래 문장을 <b>복사</b>해요. (②직업명과 ③하는 일을 쓰면 자동으로 만들어져요)</li>
+            <li>캔바 같은 AI 그림 도구에 붙여 넣고, 마음에 드는 그림을 만들어 <b>저장</b>해요. 문장은 내 생각대로 고쳐도 좋아요.</li>
+            <li><b>🖼️ 그림 파일 올리기</b>를 눌러 저장한 그림을 올려요.</li>
+          </ol>
+          <div class="ai-prompt" id="aiPrompt"></div>
+          <div class="ai-btns">
+            <button type="button" class="ai-copy" id="copyPromptBtn">📋 문장 복사하기</button>
+            <a class="ai-link" href="https://www.canva.com/ai-image-generator/" target="_blank" rel="noopener">캔바 AI 그림 열기 ↗</a>
+          </div>
+        </div>
+
+        <button type="button" class="upload-btn" id="photoBtn" data-nocapture>🖼️ 그림 파일 올리기 <span>(AI 그림 · 사진)</span></button>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;">
+
+        <div class="draw-wrap">
+          <div class="draw-label" data-nocapture>✏️ 직접 그리기 <span>· 올린 그림 위에 덧그릴 수도 있어요</span></div>
+          <div class="toolbar" data-nocapture>
+            <div class="tool-group" id="toolGroup">
+              <button type="button" class="tool-btn active" data-tool="pen" title="펜">✏️<span class="lbl"> 펜</span></button>
+              <button type="button" class="tool-btn" data-tool="fill" title="채우기">🪣<span class="lbl"> 채우기</span></button>
+              <button type="button" class="tool-btn" data-tool="eraser" title="지우개">🧽<span class="lbl"> 지우개</span></button>
+            </div>
+            <div class="tool-sep"></div>
+            <div class="tool-group">
+              <button type="button" class="tool-btn" id="undoBtn" disabled title="되돌리기">↶<span class="lbl"> 되돌리기</span></button>
+              <button type="button" class="tool-btn" id="clearBtn" title="모두 지우기">🗑️<span class="lbl"> 모두 지우기</span></button>
+            </div>
+            <div class="tool-sep"></div>
+            <div class="tool-group" id="sizeGroup">
+              <button type="button" class="tool-btn" data-size="3" title="가늘게"><span class="size-dot" style="width:4px;height:4px;"></span></button>
+              <button type="button" class="tool-btn active" data-size="7" title="보통"><span class="size-dot" style="width:8px;height:8px;"></span></button>
+              <button type="button" class="tool-btn" data-size="14" title="굵게"><span class="size-dot" style="width:13px;height:13px;"></span></button>
+              <button type="button" class="tool-btn" data-size="28" title="아주 굵게"><span class="size-dot" style="width:19px;height:19px;"></span></button>
+            </div>
+            <div class="tool-group colors-row" id="colorGroup"></div>
+          </div>
+          <div class="canvas-box">
+            <canvas id="drawCanvas" width="800" height="600"></canvas>
+            <div class="canvas-empty" id="canvasEmpty">그림 파일을 올리거나, 여기에 직접 그려 보세요 🎨</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-group-bottom" data-nocapture>
+      <button type="submit" class="submit-btn" id="submitBtn" data-nocapture>직업 카드 제출하기 🚀</button>
+      <button type="button" class="save-mid-btn" id="midSaveBtn" data-nocapture>💾 중간 저장 (다음 시간에 이어 쓰기)</button>
+      <div class="draft-note" id="draftNote" data-nocapture>시간 안에 다 못 썼다면 <b>중간 저장</b>을 누르세요. 다음 시간에 어느 기기에서든 학번만 넣으면 이어서 쓸 수 있어요.</div>
+    </div>
+  </form>
+</div>
+
+<script>
+// ======================================================================
+//  그림판 (Firebase와 상관없이 먼저 준비됩니다)
+//  - 그린 순서를 기억해 두었다가 다시 그리는 방식이라 '되돌리기'가 됩니다.
+// ======================================================================
+(function () {
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const W = canvas.width, H = canvas.height;
+  const emptyMsg = document.getElementById('canvasEmpty');
+  const undoBtn = document.getElementById('undoBtn');
+
+  const COLORS = ['#111827', '#6b7280', '#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#92400e', '#f5c9a0'];
+  let tool = 'pen', size = 7, color = COLORS[0];
+  let current = null;      // 지금 그리고 있는 선
+  let activePointer = null;
+  const listeners = [];
+
+  // ---------- 색 고르기 ----------
+  const colorGroup = document.getElementById('colorGroup');
+  COLORS.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'swatch' + (i === 0 ? ' active' : '');
+    b.style.background = c;
+    b.dataset.color = c;
+    b.title = '색 고르기';
+    colorGroup.appendChild(b);
+  });
+  const picker = document.createElement('input');
+  picker.type = 'color';
+  picker.className = 'color-pick';
+  picker.title = '다른 색 고르기';
+  picker.value = '#0ea5e9';
+  colorGroup.appendChild(picker);
+
+  function setColor(c, fromPicker) {
+    color = c;
+    colorGroup.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', !fromPicker && s.dataset.color === c));
+    if (tool === 'eraser') setTool('pen');
+  }
+  colorGroup.addEventListener('click', e => {
+    const s = e.target.closest('.swatch');
+    if (s) setColor(s.dataset.color, false);
+  });
+  picker.addEventListener('input', () => setColor(picker.value, true));
+
+  function setTool(t) {
+    tool = t;
+    document.querySelectorAll('#toolGroup .tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+  }
+  document.getElementById('toolGroup').addEventListener('click', e => {
+    const b = e.target.closest('[data-tool]');
+    if (b) setTool(b.dataset.tool);
+  });
+  document.getElementById('sizeGroup').addEventListener('click', e => {
+    const b = e.target.closest('[data-size]');
+    if (!b) return;
+    size = Number(b.dataset.size);
+    document.querySelectorAll('#sizeGroup .tool-btn').forEach(x => x.classList.toggle('active', x === b));
+  });
+
+  // ---------- 다시 그리기 ----------
+  function drawStroke(s) {
+    const p = s.points;
+    ctx.strokeStyle = s.color;
+    ctx.fillStyle = s.color;
+    ctx.lineWidth = s.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (p.length === 1) {
+      ctx.beginPath();
+      ctx.arc(p[0][0], p[0][1], s.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length - 1; i++) {
+      const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my);
+    }
+    const last = p[p.length - 1];
+    ctx.lineTo(last[0], last[1]);
+    ctx.stroke();
+  }
+
+  function drawImageFit(img) {
+    const r = Math.min(W / img.width, H / img.height);
+    const w = img.width * r, h = img.height * r;
+    ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+  }
+
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  // 같은 색으로 이어진 곳을 칠합니다. (선 가장자리의 흐린 부분까지 조금 넉넉하게 칠함)
+  function floodFill(x, y, hex) {
+    x = Math.floor(x); y = Math.floor(y);
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    const imgData = ctx.getImageData(0, 0, W, H);
+    const d = imgData.data;
+    const [fr, fg, fb] = hexToRgb(hex);
+    const start = (y * W + x) * 4;
+    const sr = d[start], sg = d[start + 1], sb = d[start + 2];
+    if (Math.abs(sr - fr) + Math.abs(sg - fg) + Math.abs(sb - fb) < 6) return;
+    const TOL = 90;
+    const seen = new Uint8Array(W * H);
+    const match = (i) => {
+      const o = i * 4;
+      return Math.abs(d[o] - sr) + Math.abs(d[o + 1] - sg) + Math.abs(d[o + 2] - sb) <= TOL;
+    };
+    const stack = [y * W + x];
+    const filled = [];
+    while (stack.length) {
+      const i = stack.pop();
+      if (seen[i]) continue;
+      let px = i % W;
+      const py = (i - px) / W;
+      let l = px, r = px;
+      while (l > 0 && !seen[py * W + l - 1] && match(py * W + l - 1)) l--;
+      while (r < W - 1 && !seen[py * W + r + 1] && match(py * W + r + 1)) r++;
+      for (let cx = l; cx <= r; cx++) {
+        const j = py * W + cx;
+        if (seen[j]) continue;
+        seen[j] = 1;
+        filled.push(j);
+        if (py > 0 && !seen[j - W] && match(j - W)) stack.push(j - W);
+        if (py < H - 1 && !seen[j + W] && match(j + W)) stack.push(j + W);
+      }
+    }
+    for (const j of filled) {
+      const o = j * 4;
+      d[o] = fr; d[o + 1] = fg; d[o + 2] = fb; d[o + 3] = 255;
+    }
+    // 칠한 곳 둘레 한 칸까지 덮어서 하얀 테두리가 남지 않게 합니다. (밝은 곳을 칠할 때만)
+    if (sr + sg + sb > 450) for (const j of filled) {
+      const jx = j % W;
+      const nb = [j - W, j + W, jx > 0 ? j - 1 : -1, jx < W - 1 ? j + 1 : -1];
+      for (const k of nb) {
+        if (k < 0 || k >= W * H || seen[k]) continue;
+        const o = k * 4;
+        const dark = d[o] + d[o + 1] + d[o + 2];
+        // 진한 선은 그대로 두고, 흐린 가장자리만 덮어요.
+        if (dark > (sr + sg + sb) * 0.55) { d[o] = fr; d[o + 1] = fg; d[o + 2] = fb; d[o + 3] = 255; }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  // ---------- 되돌리기용 기록 ----------
+  // 무언가 할 때마다 '하기 전 화면'을 저장해 둡니다. (기기 메모리를 생각해 최근 20번까지)
+  const MAX_HISTORY = 20;
+  let history = [];      // { img: ImageData, blank: boolean }
+  let blank = true;      // 아직 아무것도 안 그렸는지
+
+  function snapshot() { return { img: ctx.getImageData(0, 0, W, H), blank }; }
+  function pushHistory(snap) {
+    history.push(snap);
+    if (history.length > MAX_HISTORY) history.shift();
+  }
+  function clearWhite() {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function changed() {
+    undoBtn.disabled = history.length === 0;
+    emptyMsg.style.display = blank ? 'flex' : 'none';
+    listeners.forEach(fn => { try { fn(); } catch (e) {} });
+  }
+
+  // ---------- 손가락 / 펜 / 마우스 ----------
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    return [(e.clientX - r.left) * (W / r.width), (e.clientY - r.top) * (H / r.height)];
+  }
+
+  let before = null;   // 지금 긋는 선을 시작하기 전 화면
+
+  canvas.addEventListener('pointerdown', e => {
+    if (activePointer !== null) return;           // 두 손가락이 닿아도 한 줄만 그려요
+    if (e.button !== undefined && e.button > 0) return;
+    e.preventDefault();
+    const [x, y] = pos(e);
+    if (tool === 'fill') {
+      pushHistory(snapshot());
+      floodFill(x, y, color);
+      blank = false;
+      changed();
+      return;
+    }
+    activePointer = e.pointerId;
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    before = snapshot();
+    current = { color: tool === 'eraser' ? '#ffffff' : color, size: tool === 'eraser' ? Math.max(size * 2, 16) : size, points: [[x, y]] };
+    drawStroke(current);
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    if (e.pointerId !== activePointer || !current) return;
+    e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    for (const ev of (evs.length ? evs : [e])) current.points.push(pos(ev));
+    drawTail();
+  });
+
+  // 선을 긋는 동안에는 마지막 몇 점만 이어 그립니다. (빠르게)
+  function drawTail() {
+    const p = current.points;
+    const n = p.length;
+    if (n < 2) return;
+    ctx.strokeStyle = current.color;
+    ctx.lineWidth = current.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(p[n - 2][0], p[n - 2][1]);
+    ctx.lineTo(p[n - 1][0], p[n - 1][1]);
+    ctx.stroke();
+  }
+
+  function endStroke(e) {
+    if (e.pointerId !== activePointer) return;
+    activePointer = null;
+    if (!current) return;
+    // 긋기 전 화면으로 돌린 뒤, 부드러운 곡선으로 한 번에 다시 그립니다.
+    ctx.putImageData(before.img, 0, 0);
+    drawStroke(current);
+    pushHistory(before);
+    if (current.color !== '#ffffff') blank = false;
+    else if (!before.blank) blank = false;
+    current = null;
+    before = null;
+    changed();
+  }
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
+  canvas.addEventListener('lostpointercapture', endStroke);
+
+  undoBtn.addEventListener('click', () => {
+    const s = history.pop();
+    if (!s) return;
+    ctx.putImageData(s.img, 0, 0);
+    blank = s.blank;
+    changed();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (blank) return;
+    if (!confirm('그림을 모두 지울까요? (되돌리기로 다시 살릴 수 있어요)')) return;
+    pushHistory(snapshot());
+    clearWhite();
+    blank = true;
+    changed();
+  });
+
+  // ---------- 사진 넣기 (종이에 그린 그림을 찍어서 올릴 때) ----------
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+  document.getElementById('photoBtn').addEventListener('click', () => document.getElementById('photoInput').click());
+  document.getElementById('photoInput').addEventListener('change', function () {
+    const f = this.files && this.files[0];
+    this.value = '';
+    if (!f) return;
+    const url = URL.createObjectURL(f);
+    loadImage(url).then(img => {
+      pushHistory(snapshot());
+      clearWhite();
+      drawImageFit(img);
+      blank = false;
+      changed();
+    }).catch(() => alert('사진을 불러오지 못했어요. 다른 사진으로 해 보세요.'))
+      .finally(() => setTimeout(() => URL.revokeObjectURL(url), 5000));
+  });
+
+  clearWhite();
+  changed();
+
+  // 다른 스크립트에서 쓸 수 있게 내보냅니다.
+  window.JobDraw = {
+    isEmpty: () => blank,
+    toDataURL: () => canvas.toDataURL('image/jpeg', 0.8),
+    // 저장된 그림을 불러와서 그 위에 이어서 그릴 수 있게 합니다.
+    loadFrom: async (src) => {
+      const img = await loadImage(src);
+      history = [];
+      clearWhite();
+      drawImageFit(img);
+      blank = false;
+      changed();
+    },
+    onChange: (fn) => listeners.push(fn)
+  };
+})();
+</script>
+
+<script type="module">
+  // ---------- 쓰는 중인 내용 임시 저장 (새로고침해도 사라지지 않게) ----------
+  const DRAFT_KEY = 'worksheet2_3_draft';
+  const FIELDS = ['studentId', 'reason', 'jobTitle', 'whatTheyDo', 'abilities', 'howTo', 'salary'];
+  const $ = (id) => document.getElementById(id);
+
+  function saveDraft() {
+    try {
+      const data = {};
+      FIELDS.forEach(f => { data[f] = $(f).value; });
+      data.drawing = window.JobDraw.isEmpty() ? '' : window.JobDraw.toDataURL();
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    } catch (e) { /* 저장 공간이 없어도 활동에는 영향 없음 */ }
+  }
+  function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+  let draftTimer = null;
+  function saveDraftSoon() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(saveDraft, 800);
+  }
+  // 내용과 그림을 입력 칸에 채워 넣습니다. (기기 임시 저장 / 중간 저장 / 반려된 제출에서 함께 사용)
+  async function fillForm(data, imageSrc, keepId) {
+    FIELDS.forEach(f => {
+      if (keepId && f === 'studentId') return;
+      if (typeof data[f] === 'string') $(f).value = data[f];
+    });
+    if (imageSrc) { try { await window.JobDraw.loadFrom(imageSrc); } catch (e) {} }
+    if (window.__afterFill) window.__afterFill();
+  }
+
+  // 여러 학생이 같은 기기를 쓰는 경우를 생각해서, 이전 내용을 바로 채우지 않고 먼저 물어봅니다.
+  function offerLocalDraft() {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) {}
+    if (!data) return;
+    const hasContent = data.drawing || FIELDS.some(f => f !== 'studentId' && data[f] && data[f].trim());
+    if (!hasContent) return;
+    const banner = $('localBanner');
+    const who = /^[0-9]{5}$/.test(data.studentId || '') ? ` (학번 ${data.studentId})` : '';
+    banner.innerHTML = '';
+    banner.appendChild(document.createTextNode(`📝 이 기기에 쓰던 내용이 있어요${who}. 내가 쓰던 거라면 이어서 쓰세요.`));
+    const btns = document.createElement('div');
+    btns.className = 'note-btns';
+    const go = document.createElement('button');
+    go.type = 'button';
+    go.textContent = '이어서 쓰기';
+    go.addEventListener('click', async () => { banner.style.display = 'none'; await fillForm(data, data.drawing, false); });
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'plain';
+    del.textContent = '지우고 새로 쓰기';
+    del.addEventListener('click', () => { banner.style.display = 'none'; clearDraft(); });
+    btns.append(go, del);
+    banner.appendChild(btns);
+    banner.style.display = 'block';
+  }
+
+  offerLocalDraft();
+  // 물어보는 동안 새로 쓰기 시작하면 안내를 닫습니다. (자동 저장이 새 내용으로 바뀌므로)
+  const hideLocalBanner = () => { $('localBanner').style.display = 'none'; };
+  FIELDS.forEach(f => $(f).addEventListener('input', hideLocalBanner, { once: true }));
+  FIELDS.forEach(f => $(f).addEventListener('input', saveDraftSoon));
+  window.JobDraw.onChange(saveDraftSoon);
+  // 창을 닫거나 다른 앱으로 넘어갈 때도 바로 저장합니다.
+  let submittedOk = false;
+  window.addEventListener('pagehide', () => { if (!submittedOk) saveDraft(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && !submittedOk) saveDraft(); });
+
+  // ---------- AI 그림 문장 만들기 ----------
+  function buildPrompt() {
+    const job = $('jobTitle').value.trim();
+    const what = $('whatTheyDo').value.trim().replace(/\s+/g, ' ');
+    if (!job || !what) return '';
+    return `직업 이름: ${job} / 하는 일: ${what} / 이 직업을 가진 사람이 일하는 모습을 밝고 따뜻한 그림책 느낌으로 그려 줘. 그림 안에 글자는 넣지 말아 줘.`;
+  }
+  function renderPrompt() {
+    const box = $('aiPrompt');
+    const text = buildPrompt();
+    box.textContent = text || '②직업명과 ③하는 일을 먼저 쓰면, AI에게 보낼 문장이 여기에 만들어져요.';
+    box.classList.toggle('waiting', !text);
+    $('copyPromptBtn').disabled = !text;
+  }
+  ['jobTitle', 'whatTheyDo'].forEach(f => $(f).addEventListener('input', renderPrompt));
+  renderPrompt();
+  window.__afterFill = () => { renderPrompt(); saveDraft(); };
+  $('copyPromptBtn').addEventListener('click', async () => {
+    const text = buildPrompt();
+    if (!text) return;
+    const btn = $('copyPromptBtn');
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = '✅ 복사했어요!';
+    } catch (e) {
+      // 복사가 막힌 기기에서는 문장을 선택해 두어 길게 눌러 복사하게 합니다.
+      const r = document.createRange();
+      r.selectNodeContents($('aiPrompt'));
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      btn.textContent = '문장을 길게 눌러 복사하세요';
+    }
+    setTimeout(() => { btn.textContent = '📋 문장 복사하기'; }, 2500);
+  });
+
+  // ---------- Firebase ----------
+  let fb;
+  try {
+    const appMod = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+    const dbMod = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js");
+    fb = { ...appMod, ...dbMod };
+  } catch (e) {
+    alert('인터넷 연결을 확인해 주세요. (제출 기능을 불러오지 못했어요)');
+    throw e;
+  }
+  const { initializeApp, getDatabase, ref, push, get, set, remove } = fb;
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
+    authDomain: "activity3-bcbca.firebaseapp.com",
+    databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
+    projectId: "activity3-bcbca",
+    storageBucket: "activity3-bcbca.firebasestorage.app",
+    messagingSenderId: "698284558768",
+    appId: "1:698284558768:web:8f8877735a2580af8a6e75"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // 글은 SUB_PATH에, 그림은 무거워서 DRAW_PATH에 따로 저장합니다. (현황판이 빨리 열리도록)
+  const SUB_PATH = 'worksheet2_3_submissions';
+  const DRAW_PATH = 'worksheet2_3_drawings';
+  // 중간 저장은 학번별로 한 개씩만 둡니다. (다시 저장하면 덮어씀)
+  const MID_PATH = 'worksheet2_3_drafts';
+  const BTN_TEXT = '직업 카드 제출하기 🚀';
+
+  // 제출 완료 화면 도우미 (done-kit.js가 없어도 활동지는 그대로 작동합니다)
+  let DK = null;
+  try { DK = await import('./done-kit.js'); } catch (e) { console.warn('done-kit.js 불러오기 실패', e); }
+  const growAll = () => { if (DK) DK.growAll(); };
+  window.__afterFill = () => { renderPrompt(); growAll(); saveDraft(); };
+
+  let kit = null;
+  if (DK) {
+    DK.initAutoGrow();
+    kit = DK.createDoneKit({
+      db, path: SUB_PATH,
+      root: $('printableArea'),
+      lockEls: () => [$('jobCardForm')],
+      getFileName: () => '필요한직업카드_' + ($('studentId').value.trim() || '학번'),
+      onReopen: () => {
+        const b = $('submitBtn');
+        b.disabled = false;
+        b.innerText = BTN_TEXT;
+      }
+    });
+  }
+
+  function permissionHelp(err) {
+    const msg = String(err && (err.code || err.message) || '');
+    if (/permission/i.test(msg)) {
+      return '\n\n(데이터베이스가 이 활동지의 저장을 막고 있어요. 선생님께 알려 주세요: Firebase 규칙에 ' + SUB_PATH + ', ' + DRAW_PATH + ', ' + MID_PATH + ' 추가 필요)';
+    }
+    return '';
+  }
+
+  // 학번 칸에는 숫자만, 최대 5자리까지만 입력되게 합니다.
+  $('studentId').addEventListener('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
+    checkRejected(this.value);
+    checkMidDraft(this.value);
+  });
+
+  // 선생님이 반려한 제출이 있으면 학번 입력 시 사유를 보여 줍니다.
+  let rejectCheckToken = 0;
+  async function checkRejected(id) {
+    const banner = $('rejectBanner');
+    const token = ++rejectCheckToken;
+    banner.style.display = 'none';
+    if (!/^[0-9]{5}$/.test(id)) return;
+    try {
+      const snap = await get(ref(db, SUB_PATH));
+      if (token !== rejectCheckToken || !snap.exists()) return;
+      const mine = Object.entries(snap.val())
+        .map(([key, it]) => ({ key, ...it }))
+        .filter(it => it.studentId === id || it.studentInfo === id);
+      const hasActive = mine.some(it => it.status !== 'rejected');
+      const rejected = mine.filter(it => it.status === 'rejected').sort((a, b) => (b.rejectedAt || 0) - (a.rejectedAt || 0))[0];
+      if (!hasActive && rejected) {
+        banner.textContent = '↩️ 선생님이 제출을 반려했어요. ' + (rejected.rejectReason ? '사유: ' + rejected.rejectReason + ' — ' : '') + '내용을 고쳐서 다시 제출해 주세요.';
+        banner.appendChild(document.createElement('br'));
+        const loadBtn = document.createElement('button');
+        loadBtn.type = 'button';
+        loadBtn.textContent = '📝 이전에 쓴 내용과 그림 불러오기';
+        loadBtn.style.cssText = 'margin-top:8px; padding:8px 14px; border:none; border-radius:8px; background:#ea580c; color:white; font-weight:bold; cursor:pointer;';
+        loadBtn.addEventListener('click', () => fillFromRejected(rejected));
+        banner.appendChild(loadBtn);
+        banner.style.display = 'block';
+      }
+    } catch (e) { /* 확인에 실패해도 제출에는 영향 없음 */ }
+  }
+
+  // 반려된 제출의 내용과 그림을 다시 채워 줍니다. (학번은 그대로 둡니다)
+  async function fillFromRejected(r) {
+    let img = '';
+    try {
+      const snap = await get(ref(db, DRAW_PATH + '/' + r.key));
+      const v = snap.val();
+      if (v && v.image) img = v.image;
+    } catch (e) { /* 그림을 못 불러와도 글은 채워집니다 */ }
+    $('rejectBanner').style.display = 'none';
+    await fillForm(r, img, true);
+  }
+
+  // ---------- 중간 저장 / 이어 쓰기 ----------
+  let midCheckToken = 0;
+  async function checkMidDraft(id) {
+    const banner = $('draftBanner');
+    const token = ++midCheckToken;
+    banner.style.display = 'none';
+    if (!/^[0-9]{5}$/.test(id)) return;
+    try {
+      const snap = await get(ref(db, MID_PATH + '/' + id));
+      if (token !== midCheckToken || !snap.exists()) return;
+      const d = snap.val();
+      banner.innerHTML = '';
+      banner.appendChild(document.createTextNode(`💾 ${d.savedAt || '지난 시간'}에 중간 저장한 내용이 있어요.` + (d.jobTitle ? ` (직업명: ${d.jobTitle})` : '')));
+      const btns = document.createElement('div');
+      btns.className = 'note-btns';
+      const go = document.createElement('button');
+      go.type = 'button';
+      go.textContent = '이어서 쓰기';
+      go.addEventListener('click', async () => {
+        banner.style.display = 'none';
+        $('localBanner').style.display = 'none';
+        await fillForm(d, d.image || '', true);
+      });
+      btns.appendChild(go);
+      banner.appendChild(btns);
+      banner.style.display = 'block';
+    } catch (e) { /* 확인에 실패해도 쓰기에는 영향 없음 */ }
+  }
+
+  $('midSaveBtn').addEventListener('click', async () => {
+    const btn = $('midSaveBtn');
+    const studentId = $('studentId').value.trim();
+    if (!/^[0-9]{5}$/.test(studentId)) {
+      alert('중간 저장을 하려면 먼저 학번 5자리를 입력해 주세요.');
+      $('studentId').focus();
+      return;
+    }
+    const label = '💾 중간 저장 (다음 시간에 이어 쓰기)';
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+    try {
+      const data = { studentId, savedAt: new Date().toLocaleString('ko-KR'), timestamp: Date.now() };
+      FIELDS.forEach(f => { if (f !== 'studentId') data[f] = $(f).value; });
+      data.image = window.JobDraw.isEmpty() ? '' : window.JobDraw.toDataURL();
+      await set(ref(db, MID_PATH + '/' + studentId), data);
+      $('draftBanner').style.display = 'none';
+      btn.textContent = '✅ 중간 저장했어요';
+      alert('💾 중간 저장했어요!\n다음 시간에 학번 ' + studentId + '을(를) 입력하면 "이어서 쓰기"가 나타나요.');
+      setTimeout(() => { btn.textContent = label; }, 3000);
+    } catch (err) {
+      btn.textContent = label;
+      alert('중간 저장 중 오류 발생: ' + err.message + permissionHelp(err));
+    }
+    btn.disabled = false;
+  });
+
+  // ---------- 제출 ----------
+  $('jobCardForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const submitBtn = $('submitBtn');
+    const studentId = $('studentId').value.trim();
+
+    if (!/^[0-9]{5}$/.test(studentId)) {
+      alert('학번은 숫자 5자리로 입력해 주세요. (예: 10305)');
+      $('studentId').focus();
+      return;
+    }
+    if (window.JobDraw.isEmpty()) {
+      alert('⑦ 직업 카드 그림을 그려 주세요. 🎨');
+      $('drawCanvas').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = '제출 중... 🚀';
+
+    let drawWritten = null;
+    try {
+      const snapshot = await get(ref(db, SUB_PATH));
+      if (snapshot.exists()) {
+        // 반려된 제출은 중복으로 보지 않아서, 반려된 학생은 다시 제출할 수 있습니다.
+        const isDuplicate = Object.values(snapshot.val()).some(item => (item.studentId === studentId || item.studentInfo === studentId) && item.status !== 'rejected');
+        if (isDuplicate) {
+          alert('이미 해당 학번으로 제출된 데이터가 존재합니다!\n내용을 고쳐야 한다면 선생님께 반려를 요청해 주세요.');
+          submitBtn.disabled = false;
+          submitBtn.innerText = BTN_TEXT;
+          return;
+        }
+      }
+
+      // 같은 번호(key)로 그림 먼저, 글은 나중에 저장합니다.
+      const newRef = push(ref(db, SUB_PATH));
+      const key = newRef.key;
+      await set(ref(db, DRAW_PATH + '/' + key), {
+        studentId,
+        image: window.JobDraw.toDataURL(),
+        timestamp: Date.now()
+      });
+      drawWritten = key;
+
+      const submitData = {
+        unit: '2단원-3',
+        studentInfo: studentId,
+        studentId,
+        reason: $('reason').value.trim(),
+        jobTitle: $('jobTitle').value.trim(),
+        whatTheyDo: $('whatTheyDo').value.trim(),
+        abilities: $('abilities').value.trim(),
+        howTo: $('howTo').value.trim(),
+        salary: $('salary').value.trim(),
+        hasDrawing: true,
+        submittedAt: new Date().toLocaleString('ko-KR'),
+        timestamp: Date.now()
+      };
+      await set(newRef, submitData);
+      submittedOk = true;
+      clearTimeout(draftTimer);
+      clearDraft();
+      $('draftBanner').style.display = 'none';
+      try { await remove(ref(db, MID_PATH + '/' + studentId)); } catch (_) { /* 중간 저장이 없어도 괜찮음 */ }
+
+      if (kit) {
+        submitBtn.innerText = '제출 완료 ✅';
+        kit.show(key);
+      } else {
+        alert('🎉 성공적으로 제출되었습니다!');
+        location.href = 'index.html';
+      }
+    } catch (err) {
+      // 글 저장이 실패했으면, 먼저 저장한 그림도 지워서 찌꺼기가 남지 않게 합니다.
+      if (drawWritten) { try { await remove(ref(db, DRAW_PATH + '/' + drawWritten)); } catch (_) {} }
+      alert('제출 처리 중 오류 발생: ' + err.message + permissionHelp(err));
+      submitBtn.disabled = false;
+      submitBtn.innerText = BTN_TEXT;
+    }
+  });
+</script>
+
+</body>
+</html>
