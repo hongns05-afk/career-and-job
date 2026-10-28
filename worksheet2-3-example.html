@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>필요한 직업 카드 작성 예시</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <style>
+    /* 실제 활동지(worksheet2-3)와 같은 틀, 답만 단정한 파란 글씨로 */
+    :root {
+      --page: #f8fafc;
+      --paper: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --pen: #1d4ed8;
+      --pen-soft: #f5f8ff;
+      --pen-line: #bfdbfe;
+      --hand: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      --ui: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--ui); background: var(--page); color: var(--ink); padding-block: 20px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    .container { max-width: 850px; margin: 0 auto; background: var(--paper); border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--line); }
+    @media (max-width: 500px) { .container { padding: 16px; } }
+
+    .stamp { display: inline-block; border: 2px solid var(--pen); color: var(--pen); font-weight: 800; font-size: 0.95rem; letter-spacing: 0.08em; padding: 3px 12px; border-radius: 8px; margin-bottom: 10px; }
+    .back-note { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; word-break: keep-all; }
+    .card-header { border-bottom: 3px solid var(--ink); padding-bottom: 12px; margin-bottom: 20px; }
+    .card-title { font-size: 1.6rem; font-weight: 800; margin-bottom: 5px; word-break: keep-all; text-wrap: balance; }
+    .card-subtitle { font-size: 0.9rem; color: var(--muted); word-break: keep-all; line-height: 1.5; }
+
+    .student-info-box { background: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .student-info-box label { font-weight: bold; color: #1e40af; font-size: 0.95rem; }
+
+    .steps { display: flex; flex-direction: column; gap: 16px; }
+    .section-block { border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+    .block-header { display: inline-flex; padding: 6px 12px; border-radius: 8px; font-weight: bold; color: #fff; font-size: 0.9rem; margin-bottom: 10px; }
+    .bg-rose { background: #e11d48; } .bg-violet { background: #7c3aed; } .bg-green { background: #16a34a; }
+    .bg-blue { background: #0284c7; } .bg-amber { background: #d97706; } .bg-slate { background: #475569; } .bg-pink { background: #db2777; }
+    .block-question { font-size: 0.95rem; font-weight: bold; margin-bottom: 10px; word-break: keep-all; }
+
+    .answer { border: 1px solid var(--pen-line); background: var(--pen-soft); border-radius: 8px; padding: 12px 14px; color: var(--pen); font-family: var(--hand); font-size: 1.05rem; line-height: 1.75; word-break: keep-all; }
+    .answer.center { text-align: center; font-size: 1.3rem; font-weight: bold; border: 1.5px solid var(--pen); }
+    .student-info-box .answer { padding: 4px 14px; min-width: 120px; font-size: 1.15rem; background: #ffffff; }
+    .tip { margin-top: 8px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; word-break: keep-all; }
+    .tip b { color: #475569; }
+
+    .ai-prompt { margin-bottom: 12px; }
+    .ai-label { font-size: 0.85rem; font-weight: bold; color: #5b21b6; margin-bottom: 6px; }
+    .figure { border: 2px dashed #cbd5e1; border-radius: 12px; overflow: hidden; background: #fff; }
+    .figure svg { display: block; width: 100%; height: auto; max-width: 100%; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card-header">
+    <div class="stamp">작성 예시</div>
+    <p class="back-note">예시는 새 창으로 열렸어요. 이 창을 닫거나 활동지 탭으로 돌아가면 쓰던 내용이 그대로 있어요.</p>
+    <h1 class="card-title">💡 나와 주변인에게 필요한 직업 카드</h1>
+    <p class="card-subtitle">나와 주변 사람들의 불편함이나 문제를 해결해 주는, 세상에 없던 새로운 직업을 만들어 봅시다.</p>
+  </div>
+
+  <div class="student-info-box">
+    <label>👤 학번 입력:</label>
+    <div class="answer">10305</div>
+  </div>
+
+  <div class="steps">
+    <div class="section-block">
+      <div class="block-header bg-rose">① 직업을 만든 이유</div>
+      <div class="block-question">Q. 나와 주변(가족, 친구, 이웃)을 돌아보면 어떤 불편함이나 문제가 있나요? 그래서 어떤 직업이 필요할까요?</div>
+      <div class="answer">지난 주말에 할머니와 햄버거 가게에 갔는데, 주문을 키오스크로만 받아서 할머니가 한참 화면을 누르다가 뒷사람 눈치를 보며 그냥 나오셨다. 할머니는 병원 접수나 기차표 예매도 앱으로 바뀌어서 혼자 하기 어렵다고 하신다. 우리 동네에는 혼자 사시는 어르신이 많은데, 매번 가족이 도와드릴 수는 없다. 그래서 어르신 옆에서 디지털 기기 쓰는 법을 천천히 알려 주는 사람이 꼭 필요하다고 생각했다.</div>
+      <p class="tip"><b>TIP</b> 누가, 언제, 어디서, 어떤 불편을 겪었는지 내가 직접 보거나 겪은 장면으로 쓰면 이유가 분명해져요.</p>
+    </div>
+
+    <div class="section-block">
+      <div class="block-header bg-violet">② 직업명</div>
+      <div class="block-question">Q. 하는 일을 가장 잘 설명할 수 있는 직업 이름을 지어 보세요.</div>
+      <div class="answer center">어르신 디지털 길잡이</div>
+      <p class="tip"><b>TIP</b> 이름만 듣고도 '누구를 위해, 무엇을 하는 사람'인지 짐작할 수 있게 지어요.</p>
+    </div>
+
+    <div class="section-block">
+      <div class="block-header bg-green">③ 하는 일</div>
+      <div class="block-question">Q. 이 직업을 가진 사람은 구체적으로 어떤 일을 하나요?</div>
+      <div class="answer">주민센터, 복지관, 시장 입구에 '디지털 도움 부스'를 열고 어르신께 키오스크 주문, 병원 예약 앱, 버스 도착 알림, 가족과 영상 통화하는 법을 1:1로 천천히 알려 드린다. 어르신과 가게에 함께 가서 직접 주문해 보는 연습을 돕고, 큰 글씨로 된 그림 설명서를 만들어 드린다. 돈을 보내라는 사기 문자를 구별하는 법도 알려 드린다.</div>
+      <p class="tip"><b>TIP</b> 일하는 장소, 만나는 사람, 하는 일을 2~3가지 이상 적어 보세요.</p>
+    </div>
+
+    <div class="section-block">
+      <div class="block-header bg-blue">④ 필요한 능력</div>
+      <div class="block-question">Q. 이 일을 잘하려면 어떤 능력이나 성격이 필요할까요?</div>
+      <div class="answer">같은 것을 여러 번 물어보셔도 웃으며 다시 설명하는 인내심, 어르신을 존중하는 공손한 말투, 어려운 말을 쉬운 말로 바꾸는 설명 능력, 스마트폰과 키오스크를 잘 다루는 디지털 능력, 사기 문자를 알아보는 정보 보안 지식</div>
+      <p class="tip"><b>TIP</b> 지식(무엇을 알아야 하나)과 태도(어떤 마음으로 일하나)를 함께 써요.</p>
+    </div>
+
+    <div class="section-block">
+      <div class="block-header bg-amber">⑤ 되는 방법</div>
+      <div class="block-question">Q. 이 직업을 가지려면 어떤 공부나 준비가 필요할까요?</div>
+      <div class="answer">중·고등학생 때 복지관에서 어르신 스마트폰 교육 봉사를 해 본다. 대학에서 사회복지학이나 평생교육을 공부하면 도움이 된다. 디지털 교육 강사 과정을 수료하고, 복지관이나 주민센터에서 실습을 한 뒤 일할 수 있다.</div>
+      <p class="tip"><b>TIP</b> 지금 학생으로서 할 수 있는 준비부터 시작해서 순서대로 써 보세요.</p>
+    </div>
+
+    <div class="section-block">
+      <div class="block-header bg-slate">⑥ 보수</div>
+      <div class="block-question">Q. 이 일에 알맞은 보수는 얼마일까요?</div>
+      <div class="answer">1회(2시간) 교육에 5만 원, 복지관 소속이면 월급 250만 원</div>
+      <p class="tip"><b>TIP</b> 시급, 회당, 월급, 연봉 중 이 일에 어울리는 방식으로 정하고, 왜 그 정도가 알맞은지 생각해 보세요.</p>
+    </div>
+
+    <div class="section-block">
+      <div class="block-header bg-pink">⑦ 직업 카드 그림</div>
+      <div class="block-question">Q. 내가 만든 직업을 한눈에 알 수 있는 그림을 넣어 보세요.</div>
+
+      <div class="ai-prompt">
+        <div class="ai-label">🤖 AI에게 보낸 문장 (자동으로 만들어진 문장을 고쳐 씀)</div>
+        <div class="answer">직업 이름: 어르신 디지털 길잡이 / 하는 일: 햄버거 가게 키오스크 앞에서 젊은 길잡이가 할머니 옆에 서서 화면 누르는 법을 친절하게 알려 주는 모습 / 밝고 따뜻한 그림책 느낌으로 그려 줘. 그림 안에 글자는 넣지 말아 줘.</div>
+      </div>
+
+      <div class="figure" role="img" aria-label="키오스크 앞에서 길잡이가 할머니에게 화면 누르는 법을 알려 주는 그림">
+        <svg viewBox="0 0 800 520" xmlns="http://www.w3.org/2000/svg">
+          <rect width="800" height="520" fill="#fff7ec"/>
+          <rect y="410" width="800" height="110" fill="#f3dcc0"/>
+          <g fill="#ffe7c7"><circle cx="90" cy="90" r="46"/><circle cx="720" cy="70" r="30"/></g>
+          <rect x="60" y="150" width="140" height="90" rx="10" fill="#ffffff" stroke="#e8c9a3" stroke-width="4"/>
+          <path d="M80 220 l30 -40 l25 25 l20 -30 l25 45z" fill="#9fd3a8"/>
+          <circle cx="170" cy="175" r="10" fill="#f6c453"/>
+          <!-- 키오스크 -->
+          <rect x="300" y="120" width="190" height="300" rx="18" fill="#3a4a63"/>
+          <rect x="318" y="140" width="154" height="190" rx="8" fill="#dff1ff"/>
+          <g fill="#ffffff" stroke="#9cc8ea" stroke-width="3">
+            <rect x="330" y="155" width="60" height="50" rx="8"/><rect x="400" y="155" width="60" height="50" rx="8"/>
+            <rect x="330" y="215" width="60" height="50" rx="8"/><rect x="400" y="215" width="60" height="50" rx="8"/>
+          </g>
+          <circle cx="360" cy="180" r="13" fill="#f2a65a"/><rect x="415" y="170" width="30" height="22" rx="5" fill="#e86a5a"/>
+          <rect x="350" y="232" width="20" height="22" rx="4" fill="#f6c453"/><circle cx="430" cy="240" r="12" fill="#7cc28a"/>
+          <rect x="340" y="280" width="110" height="34" rx="17" fill="#2f80ed"/>
+          <rect x="365" y="350" width="60" height="10" rx="5" fill="#26324a"/>
+          <rect x="370" y="420" width="50" height="10" fill="#26324a"/>
+          <!-- 할머니 -->
+          <g>
+            <path d="M560 410 q0 -150 70 -150 q70 0 70 150z" fill="#b5838d"/>
+            <rect x="585" y="400" width="22" height="20" rx="6" fill="#6d4c41"/><rect x="655" y="400" width="22" height="20" rx="6" fill="#6d4c41"/>
+            <circle cx="630" cy="215" r="50" fill="#f6d2b8"/>
+            <path d="M578 205 q4 -62 52 -62 q50 0 54 62 q-14 -30 -54 -30 q-38 0 -52 30z" fill="#e5e5e5"/>
+            <circle cx="630" cy="140" r="20" fill="#e5e5e5"/>
+            <g fill="none" stroke="#5b4636" stroke-width="3"><circle cx="612" cy="218" r="12"/><circle cx="648" cy="218" r="12"/><path d="M624 218 h12"/></g>
+            <path d="M616 245 q14 10 28 0" stroke="#a0522d" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <circle cx="598" cy="240" r="6" fill="#f4a3a3" opacity=".7"/><circle cx="662" cy="240" r="6" fill="#f4a3a3" opacity=".7"/>
+            <path d="M575 300 q-60 -10 -90 -60" stroke="#b5838d" stroke-width="22" fill="none" stroke-linecap="round"/>
+            <circle cx="482" cy="236" r="12" fill="#f6d2b8"/>
+          </g>
+          <!-- 길잡이 -->
+          <g>
+            <path d="M120 410 q0 -160 75 -160 q75 0 75 160z" fill="#2f9e8f"/>
+            <rect x="148" y="400" width="24" height="20" rx="6" fill="#334155"/><rect x="220" y="400" width="24" height="20" rx="6" fill="#334155"/>
+            <circle cx="195" cy="205" r="48" fill="#f1c7a6"/>
+            <path d="M147 200 q0 -58 48 -58 q50 0 50 56 q-20 -24 -50 -24 q-28 0 -48 26z" fill="#3b2a20"/>
+            <circle cx="180" cy="208" r="5" fill="#3b2a20"/><circle cx="212" cy="208" r="5" fill="#3b2a20"/>
+            <path d="M180 230 q15 14 30 0" stroke="#a0522d" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <path d="M195 262 v40" stroke="#ffffff" stroke-width="3"/>
+            <rect x="178" y="300" width="34" height="42" rx="6" fill="#ffffff" stroke="#1f6f65" stroke-width="3"/>
+            <circle cx="195" cy="316" r="7" fill="#f6c453"/><rect x="185" y="328" width="20" height="5" rx="2" fill="#1f6f65"/>
+            <path d="M255 300 q50 -20 70 -90" stroke="#2f9e8f" stroke-width="22" fill="none" stroke-linecap="round"/>
+            <circle cx="327" cy="204" r="12" fill="#f1c7a6"/>
+          </g>
+          <!-- 말풍선 -->
+          <g>
+            <rect x="25" y="40" width="285" height="64" rx="22" fill="#ffffff" stroke="#2f9e8f" stroke-width="3"/>
+            <path d="M160 102 l14 26 l10 -26z" fill="#ffffff" stroke="#2f9e8f" stroke-width="3" stroke-linejoin="round"/>
+            <rect x="158" y="98" width="28" height="8" fill="#ffffff"/>
+            <text x="165" y="80" text-anchor="middle" font-family="'Gowun Dodum', 'Malgun Gothic', sans-serif" font-size="24" font-weight="700" fill="#1f6f65">천천히 같이 눌러 봐요!</text>
+          </g>
+          <g>
+            <rect x="540" y="40" width="230" height="56" rx="20" fill="#ffffff" stroke="#b5838d" stroke-width="3"/>
+            <path d="M620 94 l-6 24 l20 -24z" fill="#ffffff" stroke="#b5838d" stroke-width="3" stroke-linejoin="round"/>
+            <rect x="612" y="90" width="26" height="8" fill="#ffffff"/>
+            <text x="655" y="76" text-anchor="middle" font-family="'Gowun Dodum', 'Malgun Gothic', sans-serif" font-size="22" font-weight="700" fill="#7a4a55">아이고, 고마워라</text>
+          </g>
+        </svg>
+      </div>
+      <p class="tip"><b>TIP</b> 직업을 가진 사람이 <b>누구를</b> 도와 <b>무슨 일</b>을 하고 있는지 한 장면으로 보여 주면 좋아요. AI에게 보낼 문장에 장면을 자세히 적을수록 원하는 그림이 나와요.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
