@@ -69,7 +69,7 @@
 
     .presentation-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0f172a; color: white; z-index: 900000; padding: 30px; flex-direction: column; justify-content: space-between; }
     .present-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; }
-    .present-student-title { font-size: 1.6rem; font-weight: bold; color: #60a5fa; }
+    .present-student-title { font-size: 2.2rem; font-weight: bold; color: #60a5fa; }
     .present-body { flex: 1; background: #1e293b; margin: 25px 0; border-radius: 16px; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; }
     .present-nav { display: flex; justify-content: center; align-items: center; gap: 20px; }
     .present-nav-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
@@ -175,6 +175,8 @@
     <button class="present-nav-btn" id="btnPrevPresent">◀ 이전</button>
     <span id="presentIndexText" style="font-size: 1.1rem; font-weight: bold;">0 / 0</span>
     <button class="present-nav-btn" id="btnNextPresent">다음 ▶</button>
+    <button class="present-nav-btn" id="btnFontDown" style="background:#475569;">글씨 −</button>
+    <button class="present-nav-btn" id="btnFontUp" style="background:#475569;">글씨 +</button>
   </div>
 </div>
 
@@ -259,6 +261,7 @@
   });
 
   // ---------- 화면 그리기 ----------
+  let seatIndex = {};   // 번호 -> filteredItems 안의 위치 (칸을 눌렀을 때 크게 보여 주기용)
   function renderGrid() {
     const grid = document.getElementById('studentGrid');
     grid.innerHTML = '';
@@ -267,6 +270,13 @@
       card.className = 'student-card';
       card.id = `card-num-${i}`;
       card.innerHTML = `<div class="num">${i}번</div><div class="status" id="status-num-${i}">미제출</div>`;
+      card.addEventListener('click', () => {
+        const idx = seatIndex[i];
+        if (idx === undefined) return;
+        currentPresentIndex = idx;
+        renderPresentSlide();
+        document.getElementById('presentationOverlay').style.display = 'flex';
+      });
       grid.appendChild(card);
     }
   }
@@ -344,6 +354,12 @@
     } else {
       filteredItems.reverse();
     }
+
+    seatIndex = {};
+    if (selectedClass !== 'all') {
+      filteredItems.forEach((it, i) => { if (it.status !== 'rejected') seatIndex[it.seatNum] = i; });
+    }
+    document.querySelectorAll('.student-card.submitted').forEach(c => { c.style.cursor = 'pointer'; c.title = '눌러서 크게 보기'; });
 
     filteredItems.forEach((item, index) => {
       let typeVal = '-', contentVal = '-';
@@ -505,11 +521,20 @@
     document.getElementById('btnNextPresent').disabled = (currentPresentIndex === filteredItems.length - 1);
 
     document.getElementById('presentContent').innerHTML = `
-      <div style="font-size:1.8rem; color:#4ade80; margin-bottom:15px;">입력 학번: <strong>${esc(item.studentStr)}</strong></div>
-      <div style="font-size:1.3rem; line-height:1.5; color:#f8fafc; background:#0f172a; padding:15px; border-radius:8px;">${esc(item.jobTitle || item.sdgsGoal || item.topGroup) || '-'}</div>
-      <div style="font-size:1.5rem; line-height:1.6; color:#f8fafc; background:#0f172a; padding:20px; border-radius:12px; margin-top: 15px;">${esc(item.contribution || item.content || item.futurePlan) || '-'}</div>
+      <div style="font-size:calc(var(--ps) * 3rem); color:#4ade80; margin-bottom:20px;">입력 학번: <strong>${esc(item.studentStr)}</strong></div>
+      <div style="font-size:calc(var(--ps) * 3rem); font-weight:bold; line-height:1.4; color:#f8fafc; background:#0f172a; padding:25px; border-radius:12px;">${esc(item.jobTitle || item.sdgsGoal || item.topGroup) || '-'}</div>
+      <div style="font-size:calc(var(--ps) * 3.4rem); line-height:1.6; color:#f8fafc; background:#0f172a; padding:30px; border-radius:16px; margin-top: 20px; white-space:pre-wrap;">${esc(item.contribution || item.content || item.jobDesc || item.futurePlan) || '-'}</div>
     `;
   }
+  // 발표 글씨 크기 조절 (기본 1.0, 0.6 ~ 2.0)
+  let presentScale = 1;
+  function setPresentScale(v) {
+    presentScale = Math.min(2, Math.max(0.6, Math.round(v * 10) / 10));
+    document.getElementById('presentationOverlay').style.setProperty('--ps', presentScale);
+  }
+  setPresentScale(1);
+  document.getElementById('btnFontDown').addEventListener('click', () => setPresentScale(presentScale - 0.2));
+  document.getElementById('btnFontUp').addEventListener('click', () => setPresentScale(presentScale + 0.2));
   document.getElementById('btnPrevPresent').addEventListener('click', () => { if (currentPresentIndex > 0) { currentPresentIndex--; renderPresentSlide(); } });
   document.getElementById('btnNextPresent').addEventListener('click', () => { if (currentPresentIndex < filteredItems.length - 1) { currentPresentIndex++; renderPresentSlide(); } });
   document.getElementById('btnClosePresent').addEventListener('click', () => { document.getElementById('presentationOverlay').style.display = 'none'; });
