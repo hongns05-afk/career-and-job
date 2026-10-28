@@ -71,6 +71,16 @@
     .present-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; }
     .present-student-title { font-size: 2.2rem; font-weight: bold; color: #60a5fa; }
     .present-body { flex: 1; background: #1e293b; margin: 25px 0; border-radius: 16px; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; }
+    /* 2단원-3 직업 카드 (그림) */
+    .thumb { width: 72px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; display: block; margin-bottom: 4px; cursor: pointer; }
+    .modal-drawing { width: 100%; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; aspect-ratio: 4 / 3; object-fit: contain; margin-bottom: 12px; }
+    .pc-card { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; width: 100%; }
+    @media (min-width: 900px) { .pc-card { grid-template-columns: 1.15fr 1fr; } }
+    .pc-img { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #ffffff; border-radius: 14px; }
+    .pc-title { font-size: calc(var(--ps) * 2.6rem); font-weight: bold; color: #fbbf24; line-height: 1.3; margin-bottom: 14px; word-break: keep-all; }
+    .pc-row { background: #0f172a; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+    .pc-label { font-size: calc(var(--ps) * 1rem); color: #93c5fd; font-weight: bold; margin-bottom: 4px; }
+    .pc-val { font-size: calc(var(--ps) * 1.45rem); line-height: 1.5; color: #f8fafc; white-space: pre-wrap; word-break: keep-all; }
     .present-nav { display: flex; justify-content: center; align-items: center; gap: 20px; }
     .present-nav-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
     .present-nav-btn:disabled { background: #475569; cursor: not-allowed; }
@@ -105,7 +115,8 @@
       <select id="activitySelect">
         <option value="1단원">1단원 (진로 특성 직업)</option>
         <option value="2단원">2단원 (창업가 정신)</option>
-        <option value="2단원-2" selected>2단원-2 (SDGs 직업 카드)</option>
+        <option value="2단원-2">2단원-2 (SDGs 직업 카드)</option>
+        <option value="2단원-3" selected>2단원-3 (필요한 직업 카드)</option>
         <option value="3단원">3단원 (학습 성격 유형)</option>
       </select>
     </div>
@@ -182,7 +193,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -208,6 +219,28 @@
   function esc(v) {
     if (v === undefined || v === null) return '';
     return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ---------- 2단원-3 그림 불러오기 (그림은 따로 저장되어 있어서 필요할 때만 가져옵니다) ----------
+  const DRAW_PATH = 'worksheet2_3_drawings';
+  const drawingCache = {};
+  function loadDrawing(key) {
+    if (!drawingCache[key]) {
+      drawingCache[key] = get(ref(db, DRAW_PATH + '/' + key)).then(snap => {
+        const v = snap.val();
+        const src = v && typeof v.image === 'string' ? v.image : '';
+        return src.startsWith('data:image/') ? src : '';
+      }).catch(() => { delete drawingCache[key]; return ''; });
+    }
+    return drawingCache[key];
+  }
+  function fillDrawings(root) {
+    root.querySelectorAll('img[data-draw-key]').forEach(img => {
+      loadDrawing(img.dataset.drawKey).then(src => {
+        if (src) img.src = src;
+        else img.alt = '그림 없음';
+      });
+    });
   }
 
   // ---------- 로그인 / 로그아웃 ----------
@@ -293,6 +326,7 @@
     if (unit === '1단원') return 'worksheet1_submissions';
     if (unit === '2단원') return 'yeep_activity_submissions';
     if (unit === '2단원-2') return 'worksheet2_2_submissions';
+    if (unit === '2단원-3') return 'worksheet2_3_submissions';
     return 'learning_activity_submissions';
   }
 
@@ -314,6 +348,10 @@
       document.getElementById('tableTitle').innerText = '📝 [2단원-2] SDGs 직업 카드';
       document.getElementById('thHeaderType').innerText = 'SDGs 목표 / 직업명';
       document.getElementById('thHeaderContent').innerText = '기여점 및 한줄평';
+    } else if (selectedUnit === '2단원-3') {
+      document.getElementById('tableTitle').innerText = '📝 [2단원-3] 나와 주변인에게 필요한 직업 카드';
+      document.getElementById('thHeaderType').innerText = '그림 / 직업명';
+      document.getElementById('thHeaderContent').innerText = '하는 일 및 만든 이유';
     } else {
       document.getElementById('tableTitle').innerText = '📝 [3단원] 나의 학습 성격 유형 진단';
       document.getElementById('thHeaderType').innerText = '학습 유형 / 강점';
@@ -371,6 +409,9 @@
       } else if (selectedUnit === '2단원-2') {
         typeVal = `<div>🌍 <strong>목표:</strong> ${esc(item.sdgsGoal) || '-'}</div><div style="margin-top:2px; color:#16a34a;">💼 <strong>직업:</strong> ${esc(item.jobTitle) || '-'}</div>`;
         contentVal = `<div>💡 <strong>기여점:</strong> ${esc(item.contribution) || '-'}</div><div class="sub-text" style="color:#2563eb;">💬 "${esc(item.oneLineReview) || '-'}"</div>`;
+      } else if (selectedUnit === '2단원-3') {
+        typeVal = `<img class="thumb" alt="" data-draw-key="${esc(item.key)}" onclick="openDetailModal(${index})"><div style="color:#7c3aed;">💼 <strong>${esc(item.jobTitle) || '-'}</strong></div><div class="sub-text">💰 ${esc(item.salary) || '-'}</div>`;
+        contentVal = `<div>🛠️ <strong>하는 일:</strong> ${esc(item.whatTheyDo) || '-'}</div><div class="sub-text">❓ 만든 이유: ${esc(item.reason) || '-'}</div>`;
       } else {
         typeVal = esc(item.learningType || item.strength) || '-'; contentVal = esc(item.improvement || item.content) || '-';
       }
@@ -401,6 +442,7 @@
       tableBody.appendChild(tr);
     });
 
+    if (selectedUnit === '2단원-3') fillDrawings(tableBody);
     document.getElementById('submissionCounter').innerText = `총 제출 건수: ${submittedCount}건`;
     if (filteredItems.length === 0) tableBody.innerHTML = '<tr><td colspan="5" class="text-center">조건에 맞는 데이터가 없습니다.</td></tr>';
   }
@@ -430,6 +472,10 @@
     if (!ok) return;
     try {
       await remove(ref(db, getPathByUnit(unit) + '/' + item.key));
+      if (unit === '2단원-3') {
+        try { await remove(ref(db, DRAW_PATH + '/' + item.key)); } catch (e) { /* 그림이 없어도 괜찮음 */ }
+        delete drawingCache[item.key];
+      }
     } catch (err) {
       alert('삭제하지 못했습니다: ' + err.message);
     }
@@ -482,6 +528,12 @@
       body.innerHTML = `<div class="answer-block"><div class="answer-label">🏆 역량군</div><div class="answer-content">${esc(item.topGroup) || '-'}</div></div><div class="answer-block"><div class="answer-label">💡 추천 창업가</div><div class="answer-content">${esc(item.entrepreneurText) || '-'}</div></div><div class="answer-block"><div class="answer-label">🚀 노력</div><div class="answer-content">${esc(item.futurePlan) || '-'}</div></div>`;
     } else if (selectedUnit === '2단원-2') {
       body.innerHTML = `<div class="answer-block"><div class="answer-label">🌍 SDGs 목표</div><div class="answer-content">${esc(item.sdgsGoal) || '-'}</div></div><div class="answer-block"><div class="answer-label">💼 직업 이름</div><div class="answer-content">${esc(item.jobTitle) || '-'}</div></div><div class="answer-block"><div class="answer-label">📋 주요 업무</div><div class="answer-content">${esc(Array.isArray(item.tasks) ? item.tasks.join(', ') : (item.tasksText || '-'))}</div></div><div class="answer-block"><div class="answer-label">💡 기여점</div><div class="answer-content">${esc(item.contribution) || '-'}</div></div><div class="answer-block"><div class="answer-label">💬 한줄평</div><div class="answer-content">"${esc(item.oneLineReview) || '-'}"</div></div>`;
+    } else if (selectedUnit === '2단원-3') {
+      const blk = (label, v) => `<div class="answer-block"><div class="answer-label">${label}</div><div class="answer-content">${esc(v) || '-'}</div></div>`;
+      body.innerHTML = `<img class="modal-drawing" alt="그림 불러오는 중..." data-draw-key="${esc(item.key)}">`
+        + blk('💼 직업명', item.jobTitle) + blk('❓ 만든 이유', item.reason) + blk('🛠️ 하는 일', item.whatTheyDo)
+        + blk('💪 필요한 능력', item.abilities) + blk('🎓 되는 방법', item.howTo) + blk('💰 보수', item.salary);
+      fillDrawings(body);
     } else {
       body.innerHTML = `<div class="answer-block"><div class="answer-label">📘 학습 유형</div><div class="answer-content">${esc(item.learningType || item.strength) || '-'}</div></div><div class="answer-block"><div class="answer-label">💡 개선점 및 계획</div><div class="answer-content">${esc(item.improvement || item.content) || '-'}</div></div>`;
     }
@@ -497,6 +549,7 @@
       let row = { '입력된 학번': item.studentStr };
       if (selectedUnit === '1단원') { row['직업'] = item.jobTitle || ''; row['내용'] = item.jobDesc || item.content || ''; }
       else if (selectedUnit === '2단원-2') { row['목표'] = item.sdgsGoal || ''; row['직업'] = item.jobTitle || ''; row['기여점'] = item.contribution || ''; row['한줄평'] = item.oneLineReview || ''; }
+      else if (selectedUnit === '2단원-3') { row['직업명'] = item.jobTitle || ''; row['만든 이유'] = item.reason || ''; row['하는 일'] = item.whatTheyDo || ''; row['필요한 능력'] = item.abilities || ''; row['되는 방법'] = item.howTo || ''; row['보수'] = item.salary || ''; }
       else if (selectedUnit === '2단원') { row['역량군'] = item.topGroup || ''; row['추천 창업가'] = item.entrepreneurText || ''; row['다짐'] = item.futurePlan || ''; }
       else { row['학습 유형'] = item.learningType || item.strength || ''; row['개선점 및 계획'] = item.improvement || item.content || ''; }
       row['제출시간'] = item.submittedAt || '';
@@ -519,6 +572,25 @@
     document.getElementById('presentIndexText').innerText = `${currentPresentIndex + 1} / ${filteredItems.length}`;
     document.getElementById('btnPrevPresent').disabled = (currentPresentIndex === 0);
     document.getElementById('btnNextPresent').disabled = (currentPresentIndex === filteredItems.length - 1);
+
+    if (document.getElementById('activitySelect').value === '2단원-3') {
+      const row = (label, v) => `<div class="pc-row"><div class="pc-label">${label}</div><div class="pc-val">${esc(v) || '-'}</div></div>`;
+      const pc = document.getElementById('presentContent');
+      pc.innerHTML = `
+        <div class="pc-card">
+          <img class="pc-img" alt="그림 불러오는 중..." data-draw-key="${esc(item.key)}">
+          <div>
+            <div class="pc-title">💼 ${esc(item.jobTitle) || '-'}</div>
+            ${row('❓ 만든 이유', item.reason)}
+            ${row('🛠️ 하는 일', item.whatTheyDo)}
+            ${row('💪 필요한 능력', item.abilities)}
+            ${row('🎓 되는 방법', item.howTo)}
+            ${row('💰 보수', item.salary)}
+          </div>
+        </div>`;
+      fillDrawings(pc);
+      return;
+    }
 
     document.getElementById('presentContent').innerHTML = `
       <div style="font-size:calc(var(--ps) * 3rem); color:#4ade80; margin-bottom:20px;">입력 학번: <strong>${esc(item.studentStr)}</strong></div>
