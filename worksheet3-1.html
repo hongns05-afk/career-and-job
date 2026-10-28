@@ -128,7 +128,7 @@
     <textarea id="actionPlan" maxlength="500" placeholder="위의 성격 유형 특징 및 학습 전략을 참고하여 학습 행동 목표를 작성하세요."></textarea>
 
     <!-- 제출 버튼 -->
-    <button id="submitBtn" class="submit-btn" disabled>모든 항목을 입력해야 제출할 수 있습니다</button>
+    <button id="submitBtn" class="submit-btn" data-nocapture disabled>모든 항목을 입력해야 제출할 수 있습니다</button>
 </div>
 
 <script type="module">
@@ -147,6 +147,22 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    // 제출 완료 화면 도우미 (done-kit.js가 없어도 활동지는 그대로 작동합니다)
+    let DK = null;
+    try { DK = await import('./done-kit.js'); } catch (e) { console.warn('done-kit.js 불러오기 실패', e); }
+    const growAll = () => { if (DK) DK.growAll(); };
+
+    let kit = null;
+    if (DK) {
+        DK.initAutoGrow();
+        kit = DK.createDoneKit({
+            db, path: 'learning_activity_submissions',
+            root: document.querySelector('.container'),
+            getFileName: () => '학습성격유형_' + (document.getElementById('studentNum').value.trim() || '학번'),
+            onReopen: () => { checkFormCompletion(); }
+        });
+    }
 
     const questions = [
         "연극이나 역할 놀이를 통해 학습하는 것을 좋아한다.", "학교에서 하는 수업 방식이 내게 맞는 것 같다.", "사물이나 어떤 일에 대해서 따지기 좋아한다.", "친구가 나에게 잘못했더라도 쉽게 용서해 준다.",
@@ -260,6 +276,7 @@
         }
         checkFormCompletion();
         document.getElementById('rejectBanner').style.display = 'none';
+        growAll();
     }
     document.getElementById('actionPlan').addEventListener('input', checkFormCompletion);
 
@@ -407,8 +424,14 @@
                 timestamp: Date.now()
             });
 
-            alert("제출이 성공적으로 완료되었습니다!");
-            window.location.href = "index.html";
+            if (kit) {
+                btn.innerText = '제출 완료 ✅';
+                btn.className = 'submit-btn';
+                kit.show(newRef.key);
+            } else {
+                alert("제출이 성공적으로 완료되었습니다!");
+                window.location.href = "index.html";
+            }
 
         } catch (err) {
             console.error(err);
