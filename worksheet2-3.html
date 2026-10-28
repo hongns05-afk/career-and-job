@@ -29,7 +29,8 @@
     }
     @media (max-width: 500px) { .container { padding: 16px; } body { padding: 12px 10px 50px 10px; } }
 
-    .card-header { border-bottom: 3px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; }
+    .card-header { border-bottom: 3px solid #0f172a; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
+    .btn-example { display: inline-flex; align-items: center; gap: 6px; background: #1d4ed8; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; font-size: 0.92rem; white-space: nowrap; }
     .card-title { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 5px; word-break: keep-all; }
     .card-subtitle { font-size: 0.9rem; color: #64748b; word-break: keep-all; line-height: 1.5; }
 
@@ -137,8 +138,11 @@
 <div class="container" id="printableArea">
   <form id="jobCardForm" autocomplete="off">
     <div class="card-header">
-      <h1 class="card-title">💡 나와 주변인에게 필요한 직업 카드</h1>
-      <p class="card-subtitle">나와 주변 사람들의 불편함이나 문제를 해결해 주는, 세상에 없던 새로운 직업을 만들어 봅시다.</p>
+      <div>
+        <h1 class="card-title">💡 나와 주변인에게 필요한 직업 카드</h1>
+        <p class="card-subtitle">나와 주변 사람들의 불편함이나 문제를 해결해 주는, 세상에 없던 새로운 직업을 만들어 봅시다.</p>
+      </div>
+      <a href="worksheet2-3-example.html" target="_blank" class="btn-example" data-nocapture>📘 작성 예시 보기 ↗</a>
     </div>
 
     <div id="localBanner" class="note-banner note-blue" style="display:none;" data-nocapture></div>
