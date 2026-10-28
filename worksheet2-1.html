@@ -260,7 +260,7 @@
       <textarea id="futurePlan" rows="4" maxlength="500" placeholder="예: 나의 꿈인 웹 디자이너가 되기 위해 부족한 '집단 창의 역량'을 키우고 싶다. 이를 위해 앞으로 모둠 활동을 할 때 내 고집만 피우지 않고 친구들의 의견을 끝까지 경청하고 조율하는 연습을 할 것이다." required autocomplete="off"></textarea>
     </div>
 
-    <button type="submit" id="submitBtn" class="submit-btn">제출하기 🚀</button>
+    <button type="submit" id="submitBtn" class="submit-btn" data-nocapture>제출하기 🚀</button>
   </form>
 </div>
 
@@ -300,6 +300,27 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+
+  // 제출 완료 화면 도우미 (done-kit.js가 없어도 활동지는 그대로 작동합니다)
+  let DK = null;
+  try { DK = await import('./done-kit.js'); } catch (e) { console.warn('done-kit.js 불러오기 실패', e); }
+  const growAll = () => { if (DK) DK.growAll(); };
+
+  let kit = null;
+  if (DK) {
+    DK.initAutoGrow();
+    kit = DK.createDoneKit({
+      db, path: 'yeep_activity_submissions',
+      root: document.querySelector('.container'),
+      lockEls: () => [document.getElementById('activityForm')],
+      getFileName: () => '창업가정신_' + (document.getElementById('studentInfo').value.trim() || '학번'),
+      onReopen: () => {
+        const b = document.getElementById('submitBtn');
+        b.disabled = false;
+        b.innerText = '제출하기 🚀';
+      }
+    });
+  }
 
   // 학번 칸에는 숫자만, 최대 5자리까지만 입력되게 합니다.
   document.getElementById('studentInfo').addEventListener('input', function() {
@@ -355,6 +376,7 @@
     document.getElementById('entrepreneurQuote').value = ent.quote || '';
     document.getElementById('futurePlan').value = r.futurePlan || '';
     document.getElementById('rejectBanner').style.display = 'none';
+    growAll();
   }
 
   document.getElementById('activityForm').addEventListener('submit', async function(e) {
@@ -426,9 +448,14 @@
         timestamp: serverTimestamp()
       };
 
-      await push(ref(db, 'yeep_activity_submissions'), data);
-      alert('성공적으로 제출되었습니다!');
-      location.href = 'index.html';
+      const newRef = await push(ref(db, 'yeep_activity_submissions'), data);
+      if (kit) {
+        submitBtn.innerText = '제출 완료 ✅';
+        kit.show(newRef.key);
+      } else {
+        alert('성공적으로 제출되었습니다!');
+        location.href = 'index.html';
+      }
 
     } catch (err) {
       alert('제출 처리 중 오류 발생: ' + err.message);
