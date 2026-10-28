@@ -1,345 +1,46 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>진로 특성에 맞는 직업 찾기</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: #f4f7fb; color: #1e293b; padding: 20px; display: flex; justify-content: center; }
-        .container { max-width: 800px; width: 100%; background: #fff; padding: 28px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-        
-        h1 { font-size: 1.5rem; margin-bottom: 20px; color: #1e3a8a; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
-        
-        /* 학번 입력 영역 */
-        .student-info { margin-bottom: 24px; background: #e0f2fe; padding: 14px 18px; border-radius: 10px; display: flex; align-items: center; gap: 12px; }
-        .student-info label { font-weight: bold; color: #0369a1; }
-        .student-info input { padding: 8px 12px; font-size: 1rem; border: 1px solid #7dd3fc; border-radius: 6px; width: 140px; outline: none; }
 
-        .question-title { font-weight: 700; font-size: 1.05rem; margin: 24px 0 12px; color: #0f172a; }
-        
-        /* 보기 카드는 터치형 */
-        .words-box { background: #fffbeb; border: 2px dashed #f59e0b; padding: 16px; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; min-height: 60px; }
-        .word-card { background: #fff; border: 1.5px solid #d97706; color: #b45309; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 0.9rem; user-select: none; transition: all 0.2s; }
-        .word-card.selected { background: #f59e0b; color: #fff; border-color: #d97706; }
+2026 창업창직캠프 활동 보고서
+하길중학교 1학년 (   )반 (   )번 이름 (           )  
+체험학습 일시
+2026년    11월  5일 
+체험학습 장소
+각 교실
+나의 체험 성실도
+매우성실(   ), 성실(    ), 보통(    ), 불성실(    ), 매우불성실(     )
+체험학습만족도 
+매우만족(   ), 만족(    ), 보통(    ), 불만족(    ), 매우불만족(     )
+건의사항(좋았던점/ 개선할점)
 
-        /* 홀랜드 그리드 */
-        .holland-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 30px; }
-        @media (max-width: 600px) { .holland-grid { grid-template-columns: 1fr; } }
-        .holland-card { border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; background: #fafafa; cursor: pointer; min-height: 110px; transition: border-color 0.2s; }
-        .holland-card:hover { border-color: #3b82f6; }
-        .type-header { font-weight: bold; color: #1d4ed8; margin-bottom: 8px; font-size: 0.95rem; }
-        .placed-words { display: flex; flex-wrap: wrap; gap: 6px; }
-        .placed-tag { background: #2563eb; color: #fff; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+나의 꿈
 
-        /* 손글씨 변환 최적화 입력창 */
-        .text-input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; margin-bottom: 12px; resize: vertical; outline: none; line-height: 1.5; }
-        .text-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+체험활동내용
 
-        /* 진행 상황 및 안내 메시지 */
-        .status-msg { font-size: 0.9rem; color: #ef4444; font-weight: bold; text-align: center; margin-top: 15px; }
-        .status-msg.ok { color: #059669; }
 
-        /* 제출 버튼 */
-        .submit-btn { width: 100%; padding: 16px; background: #94a3b8; color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: not-allowed; margin-top: 10px; transition: background 0.2s, transform 0.1s; }
-        .submit-btn.active { background: #2563eb; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); }
-        .submit-btn.active:hover { background: #1d4ed8; }
-        .submit-btn.active:active { transform: translateY(1px); }
-    </style>
-</head>
-<body>
+1. 내가 만드는 미래 신직업 (미래 사회 주요 트렌드와 관심 직업을 연결하여 활동지에 미래 신직업 작성하기) 활동
 
-<div class="container">
-    <h1>진로 특성에 맞는 직업 찾기</h1>
+1) 내가 선택한 미래 트렌드 :
 
-    <div class="student-info">
-        <label for="student-id">학번</label>
-        <input type="text" id="student-id" placeholder="예: 10101" maxlength="5" autocomplete="off" inputmode="numeric">
-    </div>
-    <div id="rejectBanner" style="display:none; background:#fff7ed; border:2px solid #fb923c; color:#9a3412; padding:12px 15px; border-radius:12px; margin-bottom:20px; font-weight:bold; font-size:0.92rem; line-height:1.5;"></div>
+2) 미래 신직업: 
 
-    <div class="question-title">1. 아래 보기를 터치한 후 해당되는 홀랜드 흥미 유형 칸을 터치해 봅시다.</div>
-    
-    <!-- 보기 영역 -->
-    <div class="words-box" id="words-box">
-        <div class="word-card" onclick="selectWord(this)">로봇 연구원</div>
-        <div class="word-card" onclick="selectWord(this)">운동 선수</div>
-        <div class="word-card" onclick="selectWord(this)">물리학자</div>
-        <div class="word-card" onclick="selectWord(this)">생물학자</div>
-        <div class="word-card" onclick="selectWord(this)">영화감독</div>
-        <div class="word-card" onclick="selectWord(this)">화가</div>
-        <div class="word-card" onclick="selectWord(this)">가수</div>
-        <div class="word-card" onclick="selectWord(this)">간호사</div>
-        <div class="word-card" onclick="selectWord(this)">교사</div>
-        <div class="word-card" onclick="selectWord(this)">상담가</div>
-        <div class="word-card" onclick="selectWord(this)">변호사</div>
-        <div class="word-card" onclick="selectWord(this)">쇼호스트</div>
-        <div class="word-card" onclick="selectWord(this)">사서</div>
-        <div class="word-card" onclick="selectWord(this)">세무사</div>
-        <div class="word-card" onclick="selectWord(this)">회계사</div>
-    </div>
+3) 선택 이유:
 
-    <!-- 홀랜드 6가지 분류 칸 -->
-    <div class="holland-grid">
-        <div class="holland-card" onclick="placeWord(this)">
-            <div class="type-header">R (실재형)</div>
-            <div class="placed-words"></div>
-        </div>
-        <div class="holland-card" onclick="placeWord(this)">
-            <div class="type-header">I (탐구형)</div>
-            <div class="placed-words"></div>
-        </div>
-        <div class="holland-card" onclick="placeWord(this)">
-            <div class="type-header">A (예술형)</div>
-            <div class="placed-words"></div>
-        </div>
-        <div class="holland-card" onclick="placeWord(this)">
-            <div class="type-header">S (사회형)</div>
-            <div class="placed-words"></div>
-        </div>
-        <div class="holland-card" onclick="placeWord(this)">
-            <div class="type-header">E (기업형)</div>
-            <div class="placed-words"></div>
-        </div>
-        <div class="holland-card" onclick="placeWord(this)">
-            <div class="type-header">C (관습형)</div>
-            <div class="placed-words"></div>
-        </div>
-    </div>
 
-    <div class="question-title">2. 자신의 관심 직업과 필요한 진로 특성을 적어 봅시다. (펜 필기 가능)</div>
-    <input type="text" id="job-title" class="text-input" placeholder="나의 관심 직업 (예: 경찰관)" autocomplete="off" maxlength="50">
-    <textarea id="job-desc" class="text-input" rows="4" maxlength="500" placeholder="관심 직업에 요구되는 진로 특성을 적어주세요." autocomplete="off"></textarea>
 
-    <!-- 안내 메시지 및 제출 버튼 -->
-    <div class="status-msg" id="statusMsg">⚠️ 학번과 모든 문항을 작성해 주세요.</div>
-    <button class="submit-btn" id="submitBtn" disabled>제출하기</button>
-</div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, query, orderByChild, equalTo, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+2. 일상 속 불편함에서 발견하는 창업 아이디어
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB52DHJG7_ZDvUaZLzTc4raXE5ClU8ut9c",
-      authDomain: "activity3-bcbca.firebaseapp.com",
-      databaseURL: "https://activity3-bcbca-default-rtdb.firebaseio.com",
-      projectId: "activity3-bcbca",
-      storageBucket: "activity3-bcbca.firebasestorage.app",
-      messagingSenderId: "698284558768",
-      appId: "1:698284558768:web:8f8877735a2580af8a6e75"
-    };
+1) 내가 생각한 ‘도와줘 마을’이 해결해야 할 문제점:
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
 
-    let selectedWordElem = null;
 
-    // 단어 선택 함수 (다시 클릭 시 선택 해제 지원)
-    window.selectWord = function(elem) {
-        if(selectedWordElem === elem) {
-            selectedWordElem.classList.remove('selected');
-            selectedWordElem = null;
-            return;
-        }
-        if(selectedWordElem) selectedWordElem.classList.remove('selected');
-        selectedWordElem = elem;
-        elem.classList.add('selected');
-    };
 
-    // 홀랜드 칸에 단어 배치
-    window.placeWord = function(cardElem) {
-        if(!selectedWordElem) return;
-        const placedContainer = cardElem.querySelector('.placed-words');
-        
-        const tag = document.createElement('span');
-        tag.className = 'placed-tag';
-        tag.innerText = selectedWordElem.innerText;
-        
-        // 배치된 단어 클릭 시 다시 원위치로 복구 (그 단어 자신을 되돌립니다)
-        tag.onclick = function(e) {
-            e.stopPropagation(); // 카드 전체 클릭 이벤트 방지
-            returnToBox(this, this.innerText);
-        };
-        
-        placedContainer.appendChild(tag);
-        selectedWordElem.style.display = 'none';
-        selectedWordElem.classList.remove('selected');
-        selectedWordElem = null;
+2) 내가 생각한 문제를 해결할 창업아이디어:
 
-        validateForm();
-    };
 
-    // 원위치 복구 함수
-    function returnToBox(tagElem, text) {
-        const words = document.querySelectorAll('.word-card');
-        words.forEach(w => {
-            if(w.innerText === text) w.style.display = 'inline-block';
-        });
-        tagElem.remove();
-        validateForm();
-    }
 
-    // 폼 작성 검증 로직
-    function validateForm() {
-        const studentId = document.getElementById('student-id').value.trim();
-        const jobTitle = document.getElementById('job-title').value.trim();
-        const jobDesc = document.getElementById('job-desc').value.trim();
-        
-        const totalWordsCount = document.querySelectorAll('.word-card').length;
-        const placedWordsCount = document.querySelectorAll('.placed-tag').length;
 
-        const submitBtn = document.getElementById('submitBtn');
-        const statusMsg = document.getElementById('statusMsg');
 
-        const isStudentIdOk = /^[0-9]{5}$/.test(studentId);
-        const isAllWordsPlaced = (totalWordsCount === placedWordsCount);
-        const isJobTitleOk = jobTitle.length > 0;
-        const isJobDescOk = jobDesc.length > 0;
 
-        if(isStudentIdOk && isAllWordsPlaced && isJobTitleOk && isJobDescOk) {
-            submitBtn.disabled = false;
-            submitBtn.classList.add('active');
-            statusMsg.innerText = "✅ 모든 항목 작성이 완료되었습니다. 제출 버튼을 눌러주세요!";
-            statusMsg.className = "status-msg ok";
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.classList.remove('active');
-            statusMsg.className = "status-msg";
 
-            if (!isStudentIdOk) {
-                statusMsg.innerText = "⚠️ 학번 숫자 5자리를 정확히 입력해 주세요. (예: 10101)";
-            } else if (!isAllWordsPlaced) {
-                statusMsg.innerText = `⚠️ [1번] 모든 직업 보기를 분류해 주세요. (남은 보기: ${totalWordsCount - placedWordsCount}개)`;
-            } else if (!isJobTitleOk) {
-                statusMsg.innerText = "⚠️ [2번] 관심 직업을 작성해 주세요.";
-            } else if (!isJobDescOk) {
-                statusMsg.innerText = "⚠️ [2번] 요구되는 진로 특성을 작성해 주세요.";
-            }
-        }
-    }
+체험활동 후 배운점 및 느낀점 (배운점, 활동이 나에게 준 의미 앞으로의 계획 등)
 
-    // 선생님이 반려한 제출이 있으면 학번 입력 시 사유를 보여 줍니다.
-    let rejectCheckToken = 0;
-    async function checkRejected(id) {
-        const banner = document.getElementById('rejectBanner');
-        const token = ++rejectCheckToken;
-        banner.style.display = 'none';
-        if (!/^[0-9]{5}$/.test(id)) return;
-        try {
-            const q = query(ref(db, 'worksheet1_submissions'), orderByChild('studentId'), equalTo(id));
-            const snap = await get(q);
-            if (token !== rejectCheckToken || !snap.exists()) return;
-            const mine = Object.values(snap.val());
-            const hasActive = mine.some(it => it.status !== 'rejected');
-            const rejected = mine.filter(it => it.status === 'rejected').sort((a, b) => (b.rejectedAt || 0) - (a.rejectedAt || 0))[0];
-            if (!hasActive && rejected) {
-                banner.textContent = '↩️ 선생님이 제출을 반려했어요. ' + (rejected.rejectReason ? '사유: ' + rejected.rejectReason + ' — ' : '') + '내용을 고쳐서 다시 제출해 주세요.';
-                banner.appendChild(document.createElement('br'));
-                const loadBtn = document.createElement('button');
-                loadBtn.type = 'button';
-                loadBtn.textContent = '📝 이전에 쓴 내용 불러오기';
-                loadBtn.style.cssText = 'margin-top:8px; padding:8px 14px; border:none; border-radius:8px; background:#ea580c; color:white; font-weight:bold; cursor:pointer;';
-                loadBtn.addEventListener('click', () => fillFromRejected(rejected));
-                banner.appendChild(loadBtn);
-                banner.style.display = 'block';
-            }
-        } catch (e) { /* 확인에 실패해도 제출에는 영향 없음 */ }
-    }
-
-    // 반려된 제출의 내용을 다시 채워 줍니다. (학번은 그대로 둡니다)
-    function fillFromRejected(r) {
-        // 지금까지 분류해 둔 것을 모두 되돌려 놓고 시작합니다.
-        document.querySelectorAll('.placed-tag').forEach(t => t.remove());
-        document.querySelectorAll('.word-card').forEach(w => { w.style.display = 'inline-block'; w.classList.remove('selected'); });
-        selectedWordElem = null;
-
-        const classification = r.hollandClassification || {};
-        document.querySelectorAll('.holland-card').forEach(card => {
-            const typeName = card.querySelector('.type-header').innerText;
-            const words = Array.isArray(classification[typeName]) ? classification[typeName] : [];
-            words.forEach(word => {
-                const wordCard = Array.from(document.querySelectorAll('.word-card')).find(w => w.innerText === word && w.style.display !== 'none');
-                if (wordCard) {
-                    selectedWordElem = wordCard;
-                    window.placeWord(card);
-                }
-            });
-        });
-
-        document.getElementById('job-title').value = r.jobTitle || '';
-        document.getElementById('job-desc').value = r.jobDesc || '';
-        document.getElementById('rejectBanner').style.display = 'none';
-        validateForm();
-    }
-
-    // 실시간 입력 이벤트 바인딩 (학번은 숫자만, 최대 5자리)
-    document.getElementById('student-id').addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 5);
-        validateForm();
-        checkRejected(this.value);
-    });
-    document.getElementById('job-title').addEventListener('input', validateForm);
-    document.getElementById('job-desc').addEventListener('input', validateForm);
-
-    // Firebase 실시간 제출 연동
-    document.getElementById('submitBtn').addEventListener('click', async function() {
-        if(this.disabled) return;
-        const btn = this;
-
-        const studentId = document.getElementById('student-id').value.trim();
-        const jobTitle = document.getElementById('job-title').value.trim();
-        const jobDesc = document.getElementById('job-desc').value.trim();
-
-        if (!/^[0-9]{5}$/.test(studentId)) {
-            alert('학번은 숫자 5자리로 입력해 주세요. (예: 10101)');
-            return;
-        }
-
-        // 선택한 홀랜드 영역 배치 결과 수집
-        const hollandResults = {};
-        document.querySelectorAll('.holland-card').forEach(card => {
-            const typeName = card.querySelector('.type-header').innerText;
-            const words = Array.from(card.querySelectorAll('.placed-tag')).map(tag => tag.innerText);
-            hollandResults[typeName] = words;
-        });
-
-        const submission = {
-            studentId: studentId,
-            hollandClassification: hollandResults,
-            jobTitle: jobTitle,
-            jobDesc: jobDesc,
-            submittedAt: new Date().toLocaleString('ko-KR'),
-            timestamp: Date.now()
-        };
-
-        const submissionsRef = ref(db, 'worksheet1_submissions');
-        
-        btn.disabled = true;
-        btn.innerText = "제출 확인 중...";
-
-        try {
-            // 같은 학번의 제출이 이미 있으면 막습니다. (반려된 제출은 제외)
-            const snap = await get(query(submissionsRef, orderByChild('studentId'), equalTo(studentId)));
-            if (snap.exists() && Object.values(snap.val()).some(it => it.status !== 'rejected')) {
-                alert('이미 해당 학번으로 제출된 데이터가 존재합니다!\n내용을 고쳐야 한다면 선생님께 반려를 요청해 주세요.');
-                btn.disabled = false;
-                btn.innerText = "제출하기";
-                return;
-            }
-
-            btn.innerText = "제출 중...";
-            await push(submissionsRef, submission);
-            alert('🎉 성공적으로 제출되었습니다!');
-            location.reload();
-        } catch (error) {
-            console.error("제출 오류:", error);
-            alert('제출 실패! 인터넷 연결 상태를 확인해 주세요.');
-            btn.disabled = false;
-            btn.innerText = "제출하기";
-        }
-    });
-</script>
-
-</body>
-</html>
