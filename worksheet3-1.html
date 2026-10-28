@@ -100,28 +100,8 @@
         나의 학습 성격 유형: <span style="color: #64748b;">O/X 검사를 진행해 주세요</span>
     </div>
 
-    <!-- 유형별 맞춤 특징 안내 카드 -->
-    <div id="typeDetailCard" class="type-detail-card">
-        <h3 id="cardTitle">💡 나의 학습 성격 유형별 특징</h3>
-        <div class="detail-grid">
-            <div class="detail-box">
-                <h4>📌 특징</h4>
-                <ul id="listTrait"></ul>
-            </div>
-            <div class="detail-box">
-                <h4>📚 학습 전략</h4>
-                <ul id="listStrategy"></ul>
-            </div>
-            <div class="detail-box">
-                <h4>🎯 자기 관리법</h4>
-                <ul id="listManagement"></ul>
-            </div>
-            <div class="detail-box">
-                <h4>⚠️ 보완해야 할 점</h4>
-                <ul id="listImprovement"></ul>
-            </div>
-        </div>
-    </div>
+    <!-- 유형별 맞춤 특징 안내 카드 (동점이면 여러 장이 나옵니다) -->
+    <div id="typeDetailCards"></div>
 
     <!-- 3번 주관식 -->
     <div class="section-title">3. 나의 학습 성격 유형에 알맞은 효과적인 학습 행동 목표를 적어 보자. (교과서 134쪽 참고)</div>
@@ -313,26 +293,47 @@
             { type: '탐구형', score: explore },
             { type: '이상형', score: ideal }
         ];
-        scores.sort((a, b) => b.score - a.score);
+        const maxScore = Math.max(action, rules, explore, ideal);
+        const tops = scores.filter(x => x.score === maxScore);   // 동점이면 모두 포함
+        const cards = document.getElementById('typeDetailCards');
+        cards.innerHTML = '';
 
-        const top = scores[0];
-        const card = document.getElementById('typeDetailCard');
+        if (maxScore > 0) {
+            const names = tops.map(t => t.type).join(', ');
+            const color = tops.length === 1 ? typeDetails[tops[0].type].color : '#0369a1';
+            document.getElementById('finalTypeDisplay').innerHTML =
+                `나의 학습 성격 유형: <span style="color: ${color};">${names}</span> (${maxScore}점${tops.length > 1 ? ', 동점' : ''})`;
 
-        if (top.score > 0) {
-            const info = typeDetails[top.type];
-            document.getElementById('finalTypeDisplay').innerHTML = `나의 학습 성격 유형: <span style="color: ${info.color};">${top.type}</span> (${top.score}점)`;
+            tops.forEach(t => {
+                const info = typeDetails[t.type];
+                const card = document.createElement('div');
+                card.className = 'type-detail-card';
+                card.style.display = 'block';
+                card.style.backgroundColor = info.bg;
+                card.style.borderColor = info.color;
 
-            card.style.display = 'block';
-            card.style.backgroundColor = info.bg;
-            card.style.borderColor = info.color;
-            document.getElementById('cardTitle').innerHTML = `🔍 <span style="color: ${info.color};">${top.type}</span> ${info.sub}의 학습 특징`;
+                const h3 = document.createElement('h3');
+                h3.innerHTML = `🔍 <span style="color: ${info.color};">${t.type}</span> ${info.sub}의 학습 특징`;
+                card.appendChild(h3);
 
-            fillList('listTrait', info.trait);
-            fillList('listStrategy', info.strategy);
-            fillList('listManagement', info.management);
-            fillList('listImprovement', info.improvement);
+                const grid = document.createElement('div');
+                grid.className = 'detail-grid';
+                [['📌 특징', info.trait], ['📚 학습 전략', info.strategy], ['🎯 자기 관리법', info.management], ['⚠️ 보완해야 할 점', info.improvement]].forEach(([title, arr]) => {
+                    const box = document.createElement('div');
+                    box.className = 'detail-box';
+                    const h4 = document.createElement('h4');
+                    h4.textContent = title;
+                    const ul = document.createElement('ul');
+                    arr.forEach(item => { const li = document.createElement('li'); li.textContent = item; ul.appendChild(li); });
+                    box.appendChild(h4);
+                    box.appendChild(ul);
+                    grid.appendChild(box);
+                });
+                card.appendChild(grid);
+                cards.appendChild(card);
+            });
         } else {
-            card.style.display = 'none';
+            document.getElementById('finalTypeDisplay').innerHTML = '나의 학습 성격 유형: <span style="color: #64748b;">O/X 검사를 진행해 주세요</span>';
         }
     }
 
@@ -391,9 +392,8 @@
             { type: '탐구형', score: explore },
             { type: '이상형', score: ideal }
         ];
-        scores.sort((a, b) => b.score - a.score);
-
-        const topType = `${scores[0].type} (${scores[0].score}점)`;
+        const maxScore = Math.max(action, rules, explore, ideal);
+        const topType = `${scores.filter(x => x.score === maxScore).map(x => x.type).join(', ')} (${maxScore}점)`;
 
         try {
             const submissionsRef = ref(db, 'learning_activity_submissions');
