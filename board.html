@@ -81,6 +81,41 @@
     .pc-row { background: #0f172a; border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
     .pc-label { font-size: calc(var(--ps) * 1rem); color: #93c5fd; font-weight: bold; margin-bottom: 4px; }
     .pc-val { font-size: calc(var(--ps) * 1.45rem); line-height: 1.5; color: #f8fafc; white-space: pre-wrap; word-break: keep-all; }
+    /* ---------- 직업 카드 A4 인쇄 (2단원-3) ---------- */
+    .btn-print { background: #0f766e; color: white; }
+    .pick-label { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 0.75rem; color: #0f766e; font-weight: bold; cursor: pointer; }
+    .pick-label input { width: 16px; height: 16px; }
+    tr.row-picked { background: #f0fdfa; }
+    #printArea { display: none; }
+    .pcard { width: 297mm; height: 210mm; padding: 10mm; box-sizing: border-box; background: #ffffff; overflow: hidden;
+      break-after: page; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      font-family: 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #0f172a; }
+    .pcard:last-child { break-after: auto; page-break-after: auto; }
+    .pc-frame { height: 100%; border: 1.2mm solid #7c3aed; border-radius: 6mm; padding: 7mm 8mm 5mm; display: flex; flex-direction: column; gap: 5mm; box-sizing: border-box; }
+    .pc-head { display: flex; align-items: baseline; gap: 4mm; flex-wrap: wrap; border-bottom: 0.6mm solid #ddd6fe; padding-bottom: 3mm; }
+    .pc-kicker { font-size: 10pt; font-weight: 800; color: #7c3aed; letter-spacing: 0.08em; }
+    .pc-job { font-size: 26pt; font-weight: 800; line-height: 1.2; word-break: keep-all; margin: 0; }
+    .pc-main { flex: 1; min-height: 0; display: grid; grid-template-columns: 45% 1fr; gap: 7mm; }
+    .pc-pic { min-height: 0; display: flex; align-items: center; justify-content: center; border: 0.4mm solid #e2e8f0; border-radius: 4mm; overflow: hidden; background: #ffffff; }
+    .pc-pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .pc-pic .pc-nopic { color: #94a3b8; font-size: 12pt; }
+    .pc-info { min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 0.8em; font-size: 13pt; }
+    .pc-item { display: flex; flex-direction: column; gap: 0.25em; }
+    .pc-chip { align-self: flex-start; color: #ffffff; font-weight: 800; font-size: 0.78em; padding: 0.15em 0.6em; border-radius: 0.4em; }
+    .pc-text { line-height: 1.5; word-break: keep-all; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .c-rose { background: #e11d48; } .c-green { background: #16a34a; } .c-blue { background: #0284c7; } .c-amber { background: #d97706; } .c-slate { background: #475569; }
+    .pc-foot { display: flex; justify-content: space-between; font-size: 9pt; color: #64748b; }
+    /* 한 장 카드: 위에 큰 직업 이름, 아래 왼쪽 그림 · 오른쪽 설명 */
+    .pc-top { display: flex; flex-direction: column; align-items: center; gap: 1mm; border-bottom: 0.6mm solid #ddd6fe; padding-bottom: 3mm; }
+    .pc-bigname { height: 30mm; width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden;
+      font-size: 46pt; font-weight: 900; line-height: 1.12; color: #4c1d95; word-break: keep-all; letter-spacing: -0.01em; }
+    .pc-bigname span { display: block; }
+    @media print {
+      @page { size: A4 landscape; margin: 0; }
+      html, body { background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
+      body > *:not(#printArea) { display: none !important; }
+      #printArea { display: block !important; }
+    }
     .present-nav { display: flex; justify-content: center; align-items: center; gap: 20px; }
     .present-nav-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
     .present-nav-btn:disabled { background: #475569; cursor: not-allowed; }
@@ -105,6 +140,7 @@
     <div class="header-btns">
       <button class="btn btn-presentation" id="btnPresentation">🔮 발표</button>
       <button class="btn btn-excel" id="btnExcel">🧪 엑셀</button>
+      <button class="btn btn-print" id="btnPrint" style="display:none;">🖨️ 카드 인쇄</button>
       <button class="btn btn-logout" id="btnLogout">🔒 로그아웃</button>
     </div>
   </div>
@@ -138,6 +174,10 @@
     </div>
     <div class="filter-group">
       <label style="cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="showRejected"> 반려된 제출도 보기</label>
+    </div>
+    <div class="filter-group" id="printOptions" style="display:none;">
+      <span>🖨️ 인쇄:</span>
+      <label style="cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="printShowId" checked> 학번 넣기</label>
     </div>
   </div>
 
@@ -188,6 +228,7 @@
     <button class="present-nav-btn" id="btnNextPresent">다음 ▶</button>
     <button class="present-nav-btn" id="btnFontDown" style="background:#475569;">글씨 −</button>
     <button class="present-nav-btn" id="btnFontUp" style="background:#475569;">글씨 +</button>
+    <button class="present-nav-btn" id="btnPrintOne" style="background:#0f766e; display:none;">🖨️ 이 카드 인쇄</button>
   </div>
 </div>
 
@@ -332,6 +373,7 @@
 
   function updateDashboard() {
     renderGrid();
+    updatePrintControls();
     const selectedUnit = document.getElementById('activitySelect').value;
     const selectedClass = document.getElementById('classSelect').value;
     const showRejected = document.getElementById('showRejected').checked;
@@ -430,8 +472,9 @@
 
       const tr = document.createElement('tr');
       if (isRej) tr.className = 'row-rejected';
+      else if (selectedUnit === '2단원-3' && pickedKeys.has(item.key)) tr.className = 'row-picked';
       tr.innerHTML = `
-        <td><span class="student-clickable" onclick="openDetailModal(${index})">${esc(item.studentStr)}</span>${rejBadge}</td>
+        <td><span class="student-clickable" onclick="openDetailModal(${index})">${esc(item.studentStr)}</span>${rejBadge}${(selectedUnit === '2단원-3' && !isRej) ? `<div><label class="pick-label" title="인쇄할 카드로 고르기"><input type="checkbox" onchange="togglePick('${esc(item.key)}', this.checked, this)" ${pickedKeys.has(item.key) ? 'checked' : ''}> 인쇄</label></div>` : ''}</td>
         <td>${typeVal}</td>
         <td><div>${contentVal}</div></td>
         <td style="font-size:0.8rem; color:#64748b;">${timeVal}</td>
@@ -443,6 +486,7 @@
     });
 
     if (selectedUnit === '2단원-3') fillDrawings(tableBody);
+    updatePrintControls();
     document.getElementById('submissionCounter').innerText = `총 제출 건수: ${submittedCount}건`;
     if (filteredItems.length === 0) tableBody.innerHTML = '<tr><td colspan="5" class="text-center">조건에 맞는 데이터가 없습니다.</td></tr>';
   }
@@ -598,6 +642,96 @@
       <div style="font-size:calc(var(--ps) * 3.4rem); line-height:1.6; color:#f8fafc; background:#0f172a; padding:30px; border-radius:16px; margin-top: 20px; white-space:pre-wrap;">${esc(item.contribution || item.content || item.jobDesc || item.futurePlan) || '-'}</div>
     `;
   }
+  // ---------- 직업 카드 A4 인쇄 (2단원-3) ----------
+  const pickedKeys = new Set();   // 인쇄하려고 고른 카드
+  window.togglePick = function(key, on, el) {
+    if (on) pickedKeys.add(key); else pickedKeys.delete(key);
+    const tr = el && el.closest('tr');
+    if (tr) tr.classList.toggle('row-picked', on);
+    updatePrintControls();
+  };
+  function updatePrintControls() {
+    const on = document.getElementById('activitySelect').value === '2단원-3';
+    const btn = document.getElementById('btnPrint');
+    btn.style.display = on ? '' : 'none';
+    document.getElementById('printOptions').style.display = on ? '' : 'none';
+    document.getElementById('btnPrintOne').style.display = on ? '' : 'none';
+    const n = filteredItems.filter(it => it.status !== 'rejected' && pickedKeys.has(it.key)).length;
+    btn.textContent = n ? `🖨️ 고른 카드 인쇄 (${n}장)` : '🖨️ 카드 인쇄';
+  }
+
+  const pcItem = (cls, label, v) => `<div class="pc-item"><span class="pc-chip ${cls}">${label}</span><div class="pc-text">${esc(v) || '-'}</div></div>`;
+  const pcFoot = (item, showId, side) => `<div class="pc-foot"><span>진로와 직업 · 우리가 만든 미래 직업 카드${side ? ' · ' + side : ''}</span><span>${showId ? '학번 ' + esc(item.studentStr) : ''}</span></div>`;
+
+  // 한 장 카드: 위에 큰 직업 이름, 아래 왼쪽 그림 · 오른쪽 설명
+  function cardOneHtml(item, showId) {
+    return `
+      <div class="pcard"><div class="pc-frame">
+        <div class="pc-top">
+          <span class="pc-kicker">나와 주변인에게 필요한 직업</span>
+          <div class="pc-bigname"><span>${esc(item.jobTitle) || '-'}</span></div>
+        </div>
+        <div class="pc-main">
+          <div class="pc-pic"><img alt="" data-draw-key="${esc(item.key)}"></div>
+          <div class="pc-info">
+            ${pcItem('c-rose', '만든 이유', item.reason)}
+            ${pcItem('c-green', '하는 일', item.whatTheyDo)}
+            ${pcItem('c-blue', '필요한 능력', item.abilities)}
+            ${pcItem('c-amber', '되는 방법', item.howTo)}
+            ${pcItem('c-slate', '보수', item.salary)}
+          </div>
+        </div>
+        ${pcFoot(item, showId, '')}
+      </div></div>`;
+  }
+
+  // 칸을 넘치면 글씨를 조금씩 줄입니다. (els 안의 칸이 모두 들어갈 때까지, 같은 크기로)
+  function fitGroup(els, start, min, step) {
+    let fs = start;
+    const over = () => els.some(el => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1);
+    els.forEach(el => { el.style.fontSize = fs + 'pt'; });
+    while (over() && fs > min) {
+      fs -= step;
+      els.forEach(el => { el.style.fontSize = fs + 'pt'; });
+    }
+  }
+
+  async function printCards(items) {
+    if (!items.length) return;
+    const area = document.getElementById('printArea');
+    const showId = document.getElementById('printShowId').checked;
+    area.innerHTML = items.map(it => cardOneHtml(it, showId)).join('');
+    // 화면 밖에 잠깐 펼쳐서 그림을 불러오고 글씨 크기를 맞춥니다.
+    area.style.cssText = 'display:block; position:fixed; left:-10000px; top:0;';
+    await Promise.all(Array.from(area.querySelectorAll('img[data-draw-key]')).map(async img => {
+      const src = await loadDrawing(img.dataset.drawKey);
+      if (src) {
+        img.src = src;
+        try { await img.decode(); } catch (e) {}
+      } else {
+        img.outerHTML = '<span class="pc-nopic">그림 없음</span>';
+      }
+    }));
+    area.querySelectorAll('.pcard').forEach(card => {
+      fitGroup([card.querySelector('.pc-bigname')], 46, 20, 2);
+      fitGroup([card.querySelector('.pc-info')], 14, 7, 0.5);
+    });
+    area.style.cssText = '';
+    window.print();
+  }
+
+  document.getElementById('btnPrint').addEventListener('click', () => {
+    const active = filteredItems.filter(it => it.status !== 'rejected');
+    const picked = active.filter(it => pickedKeys.has(it.key));
+    if (picked.length) return printCards(picked);
+    if (!active.length) return alert('인쇄할 카드가 없습니다.');
+    if (confirm(`고른 카드가 없어요. 지금 목록에 보이는 카드 ${active.length}장을 모두 인쇄할까요?\n(잘한 카드만 인쇄하려면 학번 아래 '인쇄'에 체크하세요)`)) printCards(active);
+  });
+  document.getElementById('btnPrintOne').addEventListener('click', () => {
+    const item = filteredItems[currentPresentIndex];
+    if (item) printCards([item]);
+  });
+
   // 발표 글씨 크기 조절 (기본 1.0, 0.6 ~ 2.0)
   let presentScale = 1;
   function setPresentScale(v) {
@@ -612,5 +746,6 @@
   document.getElementById('btnClosePresent').addEventListener('click', () => { document.getElementById('presentationOverlay').style.display = 'none'; });
 </script>
 
+<div id="printArea"></div>
 </body>
 </html>
